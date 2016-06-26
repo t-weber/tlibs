@@ -317,6 +317,23 @@ template<class T=double> static const T FWHM2SIGMA = T(1)/SIGMA2FWHM<T>;
 template<class T=double> static const T HWHM2SIGMA = T(1)/SIGMA2HWHM<T>;
 */
 
+template<class T=double> T get_SIGMA2FWHM()
+{
+	return T(2)*std::sqrt(T(2)*std::log(T(2)));
+}
+template<class T=double> T get_SIGMA2HWHM()
+{
+	return std::sqrt(T(2)*std::log(T(2)));
+}
+template<class T=double> T get_FWHM2SIGMA()
+{
+	return T(1)/get_SIGMA2FWHM<T>();
+}
+template<class T=double> T get_HWHM2SIGMA()
+{
+	return T(1)/get_SIGMA2HWHM<T>();
+}
+
 static const double SIGMA2FWHM = 2.*std::sqrt(2.*std::log(2.));
 static const double SIGMA2HWHM = SIGMA2FWHM/2.;
 static const double HWHM2SIGMA = 1./SIGMA2HWHM;

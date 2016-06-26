@@ -444,6 +444,12 @@ public:
 		sort_eigenvecs<T>(evecs, vecEvals, 1,
 			[](T d) -> T { return 1./std::sqrt(d); });
 
+		if(determinant(matEvecs) < T(0) && evecs.size() >= 2)
+		{
+			std::swap(evecs[evecs.size()-2], evecs[evecs.size()-1]);
+			std::swap(vecEvals[vecEvals.size()-2], vecEvals[vecEvals.size()-1]);
+		}
+
 		matEvecs = column_matrix(evecs);
 
 		if(pquadPrincipal)

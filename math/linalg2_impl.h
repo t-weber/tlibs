@@ -225,8 +225,8 @@ bool eigenvec_sym(const ublas::matrix<T>& mat,
 		//evecs[i] /= ublas::norm_2(evecs[i]);
 	}
 
-	if(determinant<ublas::matrix<T>>(column_matrix(evecs)) < 0.)
-		evecs[0] = -evecs[0];
+	//if(determinant<ublas::matrix<T>>(column_matrix(evecs)) < 0.)
+	//	evecs[0] = -evecs[0];
 
 	return bOk;
 }

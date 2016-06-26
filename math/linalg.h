@@ -1638,9 +1638,9 @@ bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vecto
 			break;
 	}
 
-	//bool bFlipVec = 0;
-	//if(determinant<t_mat>(I) < T(0))
-	//	bFlipVec = 1;
+	/*bool bFlipVec = 0;
+	if(determinant<t_mat>(I) < T(0))
+		bFlipVec = 1;*/
 
 	evals.resize(n);
 	evecs.resize(n);
