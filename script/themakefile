@@ -1,5 +1,5 @@
-#CC = gcc
-CC = clang
+CC = gcc
+#CC = clang
 
 DEBUG = 0
 USE_FFTW = 0

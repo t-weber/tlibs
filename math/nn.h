@@ -39,12 +39,16 @@ get_neighbours(const t_cont<t_vec>& vecAtoms, const t_vec& vecCentre,
 	for(const t_vec& vec : vecAtoms)
 		vecLens.push_back(ublas::norm_2(vec - vecCentre));
 
+
 	// sort by lengths
-	t_cont<std::size_t> vecIdx = sorted_idx(vecLens,
-		[&vecAtoms, &vecLens](t_real len0, t_real len1) -> bool
+	auto fktSort = [&vecAtoms, &vecLens](t_real len0, t_real len1) -> bool
 	{
 		return len0 < len1;
-	});
+	};
+
+	t_cont<std::size_t> vecIdx = sorted_idx
+		<std::vector, t_real, decltype(fktSort)>
+			(vecLens, fktSort);
 
 	if(vecIdx.size() == 0) return vecN;
 

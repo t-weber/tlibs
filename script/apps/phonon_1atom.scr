@@ -30,10 +30,10 @@ v2beta(v, a, m)
 
 phonon_usage(app)
 {
-        print("\nPhonon branch calculation\n\nUsage: e.g. " + app + " m=1 a=1 v=1");
-        print("\tm\tmass of atoms [amu]");
-        print("\ta\tdistance between two atoms [A]");
-        print("\tv\tspeed of sound [meV/A^-1]");
+	print("\nPhonon branch calculation\n\nUsage: e.g. " + app + " m=1 a=1 v=1");
+	print("\tm\tmass of atoms [amu]");
+	print("\ta\tdistance between two atoms [A]");
+	print("\tv\tspeed of sound [meV/A^-1]");
 	print();
 }
 
@@ -44,18 +44,17 @@ main(args)
 	v = 1.;
 
 	if(length(args) greater 1)
-        for(arg : args[1:length(args)])
-        {
-                if(trim(arg) eq "--help")
-                {
-			phonon_usage(args[0]);
-                        return 0;
-                }
+		for(arg : args[1:length(args)])
+		{
+			if(trim(arg) eq "--help")
+			{
+				phonon_usage(args[0]);
+				return 0;
+			}
 
-                arg_split = trim(split(arg, "="));
-		register_var(arg_split[0], real(arg_split[1]));
-	}
-
+			arg_split = trim(split(arg, "="));
+			register_var(arg_split[0], real(arg_split[1]));
+		}
 
 	q = linspace(-pi/a, pi/a, 256);
 #	q *= 6.;

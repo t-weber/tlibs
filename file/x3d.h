@@ -41,6 +41,7 @@ class X3dElem
 		virtual void AddChild(X3dElem* pElem);
 };
 
+
 class X3dScene : public X3dElem
 {
 	public:
@@ -127,7 +128,25 @@ class X3dCylinder : public X3dElem
 		void SetColor(const t_vec& vecCol) { m_vecColor = vecCol; }
 };
 
+// polygon
+class X3dPolygon : public X3dElem
+{
+	protected:
+		std::vector<t_vec> m_vertices;
+		t_vec m_vecColor;
+
+	public:
+		X3dPolygon() = default;
+		virtual ~X3dPolygon() = default;
+
+		virtual void Write(std::ostream& ostr) const override;
+
+		void AddVertex(const t_vec& vec) { m_vertices.push_back(vec); }
+		void SetColor(const t_vec& vecCol) { m_vecColor = vecCol; }
+};
+
 // -----------------------------------------------------------------------------
+
 
 class X3d
 {

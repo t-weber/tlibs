@@ -177,14 +177,17 @@ template<class Sys, class Y>
 t_length<Sys,Y> bragg_real_d(const t_length<Sys,Y>& lam,
 	const t_angle<Sys,Y>& twotheta, Y n)
 {
-	return n * lam / (Y(2.)* units::sin(twotheta/Y(2.)));
+	return n * lam / (Y(2.)*units::sin(twotheta/Y(2.)));
 }
 
 template<class Sys, class Y>
 t_angle<Sys,Y> bragg_real_twotheta(const t_length<Sys,Y>& d,
 	const t_length<Sys,Y>& lam, Y n)
 {
-	return units::asin(n*lam/(Y(2.)*d)) * Y(2.);
+	auto dS = n*lam/(Y(2.)*d);
+	if(std::abs(Y(dS)) > Y(1))
+		throw Err("Invalid twotheta angle.");
+	return units::asin(dS) * Y(2.);
 }
 
 // reciprocal: Q * lam = 4pi * sin(twotheta/2)
@@ -192,7 +195,10 @@ template<class Sys, class Y>
 t_angle<Sys,Y> bragg_recip_twotheta(const t_wavenumber<Sys,Y>& Q,
 	const t_length<Sys,Y>& lam, Y n)
 {
-	return units::asin(Q*n*lam/(Y(4)*get_pi<Y>())) * Y(2);
+	auto dS = Q*n*lam/(Y(4)*get_pi<Y>());
+	if(std::abs(Y(dS)) > Y(1))
+		throw Err("Invalid twotheta angle.");
+	return units::asin(dS) * Y(2);
 }
 
 template<class Sys, class Y>

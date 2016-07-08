@@ -131,6 +131,38 @@ void X3dCylinder::Write(std::ostream& ostr) const
 	//X3dElem::Write(ostr);
 }
 
+void X3dPolygon::Write(std::ostream& ostr) const
+{
+	std::ostringstream ostrVertices;
+	ostrVertices << "<Coordinate point=\"";
+	for(std::size_t iVert=0; iVert<m_vertices.size(); ++iVert)
+	{
+		const t_vec& vec = m_vertices[iVert];
+
+		for(t_real d : vec)
+			ostrVertices << d << " ";
+
+		if(iVert+1 < m_vertices.size())
+			ostrVertices << ", ";
+	}
+	ostrVertices << "\" />\n";
+
+
+	ostr << "<Shape>\n";
+		ostr << "<IndexedFaceSet ";
+		ostr << "coordIndex=\"";
+		for(std::size_t iVert=0; iVert<m_vertices.size(); ++iVert)
+			ostr << iVert << ", ";
+		ostr << "-1\"";
+		ostr << ">\n";
+
+		ostr << ostrVertices.str();
+		ostr << "</IndexedFaceSet>\n";
+
+	X3dElem::WriteColor(ostr, m_vecColor);
+	ostr << "</Shape>\n";
+}
+
 // -----------------------------------------------------------------------------
 
 

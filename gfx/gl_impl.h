@@ -98,9 +98,10 @@ FontMap::FontMap(const char* pcFont, int iSize) : FontMap()
 	}
 }
 
-bool FontMap::LoadFont(FT_Face ftFace)
+bool FontMap::LoadFont(FT_Face ftFace, int iSize)
 {
 	m_ftFace = ftFace;
+	FT_Set_Pixel_Sizes(m_ftFace, 0, iSize);
 
 	m_iTileH = 0;
 	m_iTileW = 0;
@@ -115,6 +116,7 @@ bool FontMap::LoadFont(FT_Face ftFace)
 
 		unsigned int iGlyphW = m_ftFace->glyph->bitmap.width;
 		unsigned int iGlyphH = m_ftFace->glyph->bitmap.rows;
+		//tl::log_debug("glyph: ", iGlyphW, " * ", iGlyphH);
 
 		//FT_Int iLeft = m_ftFace->glyph->bitmap_left;
 		FT_Int iTop = m_ftFace->glyph->bitmap_top;
@@ -193,8 +195,7 @@ bool FontMap::LoadFont(const char* pcFont, int iSize)
 	if(FT_New_Face(m_ftLib, pcFont, 0, &m_ftFace) != 0)
 		return false;
 
-	FT_Set_Pixel_Sizes(m_ftFace, 0, iSize);
-	return LoadFont(m_ftFace);
+	return LoadFont(m_ftFace, iSize);
 }
 
 void FontMap::dump(std::ostream& ostr) const
@@ -280,7 +281,8 @@ GlFontMap::GlFontMap(const char* pcFont, int iSize)
 	m_bOk = 1;
 }
 
-GlFontMap::GlFontMap(FT_Face ftFace) : FontMap(), m_bOk(0)
+GlFontMap::GlFontMap(FT_Face ftFace, int iSize)
+	: FontMap(), m_bOk(0)
 {
 	if(!ftFace)
 	{
@@ -288,7 +290,7 @@ GlFontMap::GlFontMap(FT_Face ftFace) : FontMap(), m_bOk(0)
 		return;
 	}
 
-	if(!LoadFont(ftFace))
+	if(!LoadFont(ftFace, iSize))
 	{
 		log_err("Font map failed to create.");
 		return;
@@ -384,7 +386,7 @@ void GlFontMap::DrawText(double _dX, double _dY, const std::string& str, bool bC
 	double dX = _dX;
 	double dY = _dY;
 
-	double dScX = 0.014;
+	double dScX = (m_iTileH / 12.) * 0.025;
 	double dScY = double(m_iTileH)/double(m_iTileW) * dScX;
 
 	double dXInc = 1.75*dScX;

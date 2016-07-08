@@ -18,13 +18,13 @@
 
 namespace tl {
 
-template<class T=double> 
+template<class T=double>
 using t_mat4_gen = ublas::matrix<T, ublas::row_major, ublas::bounded_array<T,4*4>>;
-template<class T=double> 
+template<class T=double>
 using t_mat3_gen = ublas::matrix<T, ublas::row_major, ublas::bounded_array<T,3*3>>;
-template<class T=double> 
+template<class T=double>
 using t_vec4_gen = ublas::vector<T, ublas::bounded_array<T,4>>;
-template<class T=double> 
+template<class T=double>
 using t_vec3_gen = ublas::vector<T, ublas::bounded_array<T,3>>;
 
 typedef t_mat4_gen<double> t_mat4;
@@ -325,7 +325,7 @@ class FontMap
 		virtual ~FontMap();
 
 		bool LoadFont(const char* pcFont, int iSize);
-		bool LoadFont(FT_Face ftFace);
+		bool LoadFont(FT_Face ftFace, int iSize);
 
 		void dump(std::ostream& ostr) const;
 		void dump(std::ostream& ostr, const std::pair<int,int>& pair) const;
@@ -350,7 +350,7 @@ class GlFontMap : public FontMap
 	public:
 		GlFontMap() = delete;
 		GlFontMap(const char* pcFont=DEF_FONT, int iSize=DEF_FONT_SIZE);
-		GlFontMap(FT_Face ftFace);
+		GlFontMap(FT_Face ftFace, int iSize=DEF_FONT_SIZE);
 		virtual ~GlFontMap();
 
 		virtual bool IsOk() const override { return m_bOk && FontMap::IsOk(); }

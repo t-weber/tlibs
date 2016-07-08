@@ -131,17 +131,7 @@ t_cont arrayunion(const std::initializer_list<t_cont>& lst)
 
 template<class t_to, class t_from, template<class...> class t_cont,
 	bool bIsEqu = std::is_same<t_from, t_to>::value>
-struct container_cast {};
-
-template<class t_to, class t_from, template<class...> class t_cont>
-struct container_cast<t_to, t_from, t_cont, 1>
-{
-	const t_cont<t_to>& operator()(const t_cont<t_from>& vec) const
-	{ return vec; }
-};
-
-template<class t_to, class t_from, template<class...> class t_cont>
-struct container_cast<t_to, t_from, t_cont, 0>
+struct container_cast
 {
 	t_cont<t_to> operator()(const t_cont<t_from>& vec) const
 	{
@@ -150,6 +140,16 @@ struct container_cast<t_to, t_from, t_cont, 0>
 			vecTo.push_back(t_to(t));
 		return vecTo;
 	}
+};
+
+template<class t_to, class t_from, template<class...> class t_cont>
+struct container_cast<t_to, t_from, t_cont, 1>
+{
+	const t_cont<t_to>& operator()(const t_cont<t_from>& vec) const
+	{ return vec; }
+
+	t_cont<t_to>& operator()(t_cont<t_from>& vec) const
+	{ return vec; }
 };
 
 // ----------------------------------------------------------------------------

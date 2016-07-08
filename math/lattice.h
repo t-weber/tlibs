@@ -71,6 +71,8 @@ class Lattice
 
 		const t_vec& GetVec(std::size_t i) const { return m_vecs[i]; }
 		t_mat GetMetric() const;
+
+		bool IsCubic() const;
 };
 
 template<typename T>
@@ -241,8 +243,22 @@ ublas::matrix<T> Lattice<T>::GetMetric() const
 	return column_matrix({m_vecs[0], m_vecs[1], m_vecs[2]});
 }
 
+template<typename T>
+bool Lattice<T>::IsCubic() const
+{
+	bool bEqualLen = float_equal<T>(GetA(), GetB()) && float_equal<T>(GetB(), GetC());
+	if(!bEqualLen) return false;
+
+	bool b90Deg = float_equal<T>(GetAlpha(), get_pi<T>()*T(0.5)) &&
+		float_equal<T>(GetBeta(), get_pi<T>()*T(0.5)) &&
+		float_equal<T>(GetGamma(), get_pi<T>()*T(0.5));
+
+	return b90Deg;
+}
+
 
 // -----------------------------------------------------------------------------
+
 
 /**
  * B matrix converts rlu to 1/A
@@ -310,6 +326,7 @@ ublas::matrix<T> get_UB(const Lattice<T>& lattice_real,
 	t_mat matUB = ublas::prod(matU, matB);
 	return matUB;
 }
+
 
 // -----------------------------------------------------------------------------
 
@@ -439,6 +456,8 @@ std::ostream& operator<<(std::ostream& ostr, const Lattice<T>& lat)
 */
 	return ostr;
 }
+
+
 
 }
 

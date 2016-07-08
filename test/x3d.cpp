@@ -21,9 +21,15 @@ int main()
 	pSphere2->SetColor(tl::make_vec({0., 1., 0.}));
 	pTrafo2->AddChild(pSphere2);
 
+	tl::X3dPolygon *pPoly = new tl::X3dPolygon();
+	pPoly->AddVertex(tl::make_vec({0., 0., 0.}));
+	pPoly->AddVertex(tl::make_vec({10., 0., 0.}));
+	pPoly->AddVertex(tl::make_vec({10., 10., 0.}));
+	pPoly->SetColor(tl::make_vec({1., 1., 0.}));
 
 	x3d.GetScene().AddChild(pTrafo);
 	x3d.GetScene().AddChild(pTrafo2);
+	x3d.GetScene().AddChild(pPoly);
 
 	x3d.Save("sph.x3d");
 	return 0;
