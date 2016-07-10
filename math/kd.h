@@ -3,6 +3,7 @@
  * @author tweber
  * @date jun-2015
  * @license GPLv2 or GPLv3
+ * @desc see e.g.: https://en.wikipedia.org/wiki/K-d_tree
  */
 
 #ifndef __TLIBS_KD_H__
@@ -73,8 +74,6 @@ private:
 			pNode->vecMid = *lstPoints.begin();
 			return pNode;
 		}
-
-		//std::cout << "level: " << iLevel << ", size: " << iSize << ", mid: " << iSize/2 << std::endl;
 
 		lstPoints.sort(
 			[iAxis](const std::vector<T>& vec0, const std::vector<T>& vec1) -> bool

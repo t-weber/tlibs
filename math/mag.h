@@ -83,7 +83,9 @@ T mag_formfact(T Q, T L, T S,
 	return (L+T(2)*S) * j0_avg<T, t_vec>(Q, A0, a0) * L * j2_avg<T, t_vec>(Q, A2, a2);
 }
 
-// see: Squires, p. 139
+/*
+ * @desc see: Squires, p. 139
+ */
 template<class T=double, template<class...> class t_vec=std::initializer_list>
 T mag_formfact(T Q, T L, T S, T J,
 	const t_vec<T>& A0, const t_vec<T>& a0,
