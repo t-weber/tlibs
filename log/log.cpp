@@ -14,6 +14,7 @@
 
 namespace tl {
 std::recursive_mutex Log::s_mtx;
+bool Log::s_bTermCmds = 1;
 
 std::string Log::get_timestamp()
 {
@@ -50,6 +51,8 @@ std::string Log::get_thread_id()
 
 std::string Log::get_color(LogColor col, bool bBold)
 {
+	if(!s_bTermCmds) return "";
+
 	switch(col)
 	{
 		case LogColor::RED: return bBold ? "\033[1;31m" : "\033[0;31m";
@@ -60,7 +63,7 @@ std::string Log::get_color(LogColor col, bool bBold)
 		case LogColor::CYAN: return bBold ? "\033[1;36m" : "\033[0;36m";
 		case LogColor::WHITE: return bBold ? "\033[1;37m" : "\033[0;37m";
 		case LogColor::BLACK: return bBold ? "\033[1;30m" : "\033[0;30m";
-		case LogColor::NONE: 
+		case LogColor::NONE:
 		default: return "\033[0m";
 	}
 }
@@ -85,18 +88,21 @@ void Log::begin_log()
 			(*pOstr) << get_timestamp() << ", ";
 		if(m_bShowThread)
 		{
+			using t_threadmap = std::unordered_map<std::thread::id, std::string>;
+			static t_threadmap s_threadmap;
+
 			using t_mapKey = typename t_threadmap::value_type::first_type;
 			//using t_mapVal = typename t_threadmap::value_type::second_type;
 
 			t_mapKey idThread = std::this_thread::get_id();
-			typename t_threadmap::const_iterator iterMap = m_threadmap.find(idThread);
-			if(iterMap == m_threadmap.end())
+			typename t_threadmap::const_iterator iterMap = s_threadmap.find(idThread);
+			if(iterMap == s_threadmap.end())
 			{
 				++m_iNumThreads;
 				std::ostringstream ostrThread;
 				ostrThread << "Thread " << m_iNumThreads;
 
-				iterMap = m_threadmap.insert({idThread, ostrThread.str()}).first;
+				iterMap = s_threadmap.insert({idThread, ostrThread.str()}).first;
 			}
 
 			(*pOstr) << iterMap->second << ", ";
@@ -199,7 +205,7 @@ void Log::RemoveOstr(std::ostream* pOstr)
 
 
 Log log_info("INFO", LogColor::WHITE, &std::cerr),
-	log_warn("WARNING", LogColor::YELLOW, &std::cerr), 
+	log_warn("WARNING", LogColor::YELLOW, &std::cerr),
 	log_err("ERROR", LogColor::RED, &std::cerr),
 	log_crit("CRITICAL", LogColor::PURPLE, &std::cerr),
 	log_debug("DEBUG", LogColor::CYAN, &std::cerr);
@@ -235,7 +241,7 @@ int main()
 		log_info.AddOstr(&ofstrTh, 0, 1);
 		for(int i=0; i<10; ++i)
 		{
-			log_info("In thread ", 1, "."); 
+			log_info("In thread ", 1, ".");
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 		log_info.RemoveOstr(&ofstrTh);

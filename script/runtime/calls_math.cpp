@@ -405,7 +405,7 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 	else if(vecSyms.size()==1 && vecSyms[0]->GetType()==SYMBOL_ARRAY)
 	{
 		SymbolArray* pSymArr = (SymbolArray*)vecSyms[0];
-		unsigned int iSymArrSize = pSymArr->GetArr().size();
+		std::size_t iSymArrSize = pSymArr->GetArr().size();
 
 		if(iSymArrSize==0)
 			bArgsOk = 0;
@@ -428,7 +428,7 @@ static Symbol* _fkt_fft(const std::vector<Symbol*>& vecSyms,
 
 	if(vecRealIn.size() != vecImagIn.size())
 	{
-		unsigned int iSize = std::max(vecRealIn.size(), vecImagIn.size());
+		std::size_t iSize = std::max(vecRealIn.size(), vecImagIn.size());
 		vecRealIn.resize(iSize);
 		vecImagIn.resize(iSize);
 	}

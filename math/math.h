@@ -61,7 +61,8 @@ template<class vec_type>
 typename vec_type::value_type mean_value(const vec_type& vec)
 {
 	typedef typename vec_type::value_type T;
-	if(vec.size()==0) return T();
+	if(vec.size()==0) return T(0);
+	else if(vec.size()==1) return vec[0];
 
 	T tMean = vec[0];
 	for(std::size_t i=1; i<vec.size(); ++i)
@@ -76,6 +77,7 @@ template<class vec_type>
 typename vec_type::value_type std_dev(const vec_type& vec)
 {
 	typedef typename vec_type::value_type T;
+	if(vec.size()<=1) return T(0);
 
 	T tMean = mean_value(vec);
 	T t = T(0);

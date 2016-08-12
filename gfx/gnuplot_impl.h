@@ -1,4 +1,4 @@
-/*
+/**
  * invoke gnuplot
  * @autor tweber
  * @date 24-dec-2013
@@ -76,6 +76,7 @@ void GnuPlot<t_real>::SetTerminal(int iWnd, const char* pcBackend)
 		<< "font \"NimbusSanL-Regu,12\" "
 //		<< "title \"" << "Plot " << (iWnd+1) << "\" " 
 		<< "persist "
+//		<< "noraise "
 		<< "dashed "
 		<<  "\n";
 }

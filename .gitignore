@@ -38,3 +38,5 @@ Makefile
 build/*
 script/build/*
 externals/**
+doc/*
+!doc/.dir

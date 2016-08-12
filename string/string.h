@@ -518,17 +518,18 @@ T str_to_var(const t_str& str)
 }
 
 
-template<class T, bool is_number_type=std::is_fundamental<T>::value>
+template<class T, class t_ch,
+	bool is_number_type=std::is_fundamental<T>::value>
 struct _var_to_str_print_impl {};
 
-template<class T> struct _var_to_str_print_impl<T, false>
+template<class T, class t_ch> struct _var_to_str_print_impl<T, t_ch, false>
 {
-	void operator()(std::ostream& ostr, const T& t) { ostr << t; }
+	void operator()(std::basic_ostream<t_ch>& ostr, const T& t) { ostr << t; }
 };
 
-template<class T> struct _var_to_str_print_impl<T, true>
+template<class T, class t_ch> struct _var_to_str_print_impl<T, t_ch, true>
 {
-	void operator()(std::ostream& ostr, const T& t)
+	void operator()(std::basic_ostream<t_ch>& ostr, const T& t)
 	{
 		// prevents printing "-0"
 		T t0 = t;
@@ -572,7 +573,7 @@ struct _var_to_str_impl
 			ostr.imbue(std::locale(ostr.getloc(), pSep));
 		}
 
-		_var_to_str_print_impl<T> pr;
+		_var_to_str_print_impl<T, t_char> pr;
 		pr(ostr, t);
 		t_str str = ostr.str();
 

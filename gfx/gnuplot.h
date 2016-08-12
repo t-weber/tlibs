@@ -1,4 +1,4 @@
-/*
+/**
  * invoke gnuplot
  * @autor tweber
  * @date 24-dec-2013

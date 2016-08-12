@@ -1,4 +1,4 @@
-/*
+/**
  * neutron formulas
  * @author Tobias Weber
  * @date 2012-2016
@@ -602,13 +602,13 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	bool bKiqParallel = 0, bkiqAntiParallel = 0;
 	bool bKfqParallel = 0, bKfqAntiParallel = 0;
 
-	if(float_equal<T>(dAngleKiq, 0., tl::d2r(dAngleSensitivity)))
+	if(float_equal<T>(dAngleKiq, 0., d2r(dAngleSensitivity)))
 		bKiqParallel = 1;
-	else if(float_equal<T>(dAngleKiq, get_pi<T>(), tl::d2r(dAngleSensitivity)))
+	else if(float_equal<T>(dAngleKiq, get_pi<T>(), d2r(dAngleSensitivity)))
 		bkiqAntiParallel = 1;
-	if(float_equal<T>(dAngleKfq, 0., tl::d2r(dAngleSensitivity)))
+	if(float_equal<T>(dAngleKfq, 0., d2r(dAngleSensitivity)))
 		bKfqParallel = 1;
-	else if(float_equal<T>(dAngleKfq, get_pi<T>(), tl::d2r(dAngleSensitivity)))
+	else if(float_equal<T>(dAngleKfq, get_pi<T>(), d2r(dAngleSensitivity)))
 		bKfqAntiParallel = 1;
 
 	// type A: q || kf, kf > ki
@@ -666,7 +666,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 template<class t_real=double>
 t_real bose(t_real E, t_real T)
 {
-	t_real kB = get_kB<t_real>() * units::si::kelvin/tl::get_one_meV();
+	t_real kB = get_kB<t_real>() * units::si::kelvin/get_one_meV();
 
 	if(E >= 0.)
 		return 1./(std::exp(std::abs(E)/(kB*T)) - 1.) + 1.;
@@ -674,10 +674,30 @@ t_real bose(t_real E, t_real T)
 		return 1./(std::exp(std::abs(E)/(kB*T)) - 1.);
 }
 
-template<class Sys, class Y>
-Y bose(const t_energy<Sys,Y>& E, const t_temperature<Sys,Y>& T)
+/**
+ * Bose factor with a lower cutoff energy
+ */
+template<class t_real=double>
+t_real bose_cutoff(t_real E, t_real T, t_real E_cutoff=t_real(0.02))
 {
-	return bose<Y>(Y(E/tl::get_one_meV()), Y(T/tl::kelvin));
+	t_real dB = bose<t_real>(E, T);
+
+	E_cutoff = std::abs(E_cutoff);
+	if(std::abs(E) < E_cutoff)
+		dB = bose<t_real>(sign(E)*E_cutoff, T);
+
+	return dB;
+}
+
+template<class Sys, class Y>
+Y bose(const t_energy<Sys,Y>& E, const t_temperature<Sys,Y>& T,
+	t_energy<Sys,Y> E_cutoff = -get_one_meV())
+{
+	if(E_cutoff < Y(0)*get_one_meV())
+		return bose<Y>(Y(E/get_one_meV()), Y(T/kelvin));
+	else
+		return bose_cutoff<Y>(Y(E/get_one_meV()), Y(T/kelvin),
+			Y(E_cutoff/get_one_meV()));
 }
 
 // see: B. Fak, B. Dorner, Physica B 234-236 (1997) pp. 1107-1108
