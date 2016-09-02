@@ -889,6 +889,25 @@ static Symbol* fkt_append(const std::vector<Symbol*>& vecSyms,
 	return vecSyms[0];
 }
 
+static Symbol* fkt_rm_idx(const std::vector<Symbol*>& vecSyms,
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+{
+	// TODO: also handle strings
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY, SYMBOL_INT}, {0,0}, "rm_idx"))
+		return 0;
+
+	auto& arr = ((SymbolArray*)vecSyms[0])->GetArr();
+
+	t_int iIdx = ((SymbolInt*)vecSyms[1])->GetVal();
+	if(iIdx < 0)	// reverse index
+		iIdx = arr.size() + iIdx;
+
+	arr.erase(arr.begin() + iIdx);
+	((SymbolArray*)vecSyms[0])->UpdateIndices();
+
+	return vecSyms[0];
+}
+
 
 
 typedef std::tuple<const Symbol*, unsigned int> t_symtup;
@@ -1434,6 +1453,7 @@ extern void init_ext_basic_calls()
 		t_mapFkts::value_type(T_STR"sort_rev", fkt_sort_rev),
 		t_mapFkts::value_type(T_STR"splice", fkt_splice),
 		t_mapFkts::value_type(T_STR"append", fkt_append),
+		t_mapFkts::value_type(T_STR"rm_idx", fkt_rm_idx),
 
 		// map/array operations
 		t_mapFkts::value_type(T_STR"contains", fkt_contains),

@@ -1,4 +1,4 @@
-/*
+/**
  * property tree wrapper
  * @author tweber
  * @date dec-2015
@@ -237,6 +237,13 @@ public:
 
 		return true;
 	}
+
+
+	bool Load(const t_str& strFile) { return Load(strFile.c_str()); }
+	bool Load(const t_str& strFile, PropType ty) { return Load(strFile.c_str(), ty); }
+	bool Save(const t_str& strFile) const { return Save(strFile.c_str()); }
+	bool Save(const t_str& strFile, PropType ty, Compressor comp=Compressor::INVALID) const
+	{ return Save(strFile.c_str(), ty, comp); }
 
 
 	template<typename T>

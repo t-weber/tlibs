@@ -1,4 +1,4 @@
-/*
+/**
  * wrapper for boost.units
  * @author Tobias Weber
  * @date dec-2015

@@ -89,8 +89,8 @@ B_matrix(a,b,c, alpha, beta, gamma)
 	dVol = a*b*c*sqrt(1.- dCA2 - dCB2 - dCG2 + 2.*dCA*dCB*dCG);
 
 	veca = [a, 0., 0.];
-        vecb = [b*dCG, b*dSG, 0.];
-        vecc = [c*dCB, c*(dCA - dCB*dCG) / dSG, dVol / (a*b*dSG)];
+	vecb = [b*dCG, b*dSG, 0.];
+	vecc = [c*dCB, c*(dCA - dCB*dCG) / dSG, dVol / (a*b*dSG)];
 
 	matreal = [veca, vecb, vecc];
 	matrecip = 2.*pi * inv(matreal);
@@ -245,19 +245,19 @@ hkl2tas(a,b,c, alpha,beta,gamma, orient1,orient2, h,k,l, ki,kf, dm,da)
 
 usage(app)
 {
-        print("\nTAS position calculation for single crystal");
+	print("\nTAS position calculation for single crystal");
 	print("\nExample usage:");
 	print("\t* hkl->tas: " + app + " h=1 k=1 l=0 ki=1.4 kf=1.5 a=5 b=5 c=5 alpha=90 beta=90 gamma=90 orient1=1,0,0 orient2=0,1,0");
 	print("\t* tas->hkl: " + app + " th_s=80.2 tt_s=75.5 tt_m=84 tt_a=77.3 a=5 b=5 c=5 alpha=90 beta=90 gamma=90 orient1=1,0,0 orient2=0,1,0");
 	print();
-        print("\ta,b,c                 lattice constants in A");
-        print("\talpha,beta,gamma      lattice angles in deg");
+	print("\ta,b,c                 lattice constants in A");
+	print("\talpha,beta,gamma      lattice angles in deg");
 	print("\torient1               crystal orientation");
 	print("\torient2               crystal orientation");
-        print("\tdm                    d-spacing of monochromator in A");
-        print("\tda                    d-spacing of analyser in A");
-        print("\tki                    ki in 1/A");
-        print("\tkf                    kf in 1/A (kf = ki if not given)");
+	print("\tdm                    d-spacing of monochromator in A");
+	print("\tda                    d-spacing of analyser in A");
+	print("\tki                    ki in 1/A");
+	print("\tkf                    kf in 1/A (kf = ki if not given)");
 	print();
 	print("\th,k,l                 Miller indices in rlu");
 	print();
@@ -289,41 +289,43 @@ main(args)
 	had_angles = 0;
 
 	if(length(args) > 1)
+	{
         for(arg : args[1:length(args)])
         {
-                if(trim(arg) == "--help")
-                {
-			usage(args[0]);
-                        return 0;
-                }
-
-                arg_split = trim(split(arg, "="));
-		arg_val = real(arg_split[1]);
-
-		if(arg_split[0] == "orient1" || arg_split[0] == "orient2")
-		{
-			arg_vec = tokens(arg_split[1], ",");
-			if(length(arg_vec) != 3)
+			if(trim(arg) == "--help")
 			{
-				print("Error: Invalid 3-vector entered for " + arg_split[0] + ".");
-				exit(-1);
+				usage(args[0]);
+				return 0;
 			}
 
-			arg_val = real_vec(arg_vec);
+			arg_split = trim(split(arg, "="));
+			arg_val = real(arg_split[1]);
+
+			if(arg_split[0] == "orient1" || arg_split[0] == "orient2")
+			{
+				arg_vec = tokens(arg_split[1], ",");
+				if(length(arg_vec) != 3)
+				{
+					print("Error: Invalid 3-vector entered for " + arg_split[0] + ".");
+					exit(-1);
+				}
+
+				arg_val = real_vec(arg_vec);
+			}
+
+			if(arg_split[0] == "b")
+				had_b = 1;
+			else if(arg_split[0] == "c")
+				had_c = 1;
+			else if(arg_split[0] == "kf")
+				had_kf = 1;
+			else if(arg_split[0]=="h" || arg_split[0]=="k" || arg_split[0]=="l")
+				had_hkl = 1;
+			else if(arg_split[0]=="th_s" || arg_split[0]=="tt_s" || arg_split[0]=="tt_m" || arg_split[0]=="tt_a")
+				had_angles = 1;
+
+			register_var(arg_split[0], arg_val);
 		}
-
-		if(arg_split[0] == "b")
-			had_b = 1;
-		else if(arg_split[0] == "c")
-			had_c = 1;
-		else if(arg_split[0] == "kf")
-			had_kf = 1;
-		else if(arg_split[0]=="h" || arg_split[0]=="k" || arg_split[0]=="l")
-			had_hkl = 1;
-		else if(arg_split[0]=="th_s" || arg_split[0]=="tt_s" || arg_split[0]=="tt_m" || arg_split[0]=="tt_a")
-			had_angles = 1;
-
-		register_var(arg_split[0], arg_val);
 	}
 	else
 	{

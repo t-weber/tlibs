@@ -1,4 +1,4 @@
-/*
+/**
  * Chrono helpers
  * @author tweber
  * @date aug-2015
@@ -41,6 +41,22 @@ template<typename T=double>
 T epoch()
 {
 	return epoch_dur<t_dur_secs<T>>().count();
+}
+
+template<typename T=double>
+std::string epoch_to_str(T tSeconds)
+{
+	namespace ch = std::chrono;
+
+	t_dur_secs<T> secs(tSeconds);
+	ch::system_clock::time_point tp(ch::duration_cast<ch::seconds>(secs));
+
+	std::time_t t = ch::system_clock::to_time_t(tp);
+	std::tm tm = *std::localtime(&t);
+
+	char cTime[256];
+	std::strftime(cTime, sizeof cTime, "%a %Y-%b-%d %H:%M:%S %Z", &tm);
+	return std::string(cTime);
 }
 
 }

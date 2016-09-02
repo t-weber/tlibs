@@ -1,4 +1,4 @@
-/*
+/**
  * Powder peaks
  * @author Tobias Weber
  * @date apr-2015
@@ -16,7 +16,6 @@
 #include "lattice.h"
 #include "../string/string.h"
 #include "../helper/hash.h"
-//#include <iostream>
 
 namespace tl {
 
@@ -31,8 +30,8 @@ class Powder
 	private:
 		static t_str to_str(t_real t)
 		{
-			static const int iPrec = 8;
-			return tl::var_to_str<t_real, t_str>(t, iPrec);
+			static const int s_iPrec = 8;
+			return tl::var_to_str<t_real, t_str>(t, s_iPrec);
 		}
 
 		static bool is_eq(t_real t0, t_real t1)
@@ -74,11 +73,13 @@ class Powder
 		}
 
 	public:
+		// all peaks
 		typedef std::unordered_set<t_peak, decltype(&hash_peak), decltype(&equ_peak)> t_peaks;
+		// peaks unique in G and F
 		typedef std::unordered_set<t_peak, decltype(&hash_peak_unique), decltype(&equ_peak_unique)> t_peaks_unique;
 
 	protected:
-		t_peaks m_peaks;			// hashes & compares hkl
+		t_peaks m_peaks;					// hashes & compares hkl
 		t_peaks_unique m_peaks_unique;		// hashes & compares F & G
 
 		// associated reciprocal lattice
@@ -164,6 +165,34 @@ class Powder
 					++iMult;
 			}
 			return iMult;
+		}
+
+		/**
+		 * get peaks only unique in G (not F)
+		 */
+		std::vector<t_peak> GetUniquePeaksSumF() const
+		{
+			std::vector<t_peak> vecPeaks;
+
+			for(const t_peak& peak : m_peaks)
+			{
+				typename decltype(vecPeaks)::iterator iter = std::find_if(
+					vecPeaks.begin(), vecPeaks.end(), [&peak](const t_peak& pk) -> bool
+				{
+					t_real curG = std::get<3>(peak);
+					t_real pkG = std::get<3>(pk);
+					
+					return is_eq(curG, pkG);
+				});
+
+				// not already in vector?
+				if(iter == vecPeaks.end())
+					vecPeaks.push_back(peak);
+				else
+					std::get<4>(*iter) += std::get<4>(peak);	// add F
+			}
+
+			return vecPeaks;
 		}
 
 		void clear()

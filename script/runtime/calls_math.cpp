@@ -603,6 +603,25 @@ static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms,
 	return mat_to_sym<t_mat>(mat_trans);
 }
 
+static Symbol* fkt_adj(const std::vector<Symbol*>& vecSyms, 
+	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
+{
+	if(!check_args(runinfo, vecSyms, {SYMBOL_ARRAY}, {0}, "adj"))
+		return 0;
+
+	bool bIsMat = 0;
+	t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0], &bIsMat);
+	if(!bIsMat)
+	{
+		std::ostringstream ostrErr;
+		ostrErr << linenr(runinfo) << "Adjugate needs a matrix." << std::endl;
+		throw tl::Err(ostrErr.str(),0);
+	}
+
+	t_mat<t_real> mat_adj = tl::adjugate(mat);
+	return mat_to_sym<t_mat>(mat_adj);
+}
+
 static Symbol* fkt_inverse(const std::vector<Symbol*>& vecSyms, 
 	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
@@ -1197,6 +1216,7 @@ extern void init_ext_math_calls()
 		t_mapFkts::value_type(T_STR"trans", fkt_transpose),
 		t_mapFkts::value_type(T_STR"inv", fkt_inverse),
 		t_mapFkts::value_type(T_STR"det", fkt_determinant),
+		t_mapFkts::value_type(T_STR"adj", fkt_adj),
 
 		// matrix-vector or matrix-matrix operations
 		t_mapFkts::value_type(T_STR"prod", fkt_product),

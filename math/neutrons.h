@@ -19,6 +19,7 @@
 
 namespace tl {
 
+
 // --------------------------------------------------------------------------------
 
 template<typename T=double> T get_KSQ2E()
@@ -51,6 +52,7 @@ template<typename T=double> T get_E2KSQ()
 // --------------------------------------------------------------------------------
 // de Broglie stuff
 // lam = h/p
+
 template<class Sys, class Y>
 t_momentum<Sys,Y> lam2p(const t_length<Sys,Y>& lam)
 {
@@ -103,8 +105,10 @@ t_wavenumber<Sys,Y> v2k(const t_velocity<Sys,Y>& v)
 // --------------------------------------------------------------------------------
 
 
+
 // --------------------------------------------------------------------------------
 // E = hbar*omega
+
 template<class Sys, class Y>
 t_energy<Sys,Y> omega2E(const t_freq<Sys,Y>& omega)
 {
@@ -142,6 +146,7 @@ t_wavenumber<Sys,Y> E2k_direct(const t_energy<Sys,Y>& _E, bool &bImag)
 
 // ----------------------------------------------------------------------------
 // indirect calculations using conversion factors for numerical stability
+
 template<class Sys, class Y>
 t_energy<Sys,Y> k2E(const t_wavenumber<Sys,Y>& k)
 {
@@ -159,13 +164,16 @@ t_wavenumber<Sys,Y> E2k(const t_energy<Sys,Y>& _E, bool &bImag)
 	const Y dk = std::sqrt(get_E2KSQ<Y>() * dE);
 	return dk / get_one_angstrom<Y>();
 }
+
 // ----------------------------------------------------------------------------
+
 
 
 
 // --------------------------------------------------------------------------------
 // Bragg
 // real: n * lam = 2d * sin(twotheta/2)
+
 template<class Sys, class Y>
 t_length<Sys,Y> bragg_real_lam(const t_length<Sys,Y>& d,
 	const t_angle<Sys,Y>& twotheta, Y n)
@@ -217,9 +225,11 @@ t_length<Sys,Y> bragg_recip_lam(const t_wavenumber<Sys,Y>& Q,
 // --------------------------------------------------------------------------------
 
 
-// --------------------------------------------------------------------------------
 
+
+// --------------------------------------------------------------------------------
 // see e.g. ILL blue book sec. 2.6-2
+
 template<class Sys, class Y>
 t_wavenumber<Sys,Y> kinematic_plane(bool bFixedKi,
 	const t_energy<Sys,Y>& EiEf, const t_energy<Sys,Y>& DeltaE,
@@ -306,13 +316,16 @@ Y debye_waller_low_T(const t_temperature<Sys,Y>& T_D,
 // --------------------------------------------------------------------------------
 
 
+
 // --------------------------------------------------------------------------------
 // scattering triangle / TAS stuff
 
-// Q_vec = ki_vec - kf_vec
-// kf_vec = ki_vec - Q_vec
-// kf^2 = ki^2 + Q^2 - 2ki Q cos th
-// cos th = (-kf^2 + ki^2 + Q^2) / (2kiQ)
+/**
+ * Q_vec = ki_vec - kf_vec
+ * kf_vec = ki_vec - Q_vec
+ * kf^2 = ki^2 + Q^2 - 2ki Q cos th
+ * cos th = (-kf^2 + ki^2 + Q^2) / (2kiQ)
+ */
 template<class Sys, class Y>
 t_angle<Sys,Y> get_angle_ki_Q(const t_wavenumber<Sys,Y>& ki,
 	const t_wavenumber<Sys,Y>& kf,
@@ -325,7 +338,7 @@ t_angle<Sys,Y> get_angle_ki_Q(const t_wavenumber<Sys,Y>& ki,
 		angle = get_pi<Y>()/Y(2) * units::si::radians;
 	else
 	{
-		auto c = (ki*ki - kf*kf + Q*Q)/(Y(2.)*ki*Q);
+		auto c = (ki*ki - kf*kf + Q*Q) / (Y(2.)*ki*Q);
 		if(units::abs(c) > Y(1.))
 			throw Err("Scattering triangle not closed.");
 
@@ -338,10 +351,12 @@ t_angle<Sys,Y> get_angle_ki_Q(const t_wavenumber<Sys,Y>& ki,
 	return angle;
 }
 
-// Q_vec = ki_vec - kf_vec
-// ki_vec = Q_vec + kf_vec
-// ki^2 = Q^2 + kf^2 + 2Q kf cos th
-// cos th = (ki^2 - Q^2 - kf^2) / (2Q kf)
+/**
+ * Q_vec = ki_vec - kf_vec
+ * ki_vec = Q_vec + kf_vec
+ * ki^2 = Q^2 + kf^2 + 2Q kf cos th
+ * cos th = (ki^2 - Q^2 - kf^2) / (2Q kf)
+ */
 template<class Sys, class Y>
 t_angle<Sys,Y> get_angle_kf_Q(const t_wavenumber<Sys,Y>& ki,
 	const t_wavenumber<Sys,Y>& kf,
@@ -354,7 +369,7 @@ t_angle<Sys,Y> get_angle_kf_Q(const t_wavenumber<Sys,Y>& ki,
 		angle = get_pi<Y>()/Y(2) * units::si::radians;
 	else
 	{
-		auto c = (-kf*kf + ki*ki - Q*Q)/(Y(2.)*kf*Q);
+		auto c = (ki*ki - kf*kf - Q*Q) / (Y(2.)*kf*Q);
 		if(units::abs(c) > Y(1.))
 			throw Err("Scattering triangle not closed.");
 
@@ -392,9 +407,11 @@ t_wavenumber<Sys,Y> get_mono_k(const t_angle<Sys,Y>& _theta,
 }
 
 
-// Q_vec = ki_vec - kf_vec
-// Q^2 = ki^2 + kf^2 - 2ki kf cos 2th
-// cos 2th = (-Q^2 + ki^2 + kf^2) / (2ki kf)
+/**
+ * Q_vec = ki_vec - kf_vec
+ * Q^2 = ki^2 + kf^2 - 2ki kf cos 2th
+ *cos 2th = (-Q^2 + ki^2 + kf^2) / (2ki kf)
+ */
 template<class Sys, class Y>
 t_angle<Sys,Y> get_sample_twotheta(const t_wavenumber<Sys,Y>& ki,
 	const t_wavenumber<Sys,Y>& kf, const t_wavenumber<Sys,Y>& Q,
@@ -412,10 +429,12 @@ t_angle<Sys,Y> get_sample_twotheta(const t_wavenumber<Sys,Y>& ki,
 }
 
 
-// again cos theorem:
-// Q_vec = ki_vec - kf_vec
-// Q^2 = ki^2 + kf^2 - 2ki kf cos 2th
-// Q = sqrt(ki^2 + kf^2 - 2ki kf cos 2th)
+/**
+ * again cos theorem:
+ * Q_vec = ki_vec - kf_vec
+ * Q^2 = ki^2 + kf^2 - 2ki kf cos 2th
+ * Q = sqrt(ki^2 + kf^2 - 2ki kf cos 2th)
+ */
 template<class Sys, class Y>
 const t_wavenumber<Sys,Y>
 get_sample_Q(const t_wavenumber<Sys,Y>& ki,
@@ -445,9 +464,11 @@ t_energy<Sys,Y> get_energy_transfer(const t_wavenumber<Sys,Y>& ki,
 }
 
 
-// (hbar*ki)^2 / (2*mn)  -  (hbar*kf)^2 / (2mn)  =  E
-// 1) ki^2  =  +E * 2*mn / hbar^2  +  kf^2
-// 2) kf^2  =  -E * 2*mn / hbar^2  +  ki^2
+/**
+ * (hbar*ki)^2 / (2*mn)  -  (hbar*kf)^2 / (2mn)  =  E
+ * 1) ki^2  =  +E * 2*mn / hbar^2  +  kf^2
+ * 2) kf^2  =  -E * 2*mn / hbar^2  +  ki^2
+ */
 template<class Sys, class Y>
 t_wavenumber<Sys,Y> get_other_k(const t_energy<Sys,Y>& E,
 	const t_wavenumber<Sys,Y>& kfix, bool bFixedKi)
@@ -468,14 +489,25 @@ t_wavenumber<Sys,Y> get_other_k(const t_energy<Sys,Y>& E,
 
 
 // --------------------------------------------------------------------------------
-// kf^3 factor, see e.g. Shirane p. 125
 
+/**
+ * kf^3 mono/ana reflectivity factor, see e.g. Shirane p. 125
+ */
+template<class Sys, class Y>
+Y ana_effic_factor(const t_wavenumber<Sys, Y>& kf, const t_angle<Sys, Y>& theta)
+{
+	return kf*kf*kf / units::tan(theta) *
+		get_one_angstrom()*get_one_angstrom()*get_one_angstrom();
+}
+
+/**
+ * kf^3 mono/ana reflectivity factor, see e.g. Shirane p. 125
+ */
 template<class Sys, class Y>
 Y ana_effic_factor(const t_wavenumber<Sys, Y>& kf, const t_length<Sys, Y>& d)
 {
 	t_angle<Sys, Y> theta = Y(0.5)*units::abs(get_mono_twotheta<Sys, Y>(kf, d, true));
-	return kf*kf*kf / units::tan(theta) *
-		get_one_angstrom()*get_one_angstrom()*get_one_angstrom();
+	return ana_effic_factor<Sys, Y>(kf, theta);
 }
 
 // --------------------------------------------------------------------------------
@@ -485,7 +517,9 @@ Y ana_effic_factor(const t_wavenumber<Sys, Y>& kf, const t_length<Sys, Y>& d)
 // --------------------------------------------------------------------------------
 // spurions
 
-// Bragg tail -> see Shirane p. 152
+/**
+ * Bragg tail -> see Shirane p. 152
+ */
 template<class Sys, class Y>
 t_energy<Sys,Y> get_bragg_tail(t_wavenumber<Sys,Y> k,
 	t_wavenumber<Sys,Y> q, bool bConstEi=0)
@@ -498,7 +532,9 @@ t_energy<Sys,Y> get_bragg_tail(t_wavenumber<Sys,Y> k,
 }
 
 
-// higher-order inelastic spurions -> Shirane pp. 146-148
+/**
+ * higher-order inelastic spurions -> Shirane pp. 146-148
+ */
 template<class Sys, class Y>
 t_energy<Sys,Y> get_inelastic_spurion(bool bConstEi, t_energy<Sys,Y> E,
 	unsigned int iOrderMono, unsigned int iOrderAna)
@@ -570,7 +606,9 @@ struct ElasticSpurion
 	bool bMKfSmallerKi = 0;
 };
 
-// accidental elastic (currat-axe) spurions -> Shirane pp. 150-155 (esp. fig. 6.2)
+/**
+ * accidental elastic (currat-axe) spurions -> Shirane pp. 150-155 (esp. fig. 6.2)
+ */
 template<typename T=double>
 ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	const ublas::vector<T>& kf, const ublas::vector<T>& q)
@@ -700,7 +738,9 @@ Y bose(const t_energy<Sys,Y>& E, const t_temperature<Sys,Y>& T,
 			Y(E_cutoff/get_one_meV()));
 }
 
-// see: B. Fak, B. Dorner, Physica B 234-236 (1997) pp. 1107-1108
+/**
+ * see: B. Fak, B. Dorner, Physica B 234-236 (1997) pp. 1107-1108
+ */
 template<class t_real=double>
 t_real DHO_model(t_real E, t_real T, t_real E0, t_real hwhm, t_real amp, t_real offs)
 {
@@ -714,7 +754,9 @@ t_real DHO_model(t_real E, t_real T, t_real E0, t_real hwhm, t_real amp, t_real 
 // --------------------------------------------------------------------------------
 
 
-// get macroscopic from microscopic cross-section
+/**
+ * get macroscopic from microscopic cross-section
+ */
 template<class Sys, class Y=double>
 t_length_inverse<Sys, Y> macro_xsect(const t_area<Sys, Y>& xsect,
 	unsigned int iNumAtoms, const t_volume<Sys, Y>& volUC)
@@ -726,7 +768,9 @@ t_length_inverse<Sys, Y> macro_xsect(const t_area<Sys, Y>& xsect,
 
 // --------------------------------------------------------------------------------
 
-// thin lens equation: 1/f = 1/lenB + 1/lenA
+/**
+ * thin lens equation: 1/f = 1/lenB + 1/lenA
+ */
 template<class Sys, class Y=double>
 t_length<Sys, Y> focal_len(const t_length<Sys, Y>& lenBefore, const t_length<Sys, Y>& lenAfter)
 {
@@ -734,7 +778,11 @@ t_length<Sys, Y> focal_len(const t_length<Sys, Y>& lenBefore, const t_length<Sys
 	return Y(1) / f_inv;
 }
 
-// optimal mono/ana curvature, see e.g. Monochromator_curved.comp in McStas or Shirane p. 66
+/**
+ * optimal mono/ana curvature, see e.g. Shirane p. 66
+ * or nicos/nicos-core.git/tree/nicos/devices/tas/mono.py in nicos
+ * or Monochromator_curved.comp in McStas
+ */
 template<class Sys, class Y=double>
 t_length<Sys, Y> foc_curv(const t_length<Sys, Y>& lenBefore, const t_length<Sys, Y>& lenAfter,
 	const t_angle<Sys, Y>& tt, bool bVert)
@@ -744,9 +792,6 @@ t_length<Sys, Y> foc_curv(const t_length<Sys, Y>& lenBefore, const t_length<Sys,
 
 	const t_length<Sys, Y> curv = bVert ? Y(2)*f*s : Y(2)*f/s;
 
-	//std::cout << "f = " << f << std::endl;
-	//std::cout << "s = " << s << std::endl;
-	//std::cout << "curv = " <<  curv << std::endl;
 	return curv;
 }
 

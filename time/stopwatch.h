@@ -110,9 +110,9 @@ std::string get_duration_str_secs(t_real dDur)
 	for(std::ptrdiff_t i=sizeof(iAge)/sizeof(iAge[0])-1; i>=0; --i)
 	{
 		if(iAge[i] || bHadPrev)
-		{ 
+		{
 			strAge += tl::var_to_str(iAge[i]) + pcUnit[i];
-			bHadPrev = 1; 
+			bHadPrev = 1;
 		}
 	}
 	/*if(iAgeMS)*/ { strAge += tl::var_to_str(iAgeMS) + "ms "; bHadPrev = 1; }
@@ -124,7 +124,7 @@ template<class t_real = double>
 std::string get_duration_str(const std::chrono::duration<t_real>& dur)
 {
 	using t_dur = std::chrono::duration<t_real>;
-	
+
 	t_real dDurSecs = t_real(t_dur::period::num)/t_real(t_dur::period::den)
 		* t_real(dur.count());
 	return get_duration_str_secs(dDurSecs);
