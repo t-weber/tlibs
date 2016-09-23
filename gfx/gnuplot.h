@@ -97,6 +97,7 @@ public:
 	void SetYLabel(const char* pcLab);
 	void SetTitle(const char* pcTitle);
 	void SetGrid(bool bOn);
+	void ClearArrows();
 	void AddArrow(t_real dX0, t_real dY0, t_real dX1, t_real dY1, bool bHead=1);
 
 	void SetXRange(t_real dMin, t_real dMax);

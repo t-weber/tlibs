@@ -77,8 +77,6 @@ public:
 // synonym
 //template<class T=double> using FunctionModel_nd_gen = class FunctionModel_nd<T>;
 
-
-
 }
 
 #endif

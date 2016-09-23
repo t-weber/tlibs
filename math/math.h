@@ -344,8 +344,20 @@ static const double FWHM2SIGMA = 1./SIGMA2FWHM;
 template<class T=double>
 T gauss_model(T x, T x0, T sigma, T amp, T offs)
 {
-	T norm = T(1)/(std::sqrt(2*get_pi<T>()) * sigma);
+	T norm = T(1)/(std::sqrt(T(2)*get_pi<T>()) * sigma);
 	return amp * norm * std::exp(-0.5 * ((x-x0)/sigma)*((x-x0)/sigma)) + offs;
+}
+
+template<class T=double>
+T gauss_model_amp(T x, T x0, T sigma, T amp, T offs)
+{
+	return amp * std::exp(-0.5 * ((x-x0)/sigma)*((x-x0)/sigma)) + offs;
+}
+
+template<class T=double>
+T lorentz_model_amp(T x, T x0, T hwhm, T amp, T offs)
+{
+	return amp*hwhm*hwhm / ((x-x0)*(x-x0) + hwhm*hwhm) + offs;
 }
 
 
@@ -375,6 +387,9 @@ using t_real_fadd = double;
 
 namespace tl{
 
+/**
+* Complex error function
+*/
 template<class T=double>
 std::complex<T> erf(const std::complex<T>& z)
 {
@@ -383,6 +398,9 @@ std::complex<T> erf(const std::complex<T>& z)
 	return inv_cst(::Faddeeva::erf(cst(z)));
 }
 
+/**
+* Complex complementary error function
+*/
 template<class T=double>
 std::complex<T> erfc(const std::complex<T>& z)
 {
@@ -391,6 +409,9 @@ std::complex<T> erfc(const std::complex<T>& z)
 	return inv_cst(::Faddeeva::erfc(cst(z)));
 }
 
+/**
+* Faddeeva function
+*/
 template<class T=double>
 std::complex<T> faddeeva(const std::complex<T>& z)
 {
@@ -398,13 +419,24 @@ std::complex<T> faddeeva(const std::complex<T>& z)
 	return std::exp(-z*z) * erfc(-i*z);
 }
 
+/**
+* Voigt profile
+* see e.g.: https://en.wikipedia.org/wiki/Voigt_profile
+*/
 template<class T=double>
 T voigt_model(T x, T x0, T sigma, T gamma, T amp, T offs)
 {
+	T norm = T(1)/(std::sqrt(T(2)*get_pi<T>()) * sigma);
 	std::complex<T> z = std::complex<T>(x-x0, gamma) / (sigma * std::sqrt(T(2)));
-	return amp * (faddeeva<T>(z)).real() /
-		(sigma * std::sqrt(T(2)*boost::math::constants::pi<T>()))
-			+ offs;
+
+	return amp*norm * faddeeva<T>(z).real() + offs;
+}
+
+template<class T=double>
+T voigt_model_amp(T x, T x0, T sigma, T gamma, T amp, T offs)
+{
+	std::complex<T> z = std::complex<T>(x-x0, gamma) / (sigma * std::sqrt(T(2)));
+	return amp * faddeeva<T>(z).real() + offs;
 }
 
 #endif

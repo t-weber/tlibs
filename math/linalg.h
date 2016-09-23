@@ -96,6 +96,26 @@ matrix_type unit_matrix(std::size_t N)
 
 
 /**
+ * resize matrix, filling up with unity
+ */
+template<class t_mat = ublas::matrix<double>>
+void resize_unity(t_mat& mat, std::size_t N)
+{
+	const std::size_t iOldSize1 = mat.size1();
+	const std::size_t iOldSize2 = mat.size2();
+
+	mat.resize(N,N, true);
+
+	for(std::size_t i=0; i<N; ++i)
+		for(std::size_t j=0; j<N; ++j)
+		{
+			if(i<iOldSize1 && j<iOldSize2) continue;
+			mat(i,j) = (i==j ? 1 : 0);
+		}
+}
+
+
+/**
  * converts vector
  */
 template<class t_from, class t_to, template<class...> class t_vec = ublas::vector>
@@ -1526,7 +1546,7 @@ bool is_symmetric(const t_mat& mat, t_real eps = get_epsilon<t_real>())
 		return false;
 
 	for(std::size_t i=0; i<mat.size1(); ++i)
-		for(std::size_t j=i+1; i<mat.size2(); ++i)
+		for(std::size_t j=i+1; j<mat.size2(); ++j)
 			if(!float_equal(mat(i,j), mat(j,i), eps))
 				return false;
 
@@ -1678,14 +1698,20 @@ get_minmax(const T& t)
 	get_minmax_impl<T> impl;
 	return impl(t);
 }
+
 // -----------------------------------------------------------------------------
 
 
-// ! for large matrices use eigenvec_sym from linalg2.h !
+/**
+ * Calculates the dominant eigenvector/eigenvalue for symmetric matrices
+ * see: Bronstein, equs. (4.148)-(4.151)
+ */
 template<class t_mat = ublas::matrix<double>,
 	class t_vec = ublas::vector<typename t_mat::value_type>,
 	typename T = typename t_mat::value_type>
-bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vector<T>& evals)
+bool eigenvec_dominant_sym(const t_mat& mat, t_vec& evec, T& eval,
+	t_vec vecInit = tl::make_vec<t_vec>({1,0,0}),
+	std::size_t iMaxIter = 50)
 {
 	if(mat.size1() != mat.size2())
 	{
@@ -1693,18 +1719,78 @@ bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vecto
 		return false;
 	}
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
 	t_mat matAbs = apply_fkt(mat, std::function<T(T)>((T(*)(T))std::abs));
 	T _dEps = get_minmax(matAbs).second / 100.;	// 1% accuracy
 	if(!tl::is_symmetric(mat, _dEps)) log_warn("Matrix ", mat, " is not symmetric.");
-//#endif
+#endif
+
+	t_vec vecPrev;
+	for(std::size_t iIter=0; iIter<iMaxIter; ++iIter)
+	{
+		if(iIter == iMaxIter-1)
+			vecPrev = vecInit;
+		vecInit = ublas::prod(mat, vecInit);
+	}
+
+	const T normInit = ublas::norm_2(vecInit);
+	const T normPrev = ublas::norm_2(vecPrev);
+
+	eval = normInit / normPrev;
+	evec = vecInit / normInit;
+	return true;
+}
+
+
+/**
+ * Calculates the least dominant eigenvector/eigenvalue for symmetric matrices
+ * see: Bronstein, equs. (4.148)-(4.151)
+ */
+template<class t_mat = ublas::matrix<double>,
+	class t_vec = ublas::vector<typename t_mat::value_type>,
+	typename T = typename t_mat::value_type>
+bool eigenvec_least_dominant_sym(const t_mat& mat, t_vec& evec, T& eval,
+	t_vec vecInit = tl::make_vec<t_vec>({1,0,0}),
+	std::size_t iMaxIter = 50)
+{
+	t_mat M;
+	if(!tl::inverse(mat, M))
+		return false;
+
+	if(!eigenvec_dominant_sym(M, evec, eval, vecInit, iMaxIter))
+		return false;
+
+	eval = T(1)/eval;
+	return true;
+}
+
+
+/**
+ * Calculates the eigenvectors/eigenvalues for symmetric matrices
+ * ! for large matrices use eigenvec_sym from linalg2.h !
+ */
+template<class t_mat = ublas::matrix<double>,
+	class t_vec = ublas::vector<typename t_mat::value_type>,
+	typename T = typename t_mat::value_type>
+bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vector<T>& evals,
+	std::size_t MAX_ITER=512, T tEps = std::cbrt(get_epsilon<T>()))
+{
+	if(mat.size1() != mat.size2())
+	{
+		log_err("Matrix ", mat, " is not square.");
+		return false;
+	}
+
+#ifndef NDEBUG
+	t_mat matAbs = apply_fkt(mat, std::function<T(T)>((T(*)(T))std::abs));
+	T _dEps = get_minmax(matAbs).second / 100.;	// 1% accuracy
+	if(!tl::is_symmetric(mat, _dEps)) log_warn("Matrix ", mat, " is not symmetric.");
+#endif
 
 	const std::size_t n = mat.size1();
 	t_mat I = ublas::identity_matrix<T>(n);
 	t_mat M = mat;
 
-	const T tEps = std::cbrt(get_epsilon<T>());
-	const std::size_t MAX_ITER = 512;
 	std::size_t iIter = 0;
 	for(iIter=0; iIter<MAX_ITER; ++iIter)
 	{
@@ -1751,6 +1837,21 @@ bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vecto
 
 	//if(bFlipVec) evecs[0] = -evecs[0];
 	return true;
+}
+
+
+template<class t_mat = ublas::matrix<double>,
+	class t_vec = ublas::vector<typename t_mat::value_type>,
+	typename T = typename t_mat::value_type>
+bool eigenvec_approxsym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vector<T>& evals,
+	std::size_t MAX_ITER=512, T tEps = std::cbrt(get_epsilon<T>()))
+{
+	t_mat MtM = ublas::prod(ublas::trans(mat), mat);
+	bool bOk = eigenvec_sym_simple(MtM, evecs, evals, MAX_ITER, tEps);
+
+	for(T& eval : evals)
+		eval = std::sqrt(std::abs(eval));
+	return bOk;
 }
 
 

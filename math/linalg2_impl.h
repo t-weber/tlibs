@@ -25,6 +25,7 @@ extern "C"
 	#include <lapacke.h>
 }
 
+
 namespace tl {
 
 // selects the float or double version of a lapack function
@@ -44,6 +45,7 @@ struct select_func
 		get_func() { return m_f2; }
 };
 
+// ----------------------------------------------------------------------------
 
 template<class T>
 bool eigenvec(const ublas::matrix<T>& mat,
@@ -179,13 +181,16 @@ bool eigenvec_cplx(const ublas::matrix<std::complex<T>>& mat,
 }
 
 
+// ----------------------------------------------------------------------------
+
+
 template<class T>
 bool eigenvec_sym(const ublas::matrix<T>& mat,
 	std::vector<ublas::vector<T>>& evecs,
 	std::vector<T>& evals)
 {
 	bool bOk = true;
-	select_func<float, double, decltype(LAPACKE_ssyev), decltype(LAPACKE_dsyev)> 
+	select_func<float, double, decltype(LAPACKE_ssyev), decltype(LAPACKE_dsyev)>
 		sfunc(LAPACKE_ssyev, LAPACKE_dsyev);
 	auto pfunc = sfunc.get_func<T>();
 
@@ -200,7 +205,7 @@ bool eigenvec_sym(const ublas::matrix<T>& mat,
 	for(std::size_t i=0; i<iOrder; ++i)
 		evecs[i].resize(iOrder);
 
-	std::unique_ptr<T, std::default_delete<T[]>> 
+	std::unique_ptr<T, std::default_delete<T[]>>
 		uptrMat(new T[iOrder*iOrder]);
 	T *pMatrix = uptrMat.get();
 
@@ -266,7 +271,7 @@ bool eigenvec_herm(const ublas::matrix<std::complex<T>>& mat,
 	int iInfo = (*pfunc)(LAPACK_ROW_MAJOR, 'V', 'U',
 		iOrder, pMatrix, iOrder, evals.data());
 
-	if(iInfo!=0)
+	if(iInfo != 0)
 	{
 		log_err("Could not solve hermitian eigenproblem",
 			" (lapack error ", iInfo, ").");
@@ -280,11 +285,116 @@ bool eigenvec_herm(const ublas::matrix<std::complex<T>>& mat,
 }
 
 
+// ----------------------------------------------------------------------------
+
+
+template<typename T>
+bool singvec(const ublas::matrix<T>& mat,
+	ublas::matrix<T>& matU, ublas::matrix<T>& matV, std::vector<T>& vecsvals)
+{
+	select_func<float, double, decltype(LAPACKE_sgesvd), decltype(LAPACKE_dgesvd)>
+		sfunc(LAPACKE_sgesvd, LAPACKE_dgesvd);
+	auto pfunc = sfunc.get_func<T>();
+
+	const std::size_t iM = mat.size1();
+	const std::size_t iN = mat.size2();
+	const std::size_t iMin = std::min(iM,iN);
+
+	vecsvals.resize(iMin);
+	matU.resize(iM, iM);
+	matV.resize(iN, iN);
+
+	std::unique_ptr<T, std::default_delete<T[]>> uptrMat(new T[iM*iN]);
+	std::unique_ptr<T, std::default_delete<T[]>> uptrWork(new T[iM*iN]);	// TODO: find correct size
+	std::unique_ptr<T, std::default_delete<T[]>> uptrU(new T[iM*iM]);
+	std::unique_ptr<T, std::default_delete<T[]>> uptrVt(new T[iN*iN]);
+
+	for(std::size_t i=0; i<iM; ++i)
+		for(std::size_t j=0; j<iN; ++j)
+			uptrMat.get()[i*iN + j] = mat(i,j);
+
+
+	int iInfo = (*pfunc)(LAPACK_ROW_MAJOR, 'A', 'A', iM, iN, uptrMat.get(), iN,
+		vecsvals.data(), uptrU.get(), iM, uptrVt.get(), iN, uptrWork.get());
+
+	bool bOk = true;
+	if(iInfo != 0)
+	{
+		log_err("Could not solve real singular value problem",
+			" (lapack error ", iInfo, ").");
+		bOk = false;
+	}
+
+	for(std::size_t i=0; i<iM; ++i)
+		for(std::size_t j=0; j<iM; ++j)
+			matU(i,j) = uptrU.get()[i*iM + j];
+	for(std::size_t i=0; i<iN; ++i)
+		for(std::size_t j=0; j<iN; ++j)
+			matV(j,i) = uptrVt.get()[i*iN + j];	// transposed
+
+	return bOk;
+}
+
+
+template<typename T>
+bool singvec_cplx(const ublas::matrix<std::complex<T>>& mat,
+	ublas::matrix<std::complex<T>>& matU, ublas::matrix<std::complex<T>>& matV,
+	std::vector<T>& vecsvals)
+{
+	using t_cplx = std::complex<T>;
+
+	select_func<float, double, decltype(LAPACKE_cgesvd), decltype(LAPACKE_zgesvd)>
+		sfunc(LAPACKE_cgesvd, LAPACKE_zgesvd);
+	auto pfunc = sfunc.get_func<T>();
+
+	const std::size_t iM = mat.size1();
+	const std::size_t iN = mat.size2();
+	const std::size_t iMin = std::min(iM,iN);
+
+	vecsvals.resize(iMin);
+	matU.resize(iM, iM);
+	matV.resize(iN, iN);
+
+	std::unique_ptr<t_cplx, std::default_delete<t_cplx[]>> uptrMat(new t_cplx[iM*iN]);
+	std::unique_ptr<T, std::default_delete<T[]>> uptrWork(new T[iM*iN]);	// TODO: find correct size
+	std::unique_ptr<t_cplx, std::default_delete<t_cplx[]>> uptrU(new t_cplx[iM*iM]);
+	std::unique_ptr<t_cplx, std::default_delete<t_cplx[]>> uptrVt(new t_cplx[iN*iN]);
+
+	for(std::size_t i=0; i<iM; ++i)
+		for(std::size_t j=0; j<iN; ++j)
+			uptrMat.get()[i*iN + j] = mat(i,j);
+
+
+	int iInfo = (*pfunc)(LAPACK_ROW_MAJOR, 'A', 'A', iM, iN, uptrMat.get(), iN,
+		vecsvals.data(), uptrU.get(), iM, uptrVt.get(), iN, uptrWork.get());
+
+	bool bOk = true;
+	if(iInfo != 0)
+	{
+		log_err("Could not solve complex singular value problem",
+			" (lapack error ", iInfo, ").");
+		bOk = false;
+	}
+
+	for(std::size_t i=0; i<iM; ++i)
+		for(std::size_t j=0; j<iM; ++j)
+			matU(i,j) = uptrU.get()[i*iM + j];
+	for(std::size_t i=0; i<iN; ++i)
+		for(std::size_t j=0; j<iN; ++j)
+			matV(j,i) = uptrVt.get()[i*iN + j];	// transposed
+
+	return bOk;
+}
+
+
+// ----------------------------------------------------------------------------
+
+
 template<class T>
 bool qr(const ublas::matrix<T>& M,
 	ublas::matrix<T>& Q, ublas::matrix<T>& R)
 {
-	select_func<float, double, decltype(LAPACKE_sgeqrf), decltype(LAPACKE_dgeqrf)> 
+	select_func<float, double, decltype(LAPACKE_sgeqrf), decltype(LAPACKE_dgeqrf)>
 		sfunc(LAPACKE_sgeqrf, LAPACKE_dgeqrf);
 	auto pfunc = sfunc.get_func<T>();
 

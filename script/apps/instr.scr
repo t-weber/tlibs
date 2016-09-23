@@ -402,22 +402,22 @@ plot_gausses(num_gausses, thefit, thedat, title, xlab, ylab, filename, restplotm
 	dualplot(plotobj, plotmap + ["xlabel":xlab, "ylabel":ylab, "title":title], filename);
 }
 
-fit_gausses(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width)
+fit_gausses(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width, peak_offs)
 {
 	num_peaks = length(peaks_x);
 
 	param_vec = [];
 	if(num_peaks == 1)
-		fitres = fit_gauss_manual(dat_x, dat_y, dat_yerr, peaks_x[0], peaks_size[0], peaks_width[0]);
+		fitres = fit_gauss_manual(dat_x, dat_y, dat_yerr, peaks_x[0], peaks_size[0], peaks_width[0], peak_offs);
 	else if(num_peaks == 2)
-		fitres = fit_doublegauss_manual(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width);
+		fitres = fit_doublegauss_manual(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width, peak_offs);
 	else			
-		[fitres, param_vec] = fit_multigauss_manual(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width);
+		[fitres, param_vec] = fit_multigauss_manual(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width, peak_offs);
 
 	return [fitres, param_vec];
 }
 
-plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, opts=map())
+plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, peak_offs, title, outfile, opts=map())
 {
 	[instr, dat_x, dat_y, dat_yerr, xlab, ylab] = load_instr(filenames, 1, opts);
 
@@ -480,8 +480,7 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 	miny = min(dat_y);
 	maxy = max(dat_y);
 	yrange = (maxy-miny)/20.;
-	ylims = (miny-yrange) + " " + (maxy+yrange);
-	#ylims = "0 0.003";
+	ylims = 0. + " " + (maxy+yrange);
 
 	# Fit
 	fitres = 0;
@@ -489,7 +488,7 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 	if(do_fit)
 	{
 		param_vec = [];
-		[fitres, param_vec] = fit_gausses(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width);
+		[fitres, param_vec] = fit_gausses(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width, peak_offs);
 		plotobjs_fit = get_plotobj_gausses(num_peaks, fitres, [dat_x, dat_y, dat_yerr], 0, param_vec);
 	}
 

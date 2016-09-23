@@ -452,6 +452,15 @@ void GnuPlot<t_real>::SetGrid(bool bOn)
 }
 
 template<class t_real>
+void GnuPlot<t_real>::ClearArrows()
+{
+	if(!IsReady()) return;
+
+	(*m_postr) << "unset arrow\n";
+	m_postr->flush();
+}
+
+template<class t_real>
 void GnuPlot<t_real>::AddArrow(t_real dX0, t_real dY0, t_real dX1, t_real dY1, bool bHead)
 {
 	if(!IsReady()) return;

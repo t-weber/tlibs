@@ -15,6 +15,10 @@
 
 #include <Minuit2/FCNBase.h>
 #include <Minuit2/MnFcn.h>
+#include <Minuit2/FunctionMinimum.h>
+#include <Minuit2/MnMigrad.h>
+#include <Minuit2/MnPrint.h>
+
 #include <vector>
 #include <iostream>
 #include <sstream>
@@ -27,13 +31,14 @@
 
 #include "funcmod.h"
 #include "../helper/misc.h"
+#include "../helper/traits.h"
 #include "../log/log.h"
 
 
 namespace tl {
 //using t_real_min = double;
 using t_real_min = typename std::result_of<
-	decltype(&ROOT::Minuit2::MnFcn::Up)(ROOT::Minuit2::MnFcn) >::type;
+	decltype(&ROOT::Minuit2::MnFcn::Up)(ROOT::Minuit2::MnFcn)>::type;
 
 
 class MinuitFuncModel : public FunctionModel<t_real_min>
@@ -58,6 +63,10 @@ public:
 		return ostr;
 	}
 };
+
+
+// ----------------------------------------------------------------------------
+
 
 
 template<class t_real = t_real_min>
@@ -358,6 +367,104 @@ public:
 
 	void SetDebug(bool b) { m_bDebug = b; }
 };
+
+
+// ----------------------------------------------------------------------------
+// interface using supplied functions
+
+/**
+ * iNumArgs also includes the "x" parameter to the function, m_vecVals does not
+ */
+template<std::size_t iNumArgs, typename t_func>
+class MinuitLamFuncModel : public MinuitFuncModel
+{
+protected:
+	t_func m_func;
+	std::vector<t_real_min> m_vecVals;
+	
+public:
+	MinuitLamFuncModel(t_func func) : m_func(func)
+	{
+		m_vecVals.resize(iNumArgs-1);
+	}
+
+	virtual bool SetParams(const std::vector<t_real_min>& vecParams) override
+	{
+		for(std::size_t i=0; i<std::min(vecParams.size(), m_vecVals.size()); ++i)
+			m_vecVals[i] = vecParams[i];
+		return true;
+	}
+
+	virtual t_real_min operator()(t_real_min x) const override
+	{
+		std::vector<t_real_min> vecValsWithX = {x};
+		for(t_real_min d : m_vecVals) vecValsWithX.push_back(d);
+
+		return tl::call<iNumArgs, t_func, t_real_min, std::vector>
+			(m_func, vecValsWithX);
+	}
+
+	virtual MinuitLamFuncModel* copy() const override
+	{
+		MinuitLamFuncModel<iNumArgs, t_func>* pMod =
+			new MinuitLamFuncModel<iNumArgs, t_func>(m_func);
+
+		pMod->m_vecVals = this->m_vecVals;
+		return pMod;
+	}
+
+	virtual std::string print(bool bFillInSyms=true) const override { return ""; }
+	virtual const char* GetModelName() const override { return "MinuitLamFuncModel"; }
+
+	virtual std::vector<std::string> GetParamNames() const override { return std::vector<std::string>(); }
+	virtual std::vector<t_real_min> GetParamValues() const override { return m_vecVals; }
+	virtual std::vector<t_real_min> GetParamErrors() const override { return std::vector<t_real_min>(); }
+};
+
+
+template<std::size_t iNumArgs, typename t_func>
+bool fit(t_func&& func,
+
+	const std::vector<t_real_min>& vecX,
+	const std::vector<t_real_min>& vecY,
+	const std::vector<t_real_min>& vecYErr,
+
+	const std::vector<std::string>& vecParamNames,	// size: iNumArgs-1
+	std::vector<t_real_min>& vecVals,
+	std::vector<t_real_min>& vecErrs,
+	const std::vector<bool>* pVecFixed = nullptr,
+
+	bool bDebug=1)
+{
+	MinuitLamFuncModel<iNumArgs, t_func> mod(func);
+	Chi2Function<t_real_min> chi2(&mod, vecX.size(), vecX.data(), vecY.data(), vecYErr.data());
+
+	ROOT::Minuit2::MnUserParameters params;
+	for(std::size_t iParam=0; iParam<vecParamNames.size(); ++iParam)
+	{
+		params.Add(vecParamNames[iParam], vecVals[iParam], vecErrs[iParam]);
+		if(pVecFixed && (*pVecFixed)[iParam])
+			params.Fix(vecParamNames[iParam]);
+	}
+
+	ROOT::Minuit2::MnMigrad migrad(chi2, params, 2);
+	ROOT::Minuit2::FunctionMinimum mini = migrad();
+	bool bValidFit = mini.IsValid() && mini.HasValidParameters() && mini.UserState().IsValid();
+
+	for(std::size_t iParam=0; iParam<vecParamNames.size(); ++iParam)
+	{
+		vecVals[iParam] = mini.UserState().Value(vecParamNames[iParam]);
+		vecErrs[iParam] = std::fabs(mini.UserState().Error(vecParamNames[iParam]));
+	}
+
+	if(bDebug)
+		tl::log_debug(mini);
+
+	return bValidFit;
+}
+
+// ----------------------------------------------------------------------------
+
 }
 
 #endif

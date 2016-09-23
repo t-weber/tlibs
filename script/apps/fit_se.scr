@@ -100,7 +100,7 @@ fit_seexp(tau, P, Perr, P0=-1.)
 # -----------------------------------------------------------------------------
 
 
-do_seseries(files, taus, P0s=[], freqs=[], outdir="tmp", P0max=1.)
+do_seseries(files, taus, P0s=[], freqs=[], outdir="tmp", P0max=1., thetitle="")
 {
 	phs = []; ph_errs = [];
 	Ps = []; P_errs = [];
@@ -147,10 +147,10 @@ do_seseries(files, taus, P0s=[], freqs=[], outdir="tmp", P0max=1.)
 			", {/Symbol f} = " + (ph/pi*180.) + gpl_deg + " " + gpl_pm + " " + (dph/pi*180.) + gpl_deg;
 		plot([[dat_x, dat_y, dat_yerr, ["style" : "points", "size" : size_pts]],
 			[xfine, yfit, ["style" : "line", "size" : size_lines]]], 
-			["title" : sintitle, "xlabel" : xlab, "ylabel" : ylab, 
+			["title" : thetitle + sintitle, "xlabel" : xlab, "ylabel" : ylab, 
 			"xlimits" : xlims, "ylimits" : ylims,
 			"outfile" : outdir + "/" + tau + ".pdf",
-			"term" : theterm]);
+			"term" : theterm, "grid":0]);
 
 
 		append(Ps, P); append(P_errs, dP);
@@ -168,16 +168,16 @@ do_seseries(files, taus, P0s=[], freqs=[], outdir="tmp", P0max=1.)
 	exptitle += "{/Symbol G} = " + G + " {/Symbol m}eV " + gpl_pm + " " + abs(dG) + " {/Symbol m}eV";
 	plot([taus, Ps, P_errs, ["style":"points", "size" : size_pts]], 
 		[taus_fine, pol_fit, ["style":"line", "size" : size_lines]],
-		["xlabel" : "{/Symbol t} (ps)", "ylabel" : "Polarisation", "title" : exptitle, 
+		["xlabel" : "{/Symbol t} (ps)", "ylabel" : "Polarisation", "title" : thetitle+exptitle, 
 		"xlimits" : "0 " + (max(taus)+1.), "ylimits" : "0 0.75",
 		"outfile" : outdir + "/gamma.pdf",
-		"term" : theterm]);
+		"term" : theterm, "grid":0]);
 
 	return [G, dG];
 }
 
 
-do_Eshiftseries(files, tau, tempcol, Eoffs=0., freqs=[], outdir="tmp")
+do_Eshiftseries(files, tau, tempcol, Eoffs=0., freqs=[], outdir="tmp", thetitle="")
 {
 	phs = []; ph_errs = [];
 	Es = []; E_errs = [];
@@ -187,8 +187,7 @@ do_Eshiftseries(files, tau, tempcol, Eoffs=0., freqs=[], outdir="tmp")
 	for(curfile : files)
 	{
 		print("Processing file: " + curfile + " with tau = " + tau + " ps.");
-
-                freq = -1.;
+		freq = -1.;
 		if(length(freqs) > 0.)
 		{
 			freq = freqs[cur_iter(curfile)];
@@ -213,10 +212,10 @@ do_Eshiftseries(files, tau, tempcol, Eoffs=0., freqs=[], outdir="tmp")
 			", {/Symbol f} = " + (ph/pi*180.) + gpl_deg + " " + gpl_pm + " " + (dph/pi*180.) + gpl_deg;
 		plot([[dat_x, dat_y, dat_yerr, ["style" : "points", "size" : size_pts]],
 			[xfine, yfit, ["style" : "line", "size" : size_lines]]], 
-			["title" : sintitle, "xlabel" : xlab, "ylabel" : ylab, 
+			["title" : thetitle+sintitle, "xlabel" : xlab, "ylabel" : ylab, 
 			"xlimits" : xlims, "ylimits" : ylims,
 			"outfile" : outdir + "/" + T + ".pdf",
-			"term" : theterm]);
+			"term" : theterm, "grid":0]);
 
 
 		append(Ps, P); append(P_errs, dP);
@@ -226,17 +225,24 @@ do_Eshiftseries(files, tau, tempcol, Eoffs=0., freqs=[], outdir="tmp")
 		print("-"*80);
 	}
 
+	opts = map();
+#	opts["arrow"] = "40 " + (min(Ps)-0.05) + " 40 " + (max(Ps)+0.05) + "  0, "+
+#		"60 " + str(min(Ps)-0.05)  + " 60 " + str(max(Ps)+0.05) + "  0";
 	plot(Ts, Ps, P_errs, 
-		["xlabel" : "T (K)", "ylabel" : "Polarisation", "title" : "{/Symbol t} = " + tau + " ps",
+		["xlabel" : "T (K)", "ylabel" : "Polarisation",
+		"title" : thetitle + "{/Symbol t} = " + tau + " ps",
 		"xlimits" : "0 " + (max(Ts)+10), "ylimits" : (min(Ps)-0.05) + " " + (max(Ps)+0.05),
 		"size" : size_pts, "outfile" : outdir + "/P.pdf",
-		"term" : theterm]);
+		"term" : theterm, "grid":0] + opts);
 
+#	opts["arrow"] = "40 " + str(min(Es)-50.) + " 40 " + str(max(Es)+50.) + " 0, "+
+#		"60 " + str(min(Es)-50.)  + " 60 " + str(max(Es)+50.) + "  0";
 	plot(Ts, Es, E_errs, 
-		["xlabel" : "T (K)", "ylabel" : "dE (mueV)", "title" : "{/Symbol t} = " + tau + " ps",
+		["xlabel" : "T (K)", "ylabel" : "dE ({/Symbol m}eV)",
+		"title" : thetitle + "{/Symbol t} = " + tau + " ps",
 		"xlimits" : "0 " + (max(Ts)+10), "ylimits" : (min(Es)-50) + " " + (max(Es)+50),
 		"size" : size_pts, "outfile" : outdir + "/E.pdf",
-		"term" : theterm]);
+		"term" : theterm, "grid":0] + opts);
 }
 
 

@@ -102,7 +102,7 @@ public:
 		return vecdropped;
 	}
 
-	bool IsParallel(const Plane<T>& plane, T eps = std::numeric_limits<T>::epsilon()) const
+	bool IsParallel(const Plane<T>& plane, T eps = tl::get_epsilon<T>()) const
 	{
 		return vec_is_collinear<t_vec>(GetNorm(), plane.GetNorm(), eps);
 	}
@@ -186,7 +186,7 @@ public:
 		return tnum / tdenom;
 	}
 
-	bool IsParallel(const Line<T>& line, T eps = std::numeric_limits<T>::epsilon()) const
+	bool IsParallel(const Line<T>& line, T eps = tl::get_epsilon<T>()) const
 	{
 		return vec_is_collinear<t_vec>(GetDir(), line.GetDir(), eps);
 	}
@@ -358,15 +358,25 @@ protected:
 	T m_s = 0;
 
 	t_vec m_vecOffs = ublas::zero_vector<T>(3);
+	bool m_bQSymm = 1;
+
+protected:
+	void CheckSymm()
+	{
+		m_bQSymm = is_symmetric(m_Q, std::cbrt(get_epsilon<T>()));
+		//tl::log_debug("Q = ", m_Q, ", symm: ", m_bQSymm);
+	}
 
 public:
 	Quadric() {}
 	Quadric(std::size_t iDim)
 		: m_Q(ublas::zero_matrix<T>(iDim,iDim)), m_r(ublas::zero_vector<T>(iDim))
-	{}
-	Quadric(const t_mat& Q) : m_Q(Q) {}
+	{ CheckSymm(); }
+	Quadric(const t_mat& Q) : m_Q(Q)
+	{ CheckSymm(); }
 	Quadric(const t_mat& Q, const t_vec& r, T s)
-		: m_Q(Q), m_r(r), m_s(s) {}
+		: m_Q(Q), m_r(r), m_s(s)
+	{ CheckSymm(); }
 	virtual ~Quadric() {}
 
 	void SetDim(std::size_t iDim) { m_Q.resize(iDim, iDim, 1); }
@@ -377,6 +387,7 @@ public:
 		this->m_r = quad.m_r;
 		this->m_s = quad.m_s;
 		this->m_vecOffs = quad.m_vecOffs;
+		this->m_bQSymm = quad.m_bQSymm;
 
 		return *this;
 	}
@@ -387,6 +398,7 @@ public:
 		this->m_r = std::move(quad.m_r);
 		this->m_s = std::move(quad.m_s);
 		this->m_vecOffs = std::move(quad.m_vecOffs);
+		this->m_bQSymm = quad.m_bQSymm;
 
 		return *this;
 	}
@@ -401,7 +413,7 @@ public:
 	const t_vec& GetR() const { return m_r; }
 	T GetS() const { return m_s; }
 
-	void SetQ(const t_mat& Q) { m_Q = Q; }
+	void SetQ(const t_mat& Q) { m_Q = Q; CheckSymm(); }
 	void SetR(const t_vec& r) { m_r = r; }
 	void SetS(T s) { m_s = s; }
 
@@ -427,6 +439,7 @@ public:
 	void transform(const t_mat& S)
 	{
 		m_Q = tl::transform<t_mat>(m_Q, S, 1);
+		CheckSymm();
 	}
 
 	// Q = O D O^T
@@ -435,7 +448,14 @@ public:
 		Quadric<T>* pquadPrincipal=nullptr) const
 	{
 		std::vector<t_vec> evecs;
-		if(!eigenvec_sym(m_Q, evecs, vecEvals))
+
+		bool bEV = 0;
+		if(m_bQSymm)
+			bEV = eigenvec_sym(m_Q, evecs, vecEvals);
+		else
+			bEV = eigenvec_approxsym(m_Q, evecs, vecEvals);
+
+		if(!bEV)
 		{
 			log_err("Cannot determine eigenvectors.");
 			return false;
@@ -550,8 +570,8 @@ public:
 	QuadSphere(T r) : Quadric<T>(3)
 	{
 		this->m_Q(0,0) =
-		this->m_Q(1,1) =
-		this->m_Q(2,2) = T(1.)/(r*r);
+			this->m_Q(1,1) =
+			this->m_Q(2,2) = T(1.)/(r*r);
 
 		this->m_s = T(-1.);
 	}

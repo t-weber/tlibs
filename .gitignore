@@ -42,3 +42,4 @@ doc/*
 !doc/.dir
 obj/*
 !obj/.dir
+Faddeeva.*

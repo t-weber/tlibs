@@ -174,6 +174,7 @@ static void set_plot_params(tl::GnuPlot<t_real>& plot, const SymbolMap* pParamMa
 	t_string strCmdFile = pParamMap->GetStringVal(T_STR"cmdfile", &bHasVal);
 
 
+	plot.ClearArrows();
 	t_string strArr = pParamMap->GetStringVal(T_STR"arrow", &bHasVal);
 	if(bHasVal)
 	{

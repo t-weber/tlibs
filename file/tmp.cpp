@@ -1,4 +1,4 @@
-/*
+/**
  * file helper
  * @author tweber
  * @date 07-mar-2013
@@ -24,14 +24,7 @@ TmpFile::~TmpFile() { close(); }
 // cygwin does not seem to have a ::mkstemp...
 int TmpFile::mkstemp(std::string& strFile)
 {
-	static const std::string strChars = "abcdefghijklmnopqrstuvwxyz1234567890_";
-	static const std::size_t iLenChars = strChars.length();
-
-	std::string strRnd;
-	strRnd.reserve(s_iRndLen);
-	for(unsigned int iRnd=0; iRnd<s_iRndLen; ++iRnd)
-		strRnd.push_back(strChars[simple_rand(iLenChars)]);
-
+	std::string strRnd = tl::rand_name(s_iRndLen);
 	if(!find_and_replace(strFile, std::string(s_iRndLen, 'X'), strRnd))
 		return -1;
 

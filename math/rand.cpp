@@ -1,4 +1,4 @@
-/*
+/**
  * random numbers
  * @author tweber
  * @date 16-aug-2013
@@ -60,4 +60,3 @@ unsigned int simple_rand(unsigned int iMax)
 }
 
 }
-

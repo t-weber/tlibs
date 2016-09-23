@@ -129,6 +129,92 @@ using remove_constref_t = typename remove_constref<T>::type;
 // -----------------------------------------------------------------------------
 
 
+
+// -----------------------------------------------------------------------------
 }
 
+#include <utility>
+
+namespace tl{
+
+#if __cplusplus < 201402L
+	template<class T, T... idx>
+	struct integer_sequence
+	{
+		using value_type = T;
+		static constexpr std::size_t size() { return sizeof...(idx); }
+		static constexpr std::array<value_type, size()> value = {idx...};
+	};
+
+	template<class T, T NUM, typename _dummy = void> struct _make_integer_sequence;
+
+	// TODO: make recursive
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==9>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==8>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==7>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==6>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==5>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==4>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==3>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==2>::type>
+	{ using value_type = integer_sequence<T, 0, 1>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==1>::type>
+	{ using value_type = integer_sequence<T, 0>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==0>::type>
+	{ using value_type = integer_sequence<T>; };
+
+	template<class T, T NUM>
+	using make_integer_sequence = typename _make_integer_sequence<T, NUM>::value_type;
+
+#else
+	// simply use C++14 standard implementation
+
+	template<class T, T... idx>
+	using integer_sequence = std::integer_sequence<T, idx...>;
+	template<class T, T NUM> 
+	using make_integer_sequence = std::make_integer_sequence<T, NUM>; 
+
+#endif
+
+
+template<class t_func,
+	class t_arg = double, template<class ...> class t_cont = std::vector,
+	std::size_t... idx>
+t_arg _call_impl(t_func func, const t_cont<t_arg>& args,
+	const /*std::*/integer_sequence<std::size_t, idx...>&)
+{
+	return func(args[idx]...);
+}
+
+/**
+ * call a function with the args from an STL container
+ */
+template<std::size_t iNumArgs, class t_func,
+	class t_arg = double, template<class ...> class t_cont = std::vector>
+t_arg call(t_func func, const t_cont<t_arg>& args)
+{
+	using t_seq = /*std::*/make_integer_sequence<std::size_t, iNumArgs>;
+	return _call_impl<t_func, t_arg, t_cont>(func, args, t_seq());
+}
+
+// -----------------------------------------------------------------------------
+
+}
 #endif

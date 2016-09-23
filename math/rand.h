@@ -1,4 +1,4 @@
-/*
+/**
  * random numbers
  * @author tweber
  * @date 16-aug-2013
@@ -18,16 +18,21 @@ namespace tl {
 
 extern std::mt19937/*_64*/ g_randeng;
 
+// ----------------------------------------------------------------------------
 
 extern void init_rand();
 extern void init_rand_seed(unsigned int uiSeed);
 
+// ----------------------------------------------------------------------------
 
 extern unsigned int simple_rand(unsigned int iMax);
 
 
+// ----------------------------------------------------------------------------
+
+
 template<typename INT>
-INT rand_int(int iMin, int iMax)
+INT rand_int(INT iMin, INT iMax)
 {
 	std::uniform_int_distribution<INT> dist(iMin, iMax);
 	return dist(g_randeng);
@@ -61,6 +66,9 @@ INT rand_poisson(REAL dMu)
 }
 
 
+// ----------------------------------------------------------------------------
+
+
 template<class t_vec=std::vector<double>, class REAL=typename t_vec::value_type,
 	class t_initlst=std::initializer_list<REAL>>
 t_vec rand_norm_nd(const t_initlst& vecMu, const t_initlst& vecSigma)
@@ -68,7 +76,7 @@ t_vec rand_norm_nd(const t_initlst& vecMu, const t_initlst& vecSigma)
 	if(vecMu.size() != vecSigma.size())
 		return t_vec();
 
-	unsigned int iDim = vecMu.size();
+	std::size_t iDim = vecMu.size();
 	t_vec vecRet(iDim);
 
 	std::vector<std::future<REAL>> vecFut;
@@ -85,11 +93,30 @@ t_vec rand_norm_nd(const t_initlst& vecMu, const t_initlst& vecSigma)
 			std::function<REAL(REAL,REAL)>(rand_norm<REAL>), *iterMu, *iterSig));
 	}
 
-	for(unsigned int i=0; i<iDim; ++i)
+	for(std::size_t i=0; i<iDim; ++i)
 		vecRet[i] = vecFut[i].get();
 
 	return vecRet;
 }
+
+
+// ----------------------------------------------------------------------------
+
+
+template<class t_str=std::string>
+t_str rand_name(std::size_t iLen=8)
+{
+	static const t_str strChars = "abcdefghijklmnopqrstuvwxyz1234567890_";
+	static const std::size_t iLenChars = strChars.length();
+
+	t_str strRnd;
+	strRnd.reserve(iLen);
+	for(std::size_t iRnd=0; iRnd<iLen; ++iRnd)
+		strRnd.push_back(strChars[tl::simple_rand(iLenChars)]);
+
+	return strRnd;
+}
+
 }
 
 #endif
