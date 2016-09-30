@@ -50,8 +50,8 @@ t_vec make_vec(t_lst<typename t_vec::value_type>&& lst)
 	t_vec vec(lst.size());
 
 	std::size_t i=0;
-	for(t_iter iter = lst.begin(); iter!=lst.end(); ++i, ++iter)
-		vec[i] = *iter;
+	for(t_iter iter=lst.begin(); iter!=lst.end(); ++i, ++iter)
+		vec[i] = std::move(*iter);
 
 	return vec;
 }
@@ -76,7 +76,7 @@ t_mat make_mat(t_lst<t_lst<typename t_mat::value_type>>&& lst)
 		typename t_lst<T>::const_iterator iterinner = iter->begin();
 		for(std::size_t j=0; j<J; ++j, ++iterinner)
 		{
-			mat(i,j) = *iterinner;
+			mat(i,j) = std::move(*iterinner);
 		}
 	}
 

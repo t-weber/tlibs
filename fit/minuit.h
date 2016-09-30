@@ -381,7 +381,7 @@ class MinuitLamFuncModel : public MinuitFuncModel
 protected:
 	t_func m_func;
 	std::vector<t_real_min> m_vecVals;
-	
+
 public:
 	MinuitLamFuncModel(t_func func) : m_func(func)
 	{

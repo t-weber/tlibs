@@ -1043,7 +1043,8 @@ static Symbol* fkt_rand_norm_nd(const std::vector<Symbol*>& vecSyms,
 		return 0;
 	}
 
-	t_stdvec<t_real> vecResult = tl::rand_norm_nd<t_stdvec<t_real>, t_real, t_stdvec<t_real>>(vecMu, vecSigma);
+	t_stdvec<t_real> vecResult = tl::rand_norm_nd<t_real, t_stdvec>
+		(vecMu, vecSigma);
 	return vec_to_sym<t_stdvec>(vecResult);
 }
 // --------------------------------------------------------------------------------

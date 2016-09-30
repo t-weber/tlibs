@@ -143,7 +143,7 @@ namespace tl{
 	{
 		using value_type = T;
 		static constexpr std::size_t size() { return sizeof...(idx); }
-		static constexpr std::array<value_type, size()> value = {idx...};
+		static constexpr std::array<value_type, size()> value = {{idx...}};
 	};
 
 	template<class T, T NUM, typename _dummy = void> struct _make_integer_sequence;

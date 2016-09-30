@@ -411,7 +411,9 @@ fit_gausses(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width, peak_offs)
 		fitres = fit_gauss_manual(dat_x, dat_y, dat_yerr, peaks_x[0], peaks_size[0], peaks_width[0], peak_offs);
 	else if(num_peaks == 2)
 		fitres = fit_doublegauss_manual(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width, peak_offs);
-	else			
+	else if(num_peaks == 3)
+		fitres = fit_triplegauss_manual_singlestep(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width, peak_offs, ["xxx xxx xxx f"]);
+	else # TODO: fix multigauss
 		[fitres, param_vec] = fit_multigauss_manual(dat_x, dat_y, dat_yerr, peaks_x, peaks_size, peaks_width, peak_offs);
 
 	return [fitres, param_vec];
@@ -429,7 +431,6 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, peak_offs, title
 		print("Cannot load file(s).");
 		return -1;
 	}
-
 
 	labs = instr["labels"];
 	data = instr["data"];
@@ -503,6 +504,8 @@ plot_instr(filenames, do_fit, peaks_x, peaks_size, peaks_width, peak_offs, title
 			title += ", {/Symbol c}^2/n_d_f = " + fitres["<chi2_red>"];
 	}
 
+
+	#ylims = "0 0.002";
 	plotmap = [ "xlimits" : xlims,
 		"ylimits" : ylims,
 		"xlabel" : xlab,

@@ -190,22 +190,24 @@ T lerp(const T& a, const T& b, REAL val)
 }
 
 
-template<typename T=double, typename REAL=double>
-std::vector<T> linspace(const T& tmin, const T& tmax, std::size_t iNum)
+template<typename T=double, typename REAL=double,
+	template<class...> class t_vec=std::vector>
+t_vec<T> linspace(const T& tmin, const T& tmax, std::size_t iNum)
 {
-	std::vector<T> vec;
+	t_vec<T> vec;
 	vec.reserve(iNum);
 
 	for(std::size_t i=0; i<iNum; ++i)
 		vec.push_back(REAL(i)*(tmax-tmin)/REAL(iNum-1) + tmin);
-
 	return vec;
 }
 
-template<typename T=double, typename REAL=double>
-std::vector<T> logspace(const T& tmin, const T& tmax, unsigned int iNum, T tBase=T(10))
+template<typename T=double, typename REAL=double,
+	template<class...> class t_vec=std::vector>
+t_vec<T> logspace(const T& tmin, const T& tmax, std::size_t iNum, T tBase=T(10))
 {
-	std::vector<T> vec = linspace<T, REAL>(tmin, tmax, iNum);
+	t_vec<T> vec = linspace<T, REAL>(tmin, tmax, iNum);
+
 	for(T& t : vec)
 		t = std::pow(tBase, t);
 	return vec;
