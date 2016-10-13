@@ -69,11 +69,11 @@ extern bool check_args(RuntimeInfo& runinfo,
 	if(iSyms < iCompulsory)
 	{
 		std::ostringstream ostrErr;
-		ostrErr << linenr(runinfo) 
-				<< "Function \"" << pcFkt << "\""
-				<< " requires " << iCompulsory
-				<< " arguments, but only "
-				<< iSyms << " were given.";
+		ostrErr << linenr(runinfo)
+			<< "Function \"" << pcFkt << "\""
+			<< " requires " << iCompulsory
+			<< " arguments, but only "
+			<< iSyms << " were given.";
 		if(pcErr) ostrErr << " " << pcErr;
 		ostrErr << std::endl;
 		throw tl::Err(ostrErr.str(),0);
@@ -95,7 +95,7 @@ extern bool check_args(RuntimeInfo& runinfo,
 		{
 			std::ostringstream ostrErr;
 			ostrErr << linenr(runinfo)
-				<< "Argument " << (iCurSym+1) 
+				<< "Argument " << (iCurSym+1)
 				<< " of function \"" << pcFkt << "\""
 				<< " is invalid.";
 			if(pcErr) ostrErr << " " << pcErr;

@@ -10,10 +10,16 @@
 
 #include <random>
 #include <vector>
+#include <array>
 #include <initializer_list>
 #include <future>
 #include <type_traits>
+#include <limits>
+
 #include <boost/type_traits/function_traits.hpp>
+#include <boost/multi_array.hpp>
+#include <boost/array.hpp>
+
 #include "../helper/traits.h"
 
 
@@ -70,6 +76,16 @@ T rand01()
 	return rand_real<T>(T(0), T(1));
 }
 
+/**
+ * returns 'true' with probability p
+ */
+template<typename T>
+bool rand_prob(T p)
+{
+	T rnd = rand01<T>();
+	return rnd <= p;
+}
+
 
 template<typename INT> struct _rand_int
 {
@@ -87,7 +103,7 @@ template<typename REAL> struct _rand_real
  * generates a random real or integer between tMin and tMax
  */
 template<typename T>
-T rand_minmax(T tMin, T tMax)
+static T rand_minmax(T tMin, T tMax)
 {
 	using t_rand = typename
 		std::conditional<std::is_integral<T>::value,
@@ -95,6 +111,18 @@ T rand_minmax(T tMin, T tMax)
 
 	t_rand rand;
 	return rand(tMin, tMax);
+}
+
+/**
+ * specialisation for 'bool'
+ */
+template<>
+bool rand_minmax(bool tMin, bool tMax)
+{
+	using t_rand = _rand_int<unsigned char>;
+
+	t_rand rand;
+	return rand(tMin, tMax)==1;
 }
 
 
@@ -364,6 +392,53 @@ t_str rand_name(std::size_t iLen=8)
 
 	return strRnd;
 }
+
+
+
+// ----------------------------------------------------------------------------
+// random array
+
+
+/**
+ * generates a random array
+ */
+template<class T, std::size_t DIM,
+	template<class, std::size_t, class...> class t_arr_1d = boost::array,
+	template<class, std::size_t, class...> class t_arr_nd = boost::multi_array>
+t_arr_nd<T, DIM> rand_array(
+	const t_arr_1d<typename t_arr_nd<T,DIM>::index, DIM>& arrDims)
+{
+	using t_arr = t_arr_nd<T, DIM>;
+
+	T tMin = std::numeric_limits<T>::min();
+	T tMax = std::numeric_limits<T>::max();
+
+	t_arr arrRet(arrDims);
+	std::size_t iLen = arrRet.num_elements();
+	T* pRaw = arrRet.data();
+
+	for(std::size_t i=0; i<iLen; ++i)
+		pRaw[i] = rand_minmax<T>(tMin, tMax);
+
+	return arrRet;
+}
+
+/**
+ * generates random array indices in range [arrMin, arrMax[
+ */
+template<class T = std::size_t, std::size_t DIM,
+	template<class, std::size_t, class...> class t_arr = std::array>
+t_arr<T, DIM> rand_idx(
+	const t_arr<T, DIM>& arrMin, const t_arr<T, DIM>& arrMax)
+{
+	t_arr<T, DIM> arrRet;
+	for(std::size_t i=0; i<DIM; ++i)
+		arrRet[i] = rand_int<T>(arrMin[i], arrMax[i]-1);
+
+	return arrRet;
+}
+
+// ----------------------------------------------------------------------------
 
 }
 #endif

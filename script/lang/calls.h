@@ -23,10 +23,10 @@ extern const std::string& get_type_name(SymbolType ty);
 extern const std::string& get_type_name(unsigned int ty);
 
 // errors
-extern bool check_args(RuntimeInfo& info, 
-	const std::vector<Symbol*>& vecSyms, 
-	const std::initializer_list<unsigned int>& lstTypes, 
-	const std::initializer_list<bool> &lstOptional, 
+extern bool check_args(RuntimeInfo& info,
+	const std::vector<Symbol*>& vecSyms,
+	const std::initializer_list<unsigned int>& lstTypes,
+	const std::initializer_list<bool> &lstOptional,
 	const char* pcFkt, const char* pcErr=0);
 
 // typedefs

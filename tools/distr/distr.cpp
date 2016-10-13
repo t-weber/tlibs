@@ -88,15 +88,17 @@ void DistrDlg::DistrSelected(QListWidgetItem* pItem, QListWidgetItem*)
 
 void DistrDlg::Calc()
 {
+	QLabel *pLabels[] = { labelParam1, labelParam2, labelParam3, labelParam4 };
+	QLineEdit *pEdits[] = { editParam1, editParam2, editParam3, editParam4 };
+
 	const t_real dMinX = tl::str_to_var<t_real>(editMinX->text().toStdString());
 	const t_real dMaxX = tl::str_to_var<t_real>(editMaxX->text().toStdString());
 
-	const t_real dParam1 = tl::str_to_var<t_real>(editParam1->text().toStdString());
-	const t_real dParam2 = tl::str_to_var<t_real>(editParam2->text().toStdString());
-	const t_real dParam3 = tl::str_to_var<t_real>(editParam3->text().toStdString());
-	const t_real dParam4 = tl::str_to_var<t_real>(editParam4->text().toStdString());
+	const t_real dParam1 = tl::str_to_var<t_real>(pEdits[0]->text().toStdString());
+	const t_real dParam2 = tl::str_to_var<t_real>(pEdits[1]->text().toStdString());
+	const t_real dParam3 = tl::str_to_var<t_real>(pEdits[2]->text().toStdString());
+	const t_real dParam4 = tl::str_to_var<t_real>(pEdits[3]->text().toStdString());
 
-	std::size_t iNumParams = 0;
 	std::vector<const char*> vecParamNames;
 	constexpr const char* strParam[] = { "Param 1", "Param 2", "Param 3", "Param 4" };
 
@@ -184,8 +186,6 @@ void DistrDlg::Calc()
 		{
 			return;
 		}
-
-		iNumParams = vecParamNames.size();
 	}
 	catch(const std::exception& ex)
 	{
@@ -194,10 +194,8 @@ void DistrDlg::Calc()
 
 	try
 	{
-		QLabel *pLabels[] = { labelParam1, labelParam2, labelParam3, labelParam4 };
-		QLineEdit *pEdits[] = { editParam1, editParam2, editParam3, editParam4 };
-
-		std::size_t iEdit=0;
+		std::size_t iNumParams = vecParamNames.size();
+		std::size_t iEdit = 0;
 		for(iEdit=0; iEdit<iNumParams; ++iEdit)
 		{
 			pLabels[iEdit]->setEnabled(1);

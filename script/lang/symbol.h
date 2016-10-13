@@ -1,4 +1,4 @@
-/*
+/**
  * Symbol Table
  * @author tweber
  * @date 2013

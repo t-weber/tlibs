@@ -102,7 +102,9 @@ T* vec_to_array(const std::vector<T>& vec)
 // ----------------------------------------------------------------------------
 
 
-// sort tuple-vector
+/**
+ * sort tuple-vector
+ */
 template<const std::size_t isortidx,
 	class... Ts,
 	template<class...> class t_cont = std::vector>
