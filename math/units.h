@@ -158,6 +158,8 @@ template<class Y=double> t_flux<units::si::system, Y> get_one_kilogauss()
 
 template<class Y=double> t_mass<units::si::system, Y> get_m_n()
 { return Y(co::m_n/units::si::kilograms)*units::si::kilograms; }
+template<class Y=double> t_mass<units::si::system, Y> get_m_e()
+{ return Y(co::m_e/units::si::kilograms)*units::si::kilograms; }
 template<class Y=double> t_mass<units::si::system, Y> get_amu()
 { return Y(co::m_u/units::si::kilograms)*units::si::kilograms; }
 template<class Y=double> t_action<units::si::system, Y> get_hbar()
@@ -174,6 +176,8 @@ template<class Y=double> t_energy_per_field<units::si::system, Y> get_mu_n()
 { return Y(co::mu_n/units::si::joules*units::si::tesla)*units::si::joules/units::si::tesla; }
 template<class Y=double> t_energy_per_field<units::si::system, Y> get_mu_N()
 { return Y(co::mu_N/units::si::joules*units::si::tesla)*units::si::joules/units::si::tesla; }
+template<class Y=double> t_energy_per_field<units::si::system, Y> get_mu_e()
+{ return Y(co::mu_e/units::si::joules*units::si::tesla)*units::si::joules/units::si::tesla; }
 template<class Y=double> Y get_g_n() { return Y(co::g_n.value()); }
 template<class Y=double> Y get_g_e() { return Y(co::g_e.value()); }
 

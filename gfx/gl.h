@@ -1,4 +1,4 @@
-/*
+/**
  * gfx stuff
  * @author tweber
  * @date 22-dec-2014
@@ -11,29 +11,31 @@
 #include <string>
 #include <ostream>
 #include <unordered_map>
-#include <GL/gl.h>
+#include <gl.h>
 
 #include "../math/linalg.h"
 #include "../math/geo.h"
 
 namespace tl {
 
-template<class T=double>
+using t_real_gl = GLdouble;
+
+template<class T = t_real_gl>
 using t_mat4_gen = ublas::matrix<T, ublas::row_major, ublas::bounded_array<T,4*4>>;
-template<class T=double>
+template<class T = t_real_gl>
 using t_mat3_gen = ublas::matrix<T, ublas::row_major, ublas::bounded_array<T,3*3>>;
-template<class T=double>
+template<class T = t_real_gl>
 using t_vec4_gen = ublas::vector<T, ublas::bounded_array<T,4>>;
-template<class T=double>
+template<class T = t_real_gl>
 using t_vec3_gen = ublas::vector<T, ublas::bounded_array<T,3>>;
 
-typedef t_mat4_gen<double> t_mat4;
-typedef t_mat3_gen<double> t_mat3;
-typedef t_vec4_gen<double> t_vec4;
-typedef t_vec3_gen<double> t_vec3;
+typedef t_mat4_gen<t_real_gl> t_mat4;
+typedef t_mat3_gen<t_real_gl> t_mat3;
+typedef t_vec4_gen<t_real_gl> t_vec4;
+typedef t_vec3_gen<t_real_gl> t_vec3;
 
 
-template<typename T=double, typename... Args>
+template<typename T=t_real_gl, typename... Args>
 void to_gl_array(const ublas::matrix<T, Args...>& mat, T* glmat)
 {
 	glmat[0]=mat(0,0);  glmat[1]=mat(1,0);  glmat[2]=mat(2,0);
@@ -83,7 +85,7 @@ template<typename t_mat = t_mat4, typename t_vec = t_vec4,
 	typename T = typename t_mat::value_type>
 void gl_proj_pt(T dX, T dY, T dZ, T& dXProj, T& dYProj)
 {
-	GLdouble dMatMV[16], dMatProj[16];
+	t_real_gl dMatMV[16], dMatProj[16];
 	glGetDoublev(GL_PROJECTION_MATRIX, dMatProj);
 	glGetDoublev(GL_MODELVIEW_MATRIX, dMatMV);
 
@@ -98,7 +100,7 @@ template<typename t_mat = t_mat4, typename t_vec = t_vec4,
 	typename T = typename t_mat::value_type>
 void gl_mv_pt(const t_vec& vec, t_vec& vecOut)
 {
-	GLdouble dMatMV[16];
+	t_real_gl dMatMV[16];
 	glGetDoublev(GL_MODELVIEW_MATRIX, dMatMV);
 	t_mat matMV = from_gl_array<t_mat>(dMatMV);
 	t_mat matMV_inv;
@@ -134,7 +136,7 @@ template<typename t_mat = t_mat4, typename t_vec = t_vec4,
 	typename T = typename t_mat::value_type>
 T gl_proj_sphere_size(T dRadius)
 {
-	GLdouble dMatProj[16];
+	t_real_gl dMatProj[16];
 	glGetDoublev(GL_PROJECTION_MATRIX, dMatProj);
 	t_mat matProj = from_gl_array<t_mat>(dMatProj);
 
@@ -183,7 +185,7 @@ template<typename t_mat = t_mat4, typename t_vec = t_vec4,
 	typename T = typename t_mat::value_type>
 Line<T> gl_screen_ray(T dX, T dY)
 {
-	GLdouble dMatMV[16], dMatProj[16];
+	t_real_gl dMatMV[16], dMatProj[16];
 	glGetDoublev(GL_PROJECTION_MATRIX, dMatProj);
 	glGetDoublev(GL_MODELVIEW_MATRIX, dMatMV);
 
@@ -196,7 +198,7 @@ Line<T> gl_screen_ray(T dX, T dY)
 // --------------------------------------------------------------------------------
 
 
-template<typename t_mat = ublas::matrix<double>, typename t_vec = ublas::vector<double>,
+template<typename t_mat = ublas::matrix<t_real_gl>, typename t_vec = ublas::vector<t_real_gl>,
 	typename T = typename t_mat::value_type>
 class Cam
 {
@@ -281,7 +283,6 @@ public:
  * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
  * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_02
  */
-
 #define DEF_FONT "/usr/share/fonts/dejavu/DejaVuSansMono.ttf"
 #define DEF_FONT_SIZE 12
 
@@ -343,6 +344,7 @@ class GlFontMap : public FontMap
 	protected:
 		bool m_bOk = 0;
 		GLuint m_tex = 0;
+		t_real_gl m_dScale = 0.01;
 
 	protected:
 		bool CreateFontTexture();
@@ -356,12 +358,13 @@ class GlFontMap : public FontMap
 		virtual bool IsOk() const override { return m_bOk && FontMap::IsOk(); }
 
 		void BindTexture();
-		void DrawText(double dX, double dY, const std::string& str, bool bCenter=1);
-		void DrawText(double dX, double dY, double dZ, const std::string& str, bool bCenter=1);
+		void DrawText(t_real_gl dX, t_real_gl dY, const std::string& str, bool bCenter=1);
+		void DrawText(t_real_gl dX, t_real_gl dY, t_real_gl dZ, const std::string& str, bool bCenter=1);
+
+		void SetScale(t_real_gl dScale) { m_dScale = dScale; }
 };
 
 // --------------------------------------------------------------------------------
-
 
 }
 

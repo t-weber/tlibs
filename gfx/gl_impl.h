@@ -14,7 +14,7 @@
 #include "../string/string.h"
 
 #include <iomanip>
-#include <GL/glu.h>
+#include <glu.h>
 
 
 // --------------------------------------------------------------------------------
@@ -26,6 +26,7 @@ namespace tl {
  * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
  * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_02
  */
+
 void FontMap::draw_tile(unsigned char* pcBuf,
 	unsigned int iW, unsigned int iH,
 	unsigned int iTileW, unsigned int iTileH,
@@ -78,7 +79,7 @@ const std::string FontMap::m_strCharset =
 
 FontMap::FontMap() : m_bOk(0)
 {
-	m_iCharsPerLine = int(std::ceil(std::sqrt(double(m_strCharset.length()))));
+	m_iCharsPerLine = int(std::ceil(std::sqrt(t_real_gl(m_strCharset.length()))));
 	m_iLines = m_iCharsPerLine;
 
 	if(FT_Init_FreeType(&m_ftLib) != 0)
@@ -90,7 +91,6 @@ FontMap::FontMap() : m_bOk(0)
 
 FontMap::FontMap(const char* pcFont, int iSize) : FontMap()
 {
-	//log_info("Using font \"", pcFont, "\".");
 	if(!LoadFont(pcFont, iSize))
 	{
 		log_err("Cannot load font \"", pcFont, "\".");
@@ -111,12 +111,12 @@ bool FontMap::LoadFont(FT_Face ftFace, int iSize)
 	// find /real/ image sizes
 	for(std::string::value_type ch : m_strCharset)
 	{
-		if(FT_Load_Char(m_ftFace, ch, FT_RENDER_MODE_NORMAL|FT_LOAD_RENDER /*needed for glyph sizes*/) != 0)
+		if(FT_Load_Char(m_ftFace, ch,
+			FT_RENDER_MODE_NORMAL|FT_LOAD_RENDER /*needed for glyph sizes*/) != 0)
 			continue;
 
 		unsigned int iGlyphW = m_ftFace->glyph->bitmap.width;
 		unsigned int iGlyphH = m_ftFace->glyph->bitmap.rows;
-		//tl::log_debug("glyph: ", iGlyphW, " * ", iGlyphH);
 
 		//FT_Int iLeft = m_ftFace->glyph->bitmap_left;
 		FT_Int iTop = m_ftFace->glyph->bitmap_top;
@@ -133,20 +133,15 @@ bool FontMap::LoadFont(FT_Face ftFace, int iSize)
 		m_iTileH = std::max(int(iGlyphH), m_iTileH);
 	}
 
-	//log_info("glob w: ", m_iTileW, ", glob h: ", m_iTileH);
-	//log_info("glob top: ", iMaxTop);
-
-	m_iPadH = int(nextpow<double>(2, m_iTileH))-m_iTileH;
-	m_iPadW = int(nextpow<double>(2, m_iTileW))-m_iTileW;
-	//log_info("Padding: ", m_iPadW, ", ", m_iPadH);
+	m_iPadH = int(nextpow<t_real_gl>(2, m_iTileH))-m_iTileH;
+	m_iPadW = int(nextpow<t_real_gl>(2, m_iTileW))-m_iTileW;
 
 	m_iLargeW = (m_iTileW+m_iPadW) * m_iCharsPerLine;
 	m_iLargeH = (m_iTileH+m_iPadH) * m_iLines;
 
 	// find next larger power of 2 (later used for glTexImage2D)
-	m_iLargeW = int(nextpow<double>(2, m_iLargeW));
-	m_iLargeH = int(nextpow<double>(2, m_iLargeH));
-	//log_info("full size: w=", m_iLargeW, ", h=", m_iLargeH);
+	m_iLargeW = int(nextpow<t_real_gl>(2, m_iLargeW));
+	m_iLargeH = int(nextpow<t_real_gl>(2, m_iLargeH));
 
 	m_pcLarge = new unsigned char[m_iLargeW*m_iLargeH];
 	memset(m_pcLarge, 0, m_iLargeW*m_iLargeH);
@@ -361,7 +356,7 @@ void GlFontMap::BindTexture()
 	//if(glGetError() != GL_NO_ERROR) log_err("Cannot bind texture.");
 }
 
-void GlFontMap::DrawText(double _dX, double _dY, const std::string& str, bool bCenter)
+void GlFontMap::DrawText(t_real_gl _dX, t_real_gl _dY, const std::string& str, bool bCenter)
 {
 	if(!m_bOk) return;
 
@@ -383,13 +378,13 @@ void GlFontMap::DrawText(double _dX, double _dY, const std::string& str, bool bC
 	glEnable(GL_BLEND);
 	*/
 
-	double dX = _dX;
-	double dY = _dY;
+	t_real_gl dX = _dX;
+	t_real_gl dY = _dY;
 
-	double dScX = (m_iTileH / 12.) * 0.025;
-	double dScY = double(m_iTileH)/double(m_iTileW) * dScX;
+	t_real_gl dScX = (m_iTileH / 12.) * m_dScale;
+	t_real_gl dScY = t_real_gl(m_iTileH)/t_real_gl(m_iTileW) * dScX;
 
-	double dXInc = 1.75*dScX;
+	t_real_gl dXInc = 1.75*dScX;
 
 	if(bCenter)
 	{
@@ -417,14 +412,14 @@ void GlFontMap::DrawText(double _dX, double _dY, const std::string& str, bool bC
 			return;
 		}
 
-		double dSizeFullTileW = double(m_iTileW+m_iPadW)/double(m_iLargeW);
-		double dSizeFullTileH = double(m_iTileH+m_iPadH)/double(m_iLargeH);
+		t_real_gl dSizeFullTileW = t_real_gl(m_iTileW+m_iPadW)/t_real_gl(m_iLargeW);
+		t_real_gl dSizeFullTileH = t_real_gl(m_iTileH+m_iPadH)/t_real_gl(m_iLargeH);
 
-		double dSizeTileW = double(m_iTileW)/double(m_iLargeW);
-		double dSizeTileH = double(m_iTileH)/double(m_iLargeH);
+		t_real_gl dSizeTileW = t_real_gl(m_iTileW)/t_real_gl(m_iLargeW);
+		t_real_gl dSizeTileH = t_real_gl(m_iTileH)/t_real_gl(m_iLargeH);
 
-		double dPosTileX = double(offs.first/(m_iTileW+m_iPadW))*dSizeFullTileW;
-		double dPosTileY = double(offs.second/(m_iTileH+m_iPadH))*dSizeFullTileH;
+		t_real_gl dPosTileX = t_real_gl(offs.first/(m_iTileW+m_iPadW))*dSizeFullTileW;
+		t_real_gl dPosTileY = t_real_gl(offs.second/(m_iTileH+m_iPadH))*dSizeFullTileH;
 
 		glBegin(GL_QUADS);
 			//glColor4d(1., 1., 1., 1.);
@@ -446,12 +441,12 @@ void GlFontMap::DrawText(double _dX, double _dY, const std::string& str, bool bC
 }
 
 
-void GlFontMap::DrawText(double dX, double dY, double dZ, const std::string& str, bool bCenter)
+void GlFontMap::DrawText(t_real_gl dX, t_real_gl dY, t_real_gl dZ, 
+	const std::string& str, bool bCenter)
 {
 	if(!m_bOk) return;
 
-	double dXProj, dYProj;
-
+	t_real_gl dXProj, dYProj;
 	gl_proj_pt(dX, dY, dZ, dXProj, dYProj);
 	DrawText(dXProj, dYProj, str, bCenter);
 }

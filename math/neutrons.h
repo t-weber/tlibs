@@ -701,10 +701,14 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 
 // --------------------------------------------------------------------------------
 
+/**
+ * Bose factor
+ * see e.g.: Shirane, p. 28
+ */
 template<class t_real=double>
 t_real bose(t_real E, t_real T)
 {
-	t_real kB = get_kB<t_real>() * units::si::kelvin/get_one_meV();
+	t_real kB = get_kB<t_real>() * units::si::kelvin/get_one_meV<t_real>();
 
 	if(E >= 0.)
 		return 1./(std::exp(std::abs(E)/(kB*T)) - 1.) + 1.;
@@ -729,13 +733,13 @@ t_real bose_cutoff(t_real E, t_real T, t_real E_cutoff=t_real(0.02))
 
 template<class Sys, class Y>
 Y bose(const t_energy<Sys,Y>& E, const t_temperature<Sys,Y>& T,
-	t_energy<Sys,Y> E_cutoff = -get_one_meV())
+	t_energy<Sys,Y> E_cutoff = -get_one_meV<Y>())
 {
-	if(E_cutoff < Y(0)*get_one_meV())
-		return bose<Y>(Y(E/get_one_meV()), Y(T/kelvin));
+	if(E_cutoff < Y(0)*get_one_meV<Y>())
+		return bose<Y>(Y(E/get_one_meV<Y>()), Y(T/kelvin));
 	else
-		return bose_cutoff<Y>(Y(E/get_one_meV()), Y(T/kelvin),
-			Y(E_cutoff/get_one_meV()));
+		return bose_cutoff<Y>(Y(E/get_one_meV<Y>()), Y(T/kelvin),
+			Y(E_cutoff/get_one_meV<Y>()));
 }
 
 /**

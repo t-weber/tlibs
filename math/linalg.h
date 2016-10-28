@@ -508,7 +508,7 @@ matrix_type perspective_matrix(T yfov, T asp, T n, T f)
 {
 	const T y = std::tan(T(0.5)*get_pi<T>() - T(0.5)*yfov);
 	const T x = y/asp;
-	const T dsgn = -1.;
+	const T dsgn = T(-1.);
 
 	return make_mat<matrix_type>
 	({

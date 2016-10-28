@@ -11,8 +11,8 @@
 namespace tl
 {
 	template struct PlotObj<double>;
-	//template struct PlotObj<float>;
+	template struct PlotObj<float>;
 
 	template class GnuPlot<double>;
-	//template class GnuPlot<float>;
+	template class GnuPlot<float>;
 }

@@ -15,9 +15,13 @@ find_library(Minuit2_LIBRARIES
 	DOC "Minuit2 library"
 )
 
-if(Minuit2_INCLUDE_DIRS)
+if(Minuit2_INCLUDE_DIRS AND Minuit2_LIBRARIES)
+	set(Minuit2_FOUND 1)
+
 	message("Minuit include directories: ${Minuit2_INCLUDE_DIRS}")
 	message("Minuit library: ${Minuit2_LIBRARIES}")	
 else()
+	set(Minuit2_FOUND 0)
+
 	message("Error: Minuit2 could not be found!")
 endif()

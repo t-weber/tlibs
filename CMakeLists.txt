@@ -21,6 +21,8 @@ find_package(Threads REQUIRED)
 find_package(Qt4 REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(Minuit2 REQUIRED)
+find_package(OpenGL REQUIRED)
+
 
 set(CMAKE_AUTOMOC OFF)
 set(CMAKE_AUTOUIC OFF)
@@ -45,6 +47,7 @@ include_directories("${Boost_INCLUDE_DIRS}/..")
 include_directories("${QT_INCLUDE_DIR}")
 include_directories("${FREETYPE_INCLUDE_DIRS}")
 include_directories("${Minuit2_INCLUDE_DIRS}")
+include_directories("${OPENGL_INCLUDE_DIR}")
 
 
 add_definitions(-std=c++11)
@@ -68,7 +71,7 @@ add_library(tlibs SHARED
 
 
 target_link_libraries(tlibs ${Boost_LIBRARIES} Threads::Threads
-	Qt4::QtCore Qt4::QtGui #Qt4::QtOpenGL
+	Qt4::QtCore Qt4::QtGui #Qt4::QtOpenGL ${OPENGL_LIBRARIES}
 	${FREETYPE_LIBRARY} ${Minuit2_LIBRARIES}
 )
 

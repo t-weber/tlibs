@@ -192,7 +192,10 @@ Y mieze_reduction_det_d(const t_length<Sys,Y>& d,
 //------------------------------------------------------------------------------
 // MIEZE contrast reduction due to sample geometry
 
-// numerical approximation to the R_sample integral of formula (9) in [Brandl 11]
+/**
+ * numerical approximation to the R_sample integral of
+ * formula (9) in Brandl et. al., NIMA 654(1), pp. 394-398 (2011)
+ */
 template<class Sys, class Y>
 Y mieze_reduction_sample_cuboid(const t_length<Sys,Y>& len_x,
 	const t_length<Sys,Y>& len_y, const t_length<Sys,Y>& len_z,
