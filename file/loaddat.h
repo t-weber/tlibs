@@ -188,6 +188,7 @@ class DatFile
 		void SetDataSeparators(const t_str& str) { m_strDatSep = str; };
 
 		const t_dat& GetData() const { return m_vecCols; }
+		t_dat& GetData() { return m_vecCols; }
 		const t_col& GetColumn(std::size_t iCol) const { return m_vecCols[iCol]; }
 		t_col& GetColumn(std::size_t iCol) { return m_vecCols[iCol]; }
 		std::size_t GetColumnCount() const { return m_vecCols.size(); }

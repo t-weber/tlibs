@@ -422,7 +422,7 @@ plot_eiger(filenames, do_fit, peaks_x, peaks_size, peaks_width, title, outfile, 
 
 	if(is_valid(outfile) && length(outfile) != 0)
 	{
-		fileplot(outfile, plotobjs,
+		fileplot(outfile, -1,-1, plotobjs,
 			["xlimits" : xlims,
 			"ylimits" : ylims,
 			"xlabel" : xlab,

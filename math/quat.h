@@ -19,7 +19,7 @@ namespace math = boost::math;
 
 /**
  * calculates the quaternion inverse
- * @desc see e.g.: Bronstein, Ch. 4
+ * @desc see e.g.: (Bronstein 2008), Ch. 4
  */
 template<class t_quat = math::quaternion<double>>
 t_quat inverse(const t_quat& q)
@@ -30,6 +30,7 @@ t_quat inverse(const t_quat& q)
 
 
 /**
+ * 3x3 matrix -> quat
  * @desc algo from: http://www.j3d.org/matrix_faq/matrfaq_latest.html#Q55
  */
 template<class mat_type=ublas::matrix<double>,
@@ -76,7 +77,28 @@ quat_type rot3_to_quat(const mat_type& rot)
 
 
 /**
- * @desc see e.g.: Bronstein, Formulas (4.162a/b)
+ * quat -> complex 2x2 matrix
+ * @desc see e.g. (Scherer 2010), p.173
+ */
+template<template<class...> class t_mat = ublas::matrix,
+	class t_real = double,
+	class t_quat = math::quaternion<t_real>>
+t_mat<std::complex<t_real>> quat_to_cmat(const t_quat& quat)
+{
+	const auto vecS = get_spin_matrices<t_mat, ublas::vector, t_real>();
+	const auto matI = unit_matrix<t_mat<std::complex<t_real>>>(2);
+
+	t_mat<std::complex<t_real>> mat =
+		std::complex<t_real>(quat.R_component_1()) * matI +
+		std::complex<t_real>(quat.R_component_2()) * vecS[0] +
+		std::complex<t_real>(quat.R_component_3()) * vecS[1] +
+		std::complex<t_real>(quat.R_component_4()) * vecS[2];
+	return mat;
+}
+
+/**
+ * quat -> 3x3 matrix
+ * @desc see e.g.: (Bronstein 2008), Formulas (4.162a/b)
  */
 template<class mat_type=ublas::matrix<double>,
 	class quat_type=math::quaternion<typename mat_type::value_type>>
@@ -104,6 +126,9 @@ mat_type quat_to_rot3(const quat_type& quat)
 }
 
 
+/**
+ * quat -> euler angles
+ */
 template<class quat_type=math::quaternion<double>,
 	typename T=typename quat_type::value_type>
 std::vector<T> quat_to_euler(const quat_type& quat)
@@ -164,7 +189,8 @@ T rotation_angle(const math::quaternion<T>& quat)
 
 
 /**
- * @desc see e.g.: Bronstein, Ch. 4
+ * quat -> rotation axis
+ * @desc see e.g.: (Bronstein 2008), Ch. 4
  */
 template<class t_vec=ublas::vector<double>>
 t_vec rotation_axis(const math::quaternion<typename t_vec::value_type>& quat)
@@ -184,7 +210,8 @@ t_vec rotation_axis(const math::quaternion<typename t_vec::value_type>& quat)
 
 
 /**
- * @desc see e.g.: Bronstein, formula (4.193)
+ * rotation axis -> quat
+ * @desc see e.g.: (Bronstein 2008), formula (4.193)
  */
 template<class quat_type=math::quaternion<double>,
 	class vec_type=ublas::vector<typename quat_type::value_type>,
@@ -217,7 +244,7 @@ quat_type rotation_quat_z(typename quat_type::value_type angle)
 
 
 /**
- * @desc see e.g.: Bronstein, formula (4.217)
+ * @desc see e.g.: (Bronstein 2008), formula (4.217)
  */
 template<class quat_type=math::quaternion<double>, typename T = typename quat_type::value_type>
 quat_type stereo_proj(const quat_type& quat)

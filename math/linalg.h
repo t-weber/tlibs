@@ -443,17 +443,56 @@ template<class matrix_type = ublas::matrix<double>,
 		class cont_type = std::initializer_list<typename matrix_type::value_type>>
 matrix_type diag_matrix(const cont_type& lst)
 {
-	matrix_type mat(lst.size(), lst.size());
-
-	for(std::size_t i=0; i<lst.size(); ++i)
-		for(std::size_t j=0; j<lst.size(); ++j)
-			mat(i,j) = 0.;
+	matrix_type mat = unit_matrix<matrix_type>(lst.size());
 
 	std::size_t i = 0;
 	for(typename cont_type::const_iterator iter=lst.begin(); iter!=lst.end(); ++iter, ++i)
 		mat(i,i) = *iter;
 
 	return mat;
+}
+
+template<class matrix_type = ublas::matrix<double>,
+		class cont_type = std::initializer_list<typename matrix_type::value_type>>
+matrix_type scale_matrix(const cont_type& lst)
+{
+	return diag_matrix<matrix_type, cont_type>(lst);
+}
+
+/**
+ * translation matrix in homogeneous coords
+ */
+template<class t_mat = ublas::matrix<double>,
+		class t_cont = std::initializer_list<typename t_mat::value_type>>
+t_mat translation_matrix(const t_cont& lst)
+{
+	t_mat mat = unit_matrix<t_mat>(lst.size()+1);
+
+	const std::size_t iJ = mat.size2();
+	std::size_t i = 0;
+	for(typename t_cont::const_iterator iter=lst.begin(); iter!=lst.end(); ++iter, ++i)
+		mat(i, iJ-1) = *iter;
+
+	return mat;
+}
+
+/**
+ * is mat a translation matrix in homogeneous coords?
+ */
+template<class t_mat = ublas::matrix<double>>
+bool is_translation_matrix(const t_mat& mat)
+{
+	using T = typename t_mat::value_type;
+
+	const std::size_t iI = mat.size1();
+	const std::size_t iJ = mat.size2();
+
+	for(std::size_t i=0; i<iI-1; ++i)
+	{
+		if(!float_equal<T>(mat(i, iJ-1), T(0)))
+			return true;
+	}
+	return false;
 }
 
 
@@ -498,42 +537,66 @@ typename matrix_type::value_type trace(const matrix_type& mat)
 	return tr;
 }
 
+
 /**
+ * parallel or perspectivic projection matrix
+ * see: https://www.opengl.org/sdk/docs/man2/xhtml/glOrtho.xml
+ */
+template<class t_mat = ublas::matrix<double, ublas::row_major, ublas::bounded_array<double,4*4>>,
+	class T = typename t_mat::value_type>
+t_mat proj_matrix(T l, T r, T b, T t, T n, T f, bool bParallel)
+{
+	// scale to [0:2]
+	t_mat matScale = scale_matrix<t_mat>({ T(2)/(r-l), T(2)/(t-b), T(1), T(1) });
+	// translate to [-1:1]
+	t_mat matTrans = translation_matrix<t_mat>({ -T(0.5)*(r+l), -T(0.5)*(t+b), T(0) });
+	matScale = ublas::prod(matScale, matTrans);
+
+	// project
+	t_mat matProj = unit_matrix<t_mat>(4);
+
+	if(bParallel)	// parallel
+	{
+		matProj(2,2) = T(2)*f*n/(n-f);
+		matProj(2,3) = (n+f)/(n-f);
+	}
+	else			// perspectivic
+	{
+		matProj(2,2) = (n+f)/(n-f);
+		matProj(2,3) = T(2)*f*n/(n-f);
+		matProj(3,2) = T(-1);
+		matProj(3,3) = T(0);
+	}
+
+	return ublas::prod(matScale, matProj);
+}
+
+/**
+ * parallel projection matrix
+ * see: https://www.opengl.org/sdk/docs/man2/xhtml/glOrtho.xml
+ */
+template<class t_mat = ublas::matrix<double, ublas::row_major, ublas::bounded_array<double,4*4>>,
+	class T = typename t_mat::value_type>
+t_mat ortho_matrix(T l, T r, T b, T t, T n, T f)
+{
+	return proj_matrix<t_mat, T>(l,r, b,t, n,f, 1);
+}
+
+/**
+ * perspectivic projection matrix
  * see: https://www.opengl.org/sdk/docs/man2/xhtml/gluPerspective.xml
  * also see: similar gnomonic projection of spherical coordinates onto a plane
  */
-template<class matrix_type=ublas::matrix<double,ublas::row_major, ublas::bounded_array<double,4*4>>,
-	class T=typename matrix_type::value_type>
-matrix_type perspective_matrix(T yfov, T asp, T n, T f)
+template<class t_mat = ublas::matrix<double, ublas::row_major, ublas::bounded_array<double,4*4>>,
+	class T = typename t_mat::value_type>
+t_mat perspective_matrix(T yfov, T asp, T n, T f)
 {
-	const T y = std::tan(T(0.5)*get_pi<T>() - T(0.5)*yfov);
-	const T x = y/asp;
-	const T dsgn = T(-1.);
+	const T y = std::tan(T(0.5)*yfov);
+	const T x = y*asp;
 
-	return make_mat<matrix_type>
-	({
-		{    x, T(0),             T(0),              T(0) },
-		{ T(0),    y,             T(0),              T(0) },
-		{ T(0), T(0), dsgn*(f+n)/(f-n), (-T(2)*f*n)/(f-n) },
-		{ T(0), T(0),             dsgn,              T(0) }
-	});
+	return proj_matrix<t_mat, T>(-x,x, -y,y, n,f, 0);
 }
 
-/**
- * see: https://www.opengl.org/sdk/docs/man2/xhtml/glOrtho.xml
- */
-template<class matrix_type=ublas::matrix<double, ublas::row_major, ublas::bounded_array<double,4*4>>,
-	class T=typename matrix_type::value_type>
-matrix_type ortho_matrix(T l, T r, T b, T t, T n, T f)
-{
-	return make_mat<matrix_type>
-	({
-		{ T(2)/(r-l),       T(0),       T(0), (l+r)/(l-r) },
-		{       T(0), T(2)/(t-b),       T(0), (b+t)/(b-t) },
-		{       T(0),       T(0), T(2)/(n-f), (n+f)/(n-f) },
-		{       T(0),       T(0),       T(0), T(1)        }
-	});
-}
 
 // -----------------------------------------------------------------------------
 template<typename T, class FKT, const int iDim=get_type_dim<T>::value>
@@ -641,7 +704,7 @@ bool inverse(const mat_type& mat, mat_type& inv)
 		if(ublas::lu_factorize(lu, perm) != 0)
 			return false;
 
-		inv = ublas::identity_matrix<T>(N);
+		inv = unit_matrix<mat_type>(N);
 		ublas::lu_substitute(lu, perm, inv);
 	}
 	catch(const std::exception& ex)
@@ -1281,7 +1344,7 @@ typename T::value_type vec_angle_unsigned(const T& q1, const T& q2)
 /**
  * - see: K. Shoemake, "Animating rotation with quaternion curves":
  *        http://dx.doi.org/10.1145/325334.325242
- * - see: Bronstein, formula 4.207
+ * - see: (Bronstein 2008), formula 4.207
  */
 template<class T>
 T slerp(const T& q1, const T& q2, typename T::value_type t)
@@ -1704,7 +1767,7 @@ get_minmax(const T& t)
 
 /**
  * Calculates the dominant eigenvector/eigenvalue for symmetric matrices
- * see: Bronstein, equs. (4.148)-(4.151)
+ * see: (Bronstein 2008), equs. (4.148)-(4.151)
  */
 template<class t_mat = ublas::matrix<double>,
 	class t_vec = ublas::vector<typename t_mat::value_type>,
@@ -1744,7 +1807,7 @@ bool eigenvec_dominant_sym(const t_mat& mat, t_vec& evec, T& eval,
 
 /**
  * Calculates the least dominant eigenvector/eigenvalue for symmetric matrices
- * see: Bronstein, equs. (4.148)-(4.151)
+ * see: (Bronstein 2008), equs. (4.148)-(4.151)
  */
 template<class t_mat = ublas::matrix<double>,
 	class t_vec = ublas::vector<typename t_mat::value_type>,
@@ -1788,7 +1851,7 @@ bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vecto
 #endif
 
 	const std::size_t n = mat.size1();
-	t_mat I = ublas::identity_matrix<T>(n);
+	t_mat I = unit_matrix<t_mat>(n);
 	t_mat M = mat;
 
 	std::size_t iIter = 0;

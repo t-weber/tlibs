@@ -1,4 +1,4 @@
-/*
+/**
  * external plot functions
  * @author tweber
  * @date dec 2013
@@ -85,14 +85,10 @@ static XYLimits get_plot_limits(const SymbolMap* pParamMap)
 			istrY >> lim.dMinY >> lim.dMaxY;
 		}
 	}
-	//G_COUT << "xlimits: " << lim.dMinX << ", " << lim.dMaxX << std::endl;
-	//G_COUT << "ylimits: " << lim.dMinY << ", " << lim.dMaxY << std::endl;
-
 
 	t_string strValCB = pParamMap->GetStringVal(T_STR"cblimits", &lim.bHasCB);
 	t_istringstream istrCB(strValCB);
 	istrCB >> lim.dMinCB >> lim.dMaxCB;
-	//G_COUT << "colorbar: " << lim.dMinCB << ", " << lim.dMaxCB << std::endl;
 
 	bool bHasCyc = 0;
 	t_string strValCBCyc = pParamMap->GetStringVal(T_STR"cbcyclic", &bHasCyc);
@@ -179,7 +175,7 @@ static void set_plot_params(tl::GnuPlot<t_real>& plot, const SymbolMap* pParamMa
 	if(bHasVal)
 	{
 		std::vector<t_string> vecArrToks;
-		tl::get_tokens<t_string, t_string>(strArr, ",", vecArrToks);
+		tl::get_tokens<t_string, t_string>(strArr, T_STR",", vecArrToks);
 
 		for(const t_string& strArrTok : vecArrToks)
 		{
@@ -199,12 +195,18 @@ static void set_plot_params(tl::GnuPlot<t_real>& plot, const SymbolMap* pParamMa
 	t_string strLegendPlace = pParamMap->GetStringVal(T_STR"legend_place", &bHasVal);
 	if(bHasVal) plot.SetLegendPlace(WSTR_TO_STR(strLegendPlace));
 
+	// term sizes
+	t_real dW = pParamMap->GetRealVal(T_STR"width", &bHasVal);
+	if(!bHasVal) dW = -1;
+	t_real dH = pParamMap->GetRealVal(T_STR"height", &bHasVal);
+	if(!bHasVal) dH = -1;
 
+	// window
 	int iPlotWnd = 0;
 	int iUserPlotWnd = atoi(WSTR_TO_STR(pParamMap->GetStringVal(T_STR"window", &bHasVal)).c_str());
 	if(bHasVal) iPlotWnd = iUserPlotWnd;
 
-	plot.SetTerminal(iPlotWnd, WSTR_TO_STR(strTerm).c_str());
+	plot.SetTerminal(iPlotWnd, WSTR_TO_STR(strTerm).c_str(), dW, dH);
 	plot.SetCmdFileOutput(WSTR_TO_STR(strCmdFile).c_str());
 }
 
@@ -280,19 +282,33 @@ static Symbol* fkt_plot(const std::vector<Symbol*>& vecSyms,
 	if(pPlotParams)
 	{
 		// also plot to file
-		if(pPlotParams->GetMap().find(SymbolMapKey("outfile")) != pPlotParams->GetMap().end()
-			&& pPlotParams->GetMap().find(SymbolMapKey("<outfile_written>")) == pPlotParams->GetMap().end())
+		if(pPlotParams->GetMap().find(SymbolMapKey(T_STR"outfile")) != pPlotParams->GetMap().end()
+			&& pPlotParams->GetMap().find(SymbolMapKey(T_STR"<outfile_written>")) == pPlotParams->GetMap().end())
 		{
 			// hack to prevent infinite recursion
 			pPlotParams->GetMap().insert(
-				SymbolMap::t_map::value_type(SymbolMapKey("<outfile_written>"), new SymbolInt(1)));
+				SymbolMap::t_map::value_type(SymbolMapKey(T_STR"<outfile_written>"), new SymbolInt(1)));
 
-			Symbol* pSymFileName = pPlotParams->GetMap()[SymbolMapKey("outfile")];
+			// outfile name
+			Symbol* pSymFileName = pPlotParams->GetMap()[SymbolMapKey(T_STR"outfile")];
 			std::vector<Symbol*> vecNewSyms;
-			vecNewSyms.reserve(vecSyms.size()+1);
+			vecNewSyms.reserve(vecSyms.size()+3);
 			vecNewSyms.push_back(pSymFileName);
 
-			for(unsigned int iSym=0; iSym<vecSyms.size(); ++iSym)
+			// plot size
+			if(pPlotParams->GetMap().find(SymbolMapKey(T_STR"width")) != pPlotParams->GetMap().end() &&
+				pPlotParams->GetMap().find(SymbolMapKey(T_STR"height")) != pPlotParams->GetMap().end())
+			{
+				vecNewSyms.push_back(pPlotParams->GetMap()[SymbolMapKey(T_STR"width")]);
+				vecNewSyms.push_back(pPlotParams->GetMap()[SymbolMapKey(T_STR"height")]);
+			}
+			else
+			{
+				vecNewSyms.push_back(new SymbolReal(-1.));
+				vecNewSyms.push_back(new SymbolReal(-1.));
+			}
+
+			for(std::size_t iSym=0; iSym<vecSyms.size(); ++iSym)
 				vecNewSyms.push_back(vecSyms[iSym]);
 
 			fkt_fileplot(vecNewSyms, info, runinfo, pSymTab);
@@ -305,7 +321,6 @@ static Symbol* fkt_plot2d(const std::vector<Symbol*>& vecSyms,
 	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
 	g_plot.Init();
-
 	unsigned int iNumSyms = vecSyms.size();
 
 	// e.g. plot2d([[1,2],[3,4]], params)
@@ -334,8 +349,8 @@ static Symbol* fkt_plot2d(const std::vector<Symbol*>& vecSyms,
 		{
 			XYLimits lim;
 			set_plot_params(g_plot, (SymbolMap*)pMapParam, 0, &lim);
-        	        if(lim.bHasX) { dRMinX = lim.dMinX; dRMaxX = lim.dMaxX; }
-	                if(lim.bHasY) { dRMinY = lim.dMinY; dRMaxY = lim.dMaxY; }
+			if(lim.bHasX) { dRMinX = lim.dMinX; dRMaxX = lim.dMaxX; }
+			if(lim.bHasY) { dRMinY = lim.dMinY; dRMaxY = lim.dMaxY; }
 		}
 
 		g_plot.SimplePlot2d(vecXY, dRMinX, dRMaxX, dRMinY, dRMaxY);
@@ -351,26 +366,34 @@ static Symbol* fkt_plot2d(const std::vector<Symbol*>& vecSyms,
 }
 
 
-static Symbol* _fkt_fileplot(const std::vector<Symbol*>& vecSyms, 
+static Symbol* _fkt_fileplot(const std::vector<Symbol*>& vecSyms,
 	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab,
 	Symbol* (*pPltFkt)(const::std::vector<Symbol*>&, ParseInfo&, RuntimeInfo&, SymbolTable*))
 {
 	g_plot.Init();
-	if(vecSyms.size() < 1 || vecSyms[0]->GetType()!=SYMBOL_STRING)
+	std::size_t iStartSym = 3;
+
+	if(vecSyms.size()<iStartSym || vecSyms[0]->GetType()!=SYMBOL_STRING)
 	{
 		std::ostringstream ostrErr;
 		ostrErr << linenr(runinfo)
-			<< "First argument to fileplot has to be the file name." << std::endl;
+			<< "First arguments to fileplot have to be the file name and the plot width and height."
+			<< std::endl;
 		throw tl::Err(ostrErr.str(),0);
 	}
 
+	// width and height arguments
+	t_real dW = vecSyms[1]->GetValDouble();
+	t_real dH = vecSyms[2]->GetValDouble();
+
+	// file name
 	const t_string& strFile = ((SymbolString*)vecSyms[0])->GetVal();
-	g_plot.SetFileTerminal(WSTR_TO_STR(strFile).c_str());
+	g_plot.SetFileTerminal(WSTR_TO_STR(strFile).c_str(), dW, dH);
 	g_plot.LockTerminal();
 
 	std::vector<Symbol*> vecPlot;
 	vecPlot.reserve(vecSyms.size()-1);
-	for(unsigned int iSym=1; iSym<vecSyms.size(); ++iSym)
+	for(std::size_t iSym=iStartSym; iSym<vecSyms.size(); ++iSym)
 		vecPlot.push_back(vecSyms[iSym]);
 
 	Symbol* pSymRet = pPltFkt(vecPlot, info, runinfo, pSymTab);

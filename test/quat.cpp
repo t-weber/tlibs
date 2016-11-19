@@ -17,5 +17,7 @@ int main()
 	mat = quat_to_rot3(quat);
 	std::cout << "mat = " << mat << std::endl;
 
+	std::cout << quat_to_cmat(quat) << std::endl;
+
 	return 0;
 }

@@ -1,4 +1,4 @@
-/*
+/**
  * external file functions
  * @author tweber
  * @date dec-2013
@@ -151,14 +151,12 @@ static Symbol* fkt_loadtxt(const std::vector<Symbol*>& vecSyms,
 static Symbol* fkt_loadinstr(const std::vector<Symbol*>& vecSyms,
 	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
 {
-	//if(!check_args(runinfo, vecSyms, {SYMBOL_STRING}, {0}, "loadinstr"))
-	//	return 0;
-
-	if(vecSyms.size() != 1)
+	if(vecSyms.size() < 1)
 	{
 		tl::log_err(linenr(runinfo), "loadinstr needs one argument of string or array type.");
 		return 0;
 	}
+
 
 	std::vector<tl::FileInstrBase<t_real>*> vecToMerge;
 
@@ -217,6 +215,16 @@ static Symbol* fkt_loadinstr(const std::vector<Symbol*>& vecSyms,
 		delete pToMerge;
 	}
 	vecToMerge.clear();
+
+
+	// optional smoothing
+	if(vecSyms.size() >= 3 && vecSyms[1]->GetType()==SYMBOL_STRING)
+	{
+		t_string strCol = ((SymbolString*)vecSyms[1])->GetVal();	// column name
+		t_real dEps = vecSyms[2]->GetValDouble();					// epsilon
+
+		pInstr->SmoothData(strCol, dEps);
+	}
 
 
 	const tl::FileInstrBase<t_real>::t_vecDat& vecDat = pInstr->GetData();

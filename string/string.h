@@ -180,7 +180,7 @@ bool str_is_equal(const t_str& str0, const t_str& str1, bool bCase=0)
 
 	if(bCase) return str0==str1;
 
-	for(unsigned int i=0; i<str0.size(); ++i)
+	for(std::size_t i=0; i<str0.size(); ++i)
 	{
 		if(std::tolower(str0[i]) != std::tolower(str1[i]))
 			return false;
@@ -335,7 +335,7 @@ bool begins_with(const t_str& str, const t_str& strBeg)
 	if(str.length() < strBeg.length())
 		return false;
 
-	for(unsigned int i=0; i<strBeg.length(); ++i)
+	for(std::size_t i=0; i<strBeg.length(); ++i)
 		if(str[i] != strBeg[i])
 			return false;
 

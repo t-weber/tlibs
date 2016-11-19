@@ -51,12 +51,13 @@ class FileInstrBase
 		virtual t_real GetKFix() const = 0;
 		virtual bool IsKiFixed() const = 0;
 
-		virtual const t_vecVals& GetCol(const std::string& strName) const = 0;
-		virtual t_vecVals& GetCol(const std::string& strName) = 0;
+		virtual const t_vecVals& GetCol(const std::string& strName, std::size_t *pIdx=0) const = 0;
+		virtual t_vecVals& GetCol(const std::string& strName, std::size_t *pIdx=0) = 0;
 
 		virtual std::size_t GetScanCount() const = 0;
 		virtual std::array<t_real, 5> GetScanHKLKiKf(std::size_t i) const = 0;
-		virtual bool MergeWith(const FileInstrBase<t_real>* pDat) = 0;
+		virtual bool MergeWith(const FileInstrBase<t_real>* pDat);
+		virtual void SmoothData(const std::string& strCol, t_real dEps, bool bIterate=1);
 
 		virtual std::string GetTitle() const = 0;
 		virtual std::string GetUser() const = 0;
@@ -67,6 +68,7 @@ class FileInstrBase
 		virtual std::string GetTimestamp() const = 0;
 
 		virtual const t_vecDat& GetData() const = 0;
+		virtual t_vecDat& GetData() = 0;
 		virtual const t_vecColNames& GetColNames() const = 0;
 		virtual const t_mapParams& GetAllParams() const = 0;
 
@@ -90,10 +92,10 @@ class FilePsi : public FileInstrBase<_t_real>
 {
 	public:
 		using t_real = _t_real;
-                using t_mapParams = typename FileInstrBase<t_real>::t_mapParams;
-                using t_vecColNames = typename FileInstrBase<t_real>::t_vecColNames;
-                using t_vecVals = typename FileInstrBase<t_real>::t_vecVals;
-                using t_vecDat = typename FileInstrBase<t_real>::t_vecDat;
+		using t_mapParams = typename FileInstrBase<t_real>::t_mapParams;
+		using t_vecColNames = typename FileInstrBase<t_real>::t_vecColNames;
+		using t_vecVals = typename FileInstrBase<t_real>::t_vecVals;
+		using t_vecDat = typename FileInstrBase<t_real>::t_vecDat;
 
 		// internal parameters in m_mapParams
 		typedef std::map<std::string, t_real> t_mapIParams;
@@ -121,8 +123,8 @@ class FilePsi : public FileInstrBase<_t_real>
 		std::size_t GetColCount() const { return m_vecColNames.size(); }
 
 		const t_vecVals& GetCol(std::size_t iCol) const { return m_vecData[iCol]; }
-		virtual const t_vecVals& GetCol(const std::string& strName) const override;
-		virtual t_vecVals& GetCol(const std::string& strName) override;
+		virtual const t_vecVals& GetCol(const std::string& strName, std::size_t *pIdx=0) const override;
+		virtual t_vecVals& GetCol(const std::string& strName, std::size_t *pIdx=0) override;
 
 	public:
 		virtual std::array<t_real, 3> GetSampleLattice() const override;
@@ -152,6 +154,7 @@ class FilePsi : public FileInstrBase<_t_real>
 		virtual std::string GetTimestamp() const override;
 
 		virtual const t_vecDat& GetData() const override { return m_vecData; }
+		virtual t_vecDat& GetData() override { return m_vecData; }
 		virtual const t_vecColNames& GetColNames() const override { return m_vecColNames; }
 		virtual const t_mapParams& GetAllParams() const override { return m_mapParams; }
 
@@ -169,10 +172,10 @@ class FileFrm : public FileInstrBase<_t_real>
 {
 	public:
 		using t_real = _t_real;
-                using t_mapParams = typename FileInstrBase<t_real>::t_mapParams;
-                using t_vecColNames = typename FileInstrBase<t_real>::t_vecColNames;
-                using t_vecVals = typename FileInstrBase<t_real>::t_vecVals;
-                using t_vecDat = typename FileInstrBase<t_real>::t_vecDat;
+		using t_mapParams = typename FileInstrBase<t_real>::t_mapParams;
+		using t_vecColNames = typename FileInstrBase<t_real>::t_vecColNames;
+		using t_vecVals = typename FileInstrBase<t_real>::t_vecVals;
+		using t_vecDat = typename FileInstrBase<t_real>::t_vecDat;
 
 	protected:
 		t_mapParams m_mapParams;
@@ -205,8 +208,8 @@ class FileFrm : public FileInstrBase<_t_real>
 		virtual std::array<t_real, 5> GetScanHKLKiKf(std::size_t i) const override;
 		virtual bool MergeWith(const FileInstrBase<t_real>* pDat) override;
 
-		virtual const t_vecVals& GetCol(const std::string& strName) const override;
-		virtual t_vecVals& GetCol(const std::string& strName) override;
+		virtual const t_vecVals& GetCol(const std::string& strName, std::size_t *pIdx=0) const override;
+		virtual t_vecVals& GetCol(const std::string& strName, std::size_t *pIdx=0) override;
 
 		virtual std::string GetTitle() const override;
 		virtual std::string GetUser() const override;
@@ -217,6 +220,7 @@ class FileFrm : public FileInstrBase<_t_real>
 		virtual std::string GetTimestamp() const override;
 
 		virtual const t_vecDat& GetData() const override { return m_vecData; }
+		virtual t_vecDat& GetData() override { return m_vecData; }
 		virtual const t_vecColNames& GetColNames() const override { return m_vecQuantities; }
 		virtual const t_mapParams& GetAllParams() const override { return m_mapParams; }
 
@@ -234,10 +238,10 @@ class FileMacs : public FileInstrBase<_t_real>
 {
 	public:
 		using t_real = _t_real;
-                using t_mapParams = typename FileInstrBase<t_real>::t_mapParams;
-                using t_vecColNames = typename FileInstrBase<t_real>::t_vecColNames;
-                using t_vecVals = typename FileInstrBase<t_real>::t_vecVals;
-                using t_vecDat = typename FileInstrBase<t_real>::t_vecDat;
+		using t_mapParams = typename FileInstrBase<t_real>::t_mapParams;
+		using t_vecColNames = typename FileInstrBase<t_real>::t_vecColNames;
+		using t_vecVals = typename FileInstrBase<t_real>::t_vecVals;
+		using t_vecDat = typename FileInstrBase<t_real>::t_vecDat;
 
 	protected:
 		t_mapParams m_mapParams;
@@ -270,8 +274,8 @@ class FileMacs : public FileInstrBase<_t_real>
 		virtual std::array<t_real, 5> GetScanHKLKiKf(std::size_t i) const override;
 		virtual bool MergeWith(const FileInstrBase<t_real>* pDat) override;
 
-		virtual const t_vecVals& GetCol(const std::string& strName) const override;
-		virtual t_vecVals& GetCol(const std::string& strName) override;
+		virtual const t_vecVals& GetCol(const std::string& strName, std::size_t *pIdx=0) const override;
+		virtual t_vecVals& GetCol(const std::string& strName, std::size_t *pIdx=0) override;
 
 		virtual std::string GetTitle() const override;
 		virtual std::string GetUser() const override;
@@ -282,6 +286,7 @@ class FileMacs : public FileInstrBase<_t_real>
 		virtual std::string GetTimestamp() const override;
 
 		virtual const t_vecDat& GetData() const override { return m_vecData; }
+		virtual t_vecDat& GetData() override { return m_vecData; }
 		virtual const t_vecColNames& GetColNames() const override { return m_vecQuantities; }
 		virtual const t_mapParams& GetAllParams() const override { return m_mapParams; }
 
@@ -299,10 +304,10 @@ class FileTrisp : public FileInstrBase<_t_real>
 {
 	public:
 		using t_real = _t_real;
-                using t_mapParams = typename FileInstrBase<t_real>::t_mapParams;
-                using t_vecColNames = typename FileInstrBase<t_real>::t_vecColNames;
-                using t_vecVals = typename FileInstrBase<t_real>::t_vecVals;
-                using t_vecDat = typename FileInstrBase<t_real>::t_vecDat;
+		using t_mapParams = typename FileInstrBase<t_real>::t_mapParams;
+		using t_vecColNames = typename FileInstrBase<t_real>::t_vecColNames;
+		using t_vecVals = typename FileInstrBase<t_real>::t_vecVals;
+		using t_vecDat = typename FileInstrBase<t_real>::t_vecDat;
 
 	protected:
 		t_mapParams m_mapParams;
@@ -335,8 +340,8 @@ class FileTrisp : public FileInstrBase<_t_real>
 		virtual std::array<t_real, 5> GetScanHKLKiKf(std::size_t i) const override;
 		virtual bool MergeWith(const FileInstrBase<t_real>* pDat) override;
 
-		virtual const t_vecVals& GetCol(const std::string& strName) const override;
-		virtual t_vecVals& GetCol(const std::string& strName) override;
+		virtual const t_vecVals& GetCol(const std::string& strName, std::size_t *pIdx=0) const override;
+		virtual t_vecVals& GetCol(const std::string& strName, std::size_t *pIdx=0) override;
 
 		virtual std::string GetTitle() const override;
 		virtual std::string GetUser() const override;
@@ -347,6 +352,7 @@ class FileTrisp : public FileInstrBase<_t_real>
 		virtual std::string GetTimestamp() const override;
 
 		virtual const t_vecDat& GetData() const override { return m_vecData; }
+		virtual t_vecDat& GetData() override { return m_vecData; }
 		virtual const t_vecColNames& GetColNames() const override { return m_vecQuantities; }
 		virtual const t_mapParams& GetAllParams() const override { return m_mapParams; }
 
@@ -364,10 +370,10 @@ class FileRaw : public FileInstrBase<_t_real>
 {
 	public:
 		using t_real = _t_real;
-                using t_mapParams = typename FileInstrBase<t_real>::t_mapParams;
-                using t_vecColNames = typename FileInstrBase<t_real>::t_vecColNames;
-                using t_vecVals = typename FileInstrBase<t_real>::t_vecVals;
-                using t_vecDat = typename FileInstrBase<t_real>::t_vecDat;
+		using t_mapParams = typename FileInstrBase<t_real>::t_mapParams;
+		using t_vecColNames = typename FileInstrBase<t_real>::t_vecColNames;
+		using t_vecVals = typename FileInstrBase<t_real>::t_vecVals;
+		using t_vecDat = typename FileInstrBase<t_real>::t_vecDat;
 
 	protected:
 		DatFile<t_real, char> m_dat;
@@ -395,8 +401,8 @@ class FileRaw : public FileInstrBase<_t_real>
 		virtual std::array<t_real, 5> GetScanHKLKiKf(std::size_t i) const override;
 		virtual bool MergeWith(const FileInstrBase<t_real>* pDat) override;
 
-		virtual const t_vecVals& GetCol(const std::string& strName) const override;
-		virtual t_vecVals& GetCol(const std::string& strName) override;
+		virtual const t_vecVals& GetCol(const std::string& strName, std::size_t *pIdx=0) const override;
+		virtual t_vecVals& GetCol(const std::string& strName, std::size_t *pIdx=0) override;
 
 		virtual std::string GetTitle() const override;
 		virtual std::string GetUser() const override;
@@ -407,6 +413,7 @@ class FileRaw : public FileInstrBase<_t_real>
 		virtual std::string GetTimestamp() const override;
 
 		virtual const t_vecDat& GetData() const override;
+		virtual t_vecDat& GetData() override;
 		virtual const t_vecColNames& GetColNames() const override;
 		virtual const t_mapParams& GetAllParams() const override;
 

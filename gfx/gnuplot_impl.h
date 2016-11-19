@@ -63,7 +63,7 @@ void GnuPlot<t_real>::Init()
 }
 
 template<class t_real>
-void GnuPlot<t_real>::SetTerminal(int iWnd, const char* pcBackend)
+void GnuPlot<t_real>::SetTerminal(int iWnd, const char* pcBackend, t_real dW, t_real dH)
 {
 	if(m_bTermLocked) return;
 
@@ -71,18 +71,20 @@ void GnuPlot<t_real>::SetTerminal(int iWnd, const char* pcBackend)
 	(*m_postr) << "set obj 1 rectangle behind fillcolor rgbcolor \"white\" from screen 0,0 to screen 1,1\n";
 
 	(*m_postr) << "set term " << pcBackend <<  " " << iWnd << " "
-		<< "size 640,480 "
-		<< "enhanced "
-		<< "font \"NimbusSanL-Regu,12\" "
-//		<< "title \"" << "Plot " << (iWnd+1) << "\" " 
-		<< "persist "
-//		<< "noraise "
-		<< "dashed "
-		<<  "\n";
+		<< "enhanced font \"NimbusSanL-Regu,12\" persist dashed "
+//		<< "title \"" << "Plot " << (iWnd+1) << "\" noraise "
+		;
+
+	if(dW>=t_real(0) && dH>=t_real(0))
+		(*m_postr) << "size " << dW << "," << dH << " ";
+	else
+		(*m_postr) << "size 640,480 ";
+
+	(*m_postr) << "\n";
 }
 
 template<class t_real>
-void GnuPlot<t_real>::SetFileTerminal(const char* pcFile)
+void GnuPlot<t_real>::SetFileTerminal(const char* pcFile, t_real dW, t_real dH)
 {
 	if(m_bTermLocked) return;
 
@@ -92,11 +94,21 @@ void GnuPlot<t_real>::SetFileTerminal(const char* pcFile)
 
 	if(str_is_equal(strExt, std::string("pdf"), 0))
 	{
-		(*m_postr) << "set term pdf enhanced color font \"NimbusSanL-Regu,16\" \n";
+		(*m_postr) << "set term pdf "
+			<< "enhanced color font \"NimbusSanL-Regu,16\" ";
+
+		if(dW>=t_real(0) && dH>=t_real(0))
+			(*m_postr) << "size " << dW << "," << dH << " ";
+		(*m_postr) << "\n";
 	}
 	else if(str_is_equal(strExt, std::string("ps"), 0))
 	{
-		(*m_postr) << "set term postscript eps enhanced color font \"NimbusSanL-Regu,16\" \n";
+		(*m_postr) << "set term postscript eps "
+			<< "enhanced color font \"NimbusSanL-Regu,16\" ";
+
+		if(dW>=t_real(0) && dH>=t_real(0))
+			(*m_postr) << "size " << dW << "," << dH << " ";
+		(*m_postr) << "\n";
 	}
 	else
 	{
@@ -256,6 +268,9 @@ void GnuPlot<t_real>::FinishPlot()
 			if(!!ofCmd)
 			{
 				ofCmd << "#!/usr/bin/gnuplot -p\n\n";
+				ofCmd << "#set term pdf enhanced color font \"NimbusSanL-Regu,16\"\n";
+				ofCmd << "#set output \"" << m_strCmdFileOutput << ".pdf\"\n\n";
+
 				ofCmd << strCmd << "\n";
 				ofCmd.close();
 				m_strCmdFileOutput = "";

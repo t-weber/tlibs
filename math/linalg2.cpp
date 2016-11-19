@@ -29,6 +29,9 @@ template bool eigenvec_cplx(const ublas::matrix<std::complex<double>>& mat,
 template bool eigenvec_sym(const ublas::matrix<double>& mat,
 	std::vector<ublas::vector<double>>& evecs, std::vector<double>& evals);
 
+template bool eigenvec_approxsym(const ublas::matrix<double>& mat,
+	std::vector<ublas::vector<double>>& evecs, std::vector<double>& evals);
+
 template bool eigenvec_herm(const ublas::matrix<std::complex<double>>& mat,
 	std::vector<ublas::vector<std::complex<double>>>& evecs,
 	std::vector<double>& evals);

@@ -1,4 +1,4 @@
-/*
+/**
  * Loads instrument-specific data files
  * @author tweber
  * @date feb-2015
@@ -158,7 +158,7 @@ bool FileInstrBase<t_real>::MatchColumn(const std::string& strRegex,
 				return true;
 			}*/
 
-			t_real dSum = std::accumulate(vecVals.begin(), vecVals.end(), 0., 
+			t_real dSum = std::accumulate(vecVals.begin(), vecVals.end(), 0.,
 				[](t_real t1, t_real t2) -> t_real { return t1+t2; });
 			if(!bFilterEmpty || !float_equal<t_real>(dSum, 0.))
 				vecMatchedCols.push_back(t_pairCol{strCurColName, dSum});
@@ -205,6 +205,58 @@ bool FileInstrBase<t_real>::MergeWith(const FileInstrBase<t_real>* pDat)
 	}
 
 	return true;
+}
+
+template<class t_real>
+void FileInstrBase<t_real>::SmoothData(const std::string& strCol,
+	t_real dEps, bool bIterate)
+{
+	std::size_t iIdxCol;
+	this->GetCol(strCol, &iIdxCol);		// get column index
+	if(iIdxCol == GetColNames().size())	// no such column?
+	{
+		log_err("No such data column: \"", strCol, "\".");
+		return;
+	}
+
+	while(1)
+	{
+		t_vecDat& vecDatOld = this->GetData();
+		const std::size_t iNumCols = vecDatOld.size();
+		const std::size_t iNumRows = vecDatOld[0].size();
+		t_vecDat vecDatNew(iNumCols);
+		std::vector<bool> vecValidRows(iNumRows, 1);
+
+		for(std::size_t iPt1=0; iPt1<iNumRows; ++iPt1)
+		{
+			if(!vecValidRows[iPt1]) continue;
+
+			t_vecVals vecVals(iNumCols, 0);
+			std::size_t iNumUnited = 0;
+			for(std::size_t iPt2=iPt1; iPt2<iNumRows; ++iPt2)
+			{
+				if(!vecValidRows[iPt2]) continue;
+				if(std::abs(vecDatOld[iIdxCol][iPt1]-vecDatOld[iIdxCol][iPt2]) <= dEps)
+				{
+					for(std::size_t iCol=0; iCol<iNumCols; ++iCol)
+						vecVals[iCol] += vecDatOld[iCol][iPt2];
+					++iNumUnited;
+					vecValidRows[iPt2] = 0;
+				}
+			}
+
+			for(std::size_t iCol=0; iCol<iNumCols; ++iCol)
+			{
+				vecVals[iCol] /= t_real(iNumUnited);
+				vecDatNew[iCol].push_back(vecVals[iCol]);
+			}
+		}
+
+		vecDatOld = vecDatNew;
+		// if no iteration requested or no more change -> break
+		if(!bIterate || iNumRows==vecDatNew[0].size())
+			break;
+	}
 }
 
 
@@ -329,23 +381,27 @@ bool FilePsi<t_real>::Load(const char* pcFile)
 
 template<class t_real>
 const typename FileInstrBase<t_real>::t_vecVals& 
-FilePsi<t_real>::GetCol(const std::string& strName) const
+FilePsi<t_real>::GetCol(const std::string& strName, std::size_t *pIdx) const
 {
-	return const_cast<FilePsi*>(this)->GetCol(strName);
+	return const_cast<FilePsi*>(this)->GetCol(strName, pIdx);
 }
 
 template<class t_real>
 typename FileInstrBase<t_real>::t_vecVals& 
-FilePsi<t_real>::GetCol(const std::string& strName)
+FilePsi<t_real>::GetCol(const std::string& strName, std::size_t *pIdx)
 {
 	static std::vector<t_real> vecNull;
 
 	for(std::size_t i=0; i<m_vecColNames.size(); ++i)
 	{
 		if(m_vecColNames[i] == strName)
+		{
+			if(pIdx) *pIdx = i;
 			return m_vecData[i];
+		}
 	}
 
+	if(pIdx) *pIdx = m_vecColNames.size();
 	return vecNull;
 }
 
@@ -470,16 +526,16 @@ std::array<t_real, 4> FilePsi<t_real>::GetPosHKLE() const
 template<class t_real>
 std::array<t_real, 4> FilePsi<t_real>::GetDeltaHKLE() const
 {
-        typename t_mapIParams::const_iterator iterH = m_mapScanSteps.find("DQH");
+	typename t_mapIParams::const_iterator iterH = m_mapScanSteps.find("DQH");
 	if(iterH==m_mapScanSteps.end()) iterH = m_mapScanSteps.find("QH");
 
-        typename t_mapIParams::const_iterator iterK = m_mapScanSteps.find("DQK");
+	typename t_mapIParams::const_iterator iterK = m_mapScanSteps.find("DQK");
 	if(iterK==m_mapScanSteps.end()) iterK = m_mapScanSteps.find("QK");
 
-        typename t_mapIParams::const_iterator iterL = m_mapScanSteps.find("DQL");
+	typename t_mapIParams::const_iterator iterL = m_mapScanSteps.find("DQL");
 	if(iterL==m_mapScanSteps.end()) iterL = m_mapScanSteps.find("QL");
 
-        typename t_mapIParams::const_iterator iterE = m_mapScanSteps.find("DEN");
+	typename t_mapIParams::const_iterator iterE = m_mapScanSteps.find("DEN");
 	if(iterE==m_mapScanSteps.end()) iterE = m_mapScanSteps.find("EN");
 
 
@@ -831,23 +887,27 @@ bool FileFrm<t_real>::Load(const char* pcFile)
 
 template<class t_real>
 const typename FileInstrBase<t_real>::t_vecVals& 
-FileFrm<t_real>::GetCol(const std::string& strName) const
+FileFrm<t_real>::GetCol(const std::string& strName, std::size_t *pIdx) const
 {
-	return const_cast<FileFrm*>(this)->GetCol(strName);
+	return const_cast<FileFrm*>(this)->GetCol(strName, pIdx);
 }
 
 template<class t_real>
 typename FileInstrBase<t_real>::t_vecVals& 
-FileFrm<t_real>::GetCol(const std::string& strName)
+FileFrm<t_real>::GetCol(const std::string& strName, std::size_t *pIdx)
 {
 	static std::vector<t_real> vecNull;
 
 	for(std::size_t i=0; i<m_vecQuantities.size(); ++i)
 	{
 		if(m_vecQuantities[i] == strName)
+		{
+			if(pIdx) *pIdx = i;
 			return m_vecData[i];
+		}
 	}
 
+	if(pIdx) *pIdx = m_vecQuantities.size();
 	return vecNull;
 }
 
@@ -1190,7 +1250,7 @@ void FileMacs<t_real>::ReadHeader(std::istream& istr)
 		strLine = strLine.substr(1);
 
 		std::pair<std::string, std::string> pairLine =
-				split_first<std::string>(strLine, " \t", 1);
+			split_first<std::string>(strLine, " \t", 1);
 		//std::cout << "key: " << pairLine.first << ", val: " << pairLine.second << std::endl;
 
 		if(pairLine.first == "")
@@ -1274,23 +1334,27 @@ bool FileMacs<t_real>::Load(const char* pcFile)
 
 template<class t_real>
 const typename FileInstrBase<t_real>::t_vecVals& 
-FileMacs<t_real>::GetCol(const std::string& strName) const
+FileMacs<t_real>::GetCol(const std::string& strName, std::size_t *pIdx) const
 {
-	return const_cast<FileMacs*>(this)->GetCol(strName);
+	return const_cast<FileMacs*>(this)->GetCol(strName, pIdx);
 }
 
 template<class t_real>
 typename FileInstrBase<t_real>::t_vecVals& 
-FileMacs<t_real>::GetCol(const std::string& strName)
+FileMacs<t_real>::GetCol(const std::string& strName, std::size_t *pIdx)
 {
 	static std::vector<t_real> vecNull;
 
 	for(std::size_t i=0; i<m_vecQuantities.size(); ++i)
 	{
 		if(m_vecQuantities[i] == strName)
+		{
+			if(pIdx) *pIdx = i;
 			return m_vecData[i];
+		}
 	}
 
+	if(pIdx) *pIdx = m_vecQuantities.size();
 	return vecNull;
 }
 
@@ -1748,23 +1812,27 @@ bool FileTrisp<t_real>::Load(const char* pcFile)
 
 template<class t_real>
 const typename FileInstrBase<t_real>::t_vecVals& 
-FileTrisp<t_real>::GetCol(const std::string& strName) const
+FileTrisp<t_real>::GetCol(const std::string& strName, std::size_t *pIdx) const
 {
-	return const_cast<FileTrisp*>(this)->GetCol(strName);
+	return const_cast<FileTrisp*>(this)->GetCol(strName, pIdx);
 }
 
 template<class t_real>
 typename FileInstrBase<t_real>::t_vecVals& 
-FileTrisp<t_real>::GetCol(const std::string& strName)
+FileTrisp<t_real>::GetCol(const std::string& strName, std::size_t *pIdx)
 {
 	static std::vector<t_real> vecNull;
 
 	for(std::size_t i=0; i<m_vecQuantities.size(); ++i)
 	{
 		if(m_vecQuantities[i] == strName)
+		{
+			if(pIdx) *pIdx = i;
 			return m_vecData[i];
+		}
 	}
 
+	if(pIdx) *pIdx = m_vecQuantities.size();
 	return vecNull;
 }
 
@@ -1972,26 +2040,37 @@ bool FileRaw<t_real>::Load(const char* pcFile)
 
 template<class t_real>
 const typename FileInstrBase<t_real>::t_vecVals& 
-FileRaw<t_real>::GetCol(const std::string& strName) const
+FileRaw<t_real>::GetCol(const std::string& strName, std::size_t *pIdx) const
 {
-	return const_cast<FileRaw*>(this)->GetCol(strName);
+	return const_cast<FileRaw*>(this)->GetCol(strName, pIdx);
 }
 
 template<class t_real>
 typename FileInstrBase<t_real>::t_vecVals& 
-FileRaw<t_real>::GetCol(const std::string& strName)
+FileRaw<t_real>::GetCol(const std::string& strName, std::size_t *pIdx)
 {
 	std::size_t iCol = str_to_var<std::size_t>(strName)-1;
 	if(iCol < m_dat.GetColumnCount())
+	{
+		if(pIdx) *pIdx = iCol;
 		return m_dat.GetColumn(iCol);
+	}
 
 	static std::vector<t_real> vecNull;
+	if(pIdx) *pIdx = m_dat.GetColumnCount();
 	return vecNull;
 }
 
 template<class t_real>
-const typename FileInstrBase<t_real>::t_vecDat& 
+const typename FileInstrBase<t_real>::t_vecDat&
 FileRaw<t_real>::GetData() const
+{
+	return m_dat.GetData();
+}
+
+template<class t_real>
+typename FileInstrBase<t_real>::t_vecDat&
+FileRaw<t_real>::GetData()
 {
 	return m_dat.GetData();
 }
@@ -2084,8 +2163,7 @@ template<class t_real> std::string FileRaw<t_real>::GetLocalContact() const { re
 template<class t_real> std::string FileRaw<t_real>::GetScanNumber() const { return ""; }
 template<class t_real> std::string FileRaw<t_real>::GetSampleName() const { return ""; }
 template<class t_real> std::string FileRaw<t_real>::GetSpacegroup() const { return ""; }
-template<class t_real>
-std::vector<std::string> FileRaw<t_real>::GetScannedVars() const { return {"1"}; }
+template<class t_real> std::vector<std::string> FileRaw<t_real>::GetScannedVars() const { return {"1"}; }
 template<class t_real> std::string FileRaw<t_real>::GetCountVar() const { return "2"; }
 template<class t_real> std::string FileRaw<t_real>::GetMonVar() const { return ""; }
 template<class t_real> std::string FileRaw<t_real>::GetScanCommand() const { return ""; }

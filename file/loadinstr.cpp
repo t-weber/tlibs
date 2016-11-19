@@ -1,4 +1,4 @@
-/*
+/**
  * Loads instrument-specific data files
  * @author tweber
  * @date feb-2015

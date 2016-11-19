@@ -79,8 +79,8 @@ public:
 	bool IsReady() const;
 	std::ostream& GetStream();
 
-	void SetTerminal(int iWnd=0, const char* pcBackend="x11");
-	void SetFileTerminal(const char* pcFile);
+	void SetTerminal(int iWnd=0, const char* pcBackend="x11", t_real dW=-1, t_real dH=-1);
+	void SetFileTerminal(const char* pcFile, t_real dW=-1, t_real dH=-1);
 	void SetCmdFileOutput(const char* pcFile);
 
 	void StartPlot();

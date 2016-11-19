@@ -79,6 +79,9 @@ template<class Sys, class T=double> using t_energy_per_temperature =
 template<class Sys, class T=double> using t_energy_per_field =
 	units::quantity<units::unit<typename units::derived_dimension
 	<units::current_base_dimension,1, units::length_base_dimension,2>::type, Sys>, T>;
+template<class Sys, class T=double> using t_inv_flux_time =
+	units::quantity<units::unit<typename units::derived_dimension
+	<units::current_base_dimension,1, units::time_base_dimension,1, units::mass_base_dimension,-1>::type, Sys>, T>;
 template<class Sys, class T=double> using t_dimensionless =
 	units::quantity<units::unit<units::dimensionless_type, Sys>, T>;
 
@@ -104,6 +107,7 @@ template<class Y=double> using t_flux_si = t_flux<units::si::system, Y>;
 template<class Y=double> using t_area_si = t_area<units::si::system, Y>;
 template<class Y=double> using t_action_si = t_action<units::si::system, Y>;
 template<class Y=double> using t_energy_per_temperature_si = t_energy_per_temperature<units::si::system, Y>;
+template<class Y=double> using t_inv_flux_time_si = t_inv_flux_time<units::si::system, Y>;
 
 
 // si quantities -- full specialisations
@@ -180,6 +184,12 @@ template<class Y=double> t_energy_per_field<units::si::system, Y> get_mu_e()
 { return Y(co::mu_e/units::si::joules*units::si::tesla)*units::si::joules/units::si::tesla; }
 template<class Y=double> Y get_g_n() { return Y(co::g_n.value()); }
 template<class Y=double> Y get_g_e() { return Y(co::g_e.value()); }
+template<class Y=double> t_inv_flux_time<units::si::system, Y> get_gamma_n()
+{ return Y(co::gamma_n*units::si::tesla*units::si::seconds)/units::si::tesla/units::si::seconds; }
+template<class Y=double> t_inv_flux_time<units::si::system, Y> get_gamma_e()
+{ return Y(co::gamma_e*units::si::tesla*units::si::seconds)/units::si::tesla/units::si::seconds; }
+template<class Y=double> t_length<units::si::system, Y> get_r_e()
+{ return Y(co::r_e/units::si::meters)*units::si::meters; }
 
 
 // template constants
@@ -203,7 +213,7 @@ static const time seconds = 1.*units::si::seconds;
 static const angle radians = 1.*units::si::radians;
 static const temp kelvins = 1.*units::si::kelvins;
 static const mass amu = co::m_u;
-static const area barns = 1e-28 * units::si::meters*units::si::meters;
+static const area barns = 1e-28 * meters*meters;
 
 static const energy one_meV = 1e-3 * co::e * units::si::volts;
 static const energy one_eV = co::e * units::si::volts;

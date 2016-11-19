@@ -491,7 +491,7 @@ t_wavenumber<Sys,Y> get_other_k(const t_energy<Sys,Y>& E,
 // --------------------------------------------------------------------------------
 
 /**
- * kf^3 mono/ana reflectivity factor, see e.g. Shirane p. 125
+ * kf^3 mono/ana reflectivity factor, see e.g. (Shirane 2002) p. 125
  */
 template<class Sys, class Y>
 Y ana_effic_factor(const t_wavenumber<Sys, Y>& kf, const t_angle<Sys, Y>& theta)
@@ -501,7 +501,7 @@ Y ana_effic_factor(const t_wavenumber<Sys, Y>& kf, const t_angle<Sys, Y>& theta)
 }
 
 /**
- * kf^3 mono/ana reflectivity factor, see e.g. Shirane p. 125
+ * kf^3 mono/ana reflectivity factor, see e.g. (Shirane 2002) p. 125
  */
 template<class Sys, class Y>
 Y ana_effic_factor(const t_wavenumber<Sys, Y>& kf, const t_length<Sys, Y>& d)
@@ -518,7 +518,7 @@ Y ana_effic_factor(const t_wavenumber<Sys, Y>& kf, const t_length<Sys, Y>& d)
 // spurions
 
 /**
- * Bragg tail -> see Shirane p. 152
+ * Bragg tail -> see (Shirane 2002) p. 152
  */
 template<class Sys, class Y>
 t_energy<Sys,Y> get_bragg_tail(t_wavenumber<Sys,Y> k,
@@ -533,7 +533,7 @@ t_energy<Sys,Y> get_bragg_tail(t_wavenumber<Sys,Y> k,
 
 
 /**
- * higher-order inelastic spurions -> Shirane pp. 146-148
+ * higher-order inelastic spurions -> (Shirane 2002) pp. 146-148
  */
 template<class Sys, class Y>
 t_energy<Sys,Y> get_inelastic_spurion(bool bConstEi, t_energy<Sys,Y> E,
@@ -544,7 +544,7 @@ t_energy<Sys,Y> get_inelastic_spurion(bool bConstEi, t_energy<Sys,Y> E,
 
 	t_energy<Sys,Y> E_sp;
 
-	// formulas from Shirane, p. 147
+	// formulas from (Shirane 2002), p. 147
 	if(bConstEi)
 		E_sp = (Y(1.) - dOrderMonoSq/dOrderAnaSq) * E;
 	else
@@ -607,7 +607,7 @@ struct ElasticSpurion
 };
 
 /**
- * accidental elastic (currat-axe) spurions -> Shirane pp. 150-155 (esp. fig. 6.2)
+ * accidental elastic (currat-axe) spurions -> (Shirane 2002) pp. 150-155 (esp. fig. 6.2)
  */
 template<typename T=double>
 ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
@@ -703,7 +703,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 
 /**
  * Bose factor
- * see e.g.: Shirane, p. 28
+ * see e.g.: (Shirane 2002), p. 28
  */
 template<class t_real=double>
 t_real bose(t_real E, t_real T)
@@ -783,7 +783,7 @@ t_length<Sys, Y> focal_len(const t_length<Sys, Y>& lenBefore, const t_length<Sys
 }
 
 /**
- * optimal mono/ana curvature, see e.g. Shirane p. 66
+ * optimal mono/ana curvature, see e.g. (Shirane 2002) p. 66
  * or nicos/nicos-core.git/tree/nicos/devices/tas/mono.py in nicos
  * or Monochromator_curved.comp in McStas
  */
