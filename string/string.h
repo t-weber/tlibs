@@ -161,13 +161,17 @@ t_str insert_before(const t_str& str, const t_str& strChar, const t_str& strInse
 template<class t_str=std::string>
 t_str str_to_upper(const t_str& str)
 {
-	typedef typename std::string::value_type t_char;
-
 	t_str strOut;
+
+#ifndef NO_BOOST
+	strOut = boost::to_upper_copy(str);
+#else
+	typedef typename std::string::value_type t_char;
 	strOut.reserve(str.length());
 
 	for(t_char ch : str)
 		strOut.push_back(std::toupper(ch));
+#endif
 
 	return strOut;
 }
@@ -202,10 +206,15 @@ template<class t_str=std::string>
 t_str str_to_lower(const t_str& str)
 {
 	t_str strLower;
+
+#ifndef NO_BOOST
+	strLower = boost::to_lower_copy(str);
+#else
 	strLower.reserve(str.length());
 
 	for(typename t_str::value_type ch : str)
 		strLower.push_back(std::tolower(ch));
+#endif
 
 	return strLower;
 }
@@ -229,14 +238,11 @@ void trim(t_str& str)
 	using t_char = typename t_str::value_type;
 
 #ifndef NO_BOOST
-
 	boost::trim_if(str, [](t_char c) -> bool
 	{
 		return get_trim_chars<t_str>().find(c) != t_str::npos;
 	});
-
 #else
-
 	std::size_t posLast = str.find_last_not_of(get_trim_chars<t_str>());
 	if(posLast == std::string::npos)
 		posLast = str.length();
@@ -251,7 +257,6 @@ void trim(t_str& str)
 		posFirst = str.length();
 
 	str.erase(str.begin(), str.begin()+posFirst);
-
 #endif
 }
 
