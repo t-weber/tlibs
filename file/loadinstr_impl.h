@@ -705,9 +705,12 @@ std::vector<std::string> FilePsi<t_real>::GetScannedVars() const
 
 	if(!vecVars.size())
 	{
-		tl::log_warn("Could not determine scan variable, using first column.");
+		tl::log_warn("Could not determine scan variable.");
 		if(m_vecColNames.size() >= 1)
+		{
+			tl::log_warn("Using first column: \"", m_vecColNames[0], "\".");
 			vecVars.push_back(m_vecColNames[0]);
+		}
 	}
 
 	//for(std::string& strVar : vecVars)
@@ -1177,16 +1180,21 @@ std::vector<std::string> FileFrm<t_real>::GetScannedVars() const
 			rex::smatch mDev;
 			if(rex::regex_search(strInfo, mDev, rxDev) && mDev.size()>2)
 			{
-				vecVars.push_back(mDev[2]);
+				std::string strDev = mDev[2];
+				if(std::find(m_vecQuantities.begin(), m_vecQuantities.end(), strDev) != m_vecQuantities.end())
+					vecVars.push_back(strDev);
 			}
 		}
 	}
 
 	if(!vecVars.size())
 	{
-		tl::log_warn("Could not determine scan variable, using first column.");
+		tl::log_warn("Could not determine scan variable.");
 		if(m_vecQuantities.size() >= 1)
+		{
+			tl::log_warn("Using first column: \"", m_vecQuantities[0], "\".");
 			vecVars.push_back(m_vecQuantities[0]);
+		}
 	}
 
 	return vecVars;
@@ -1619,9 +1627,12 @@ std::vector<std::string> FileMacs<t_real>::GetScannedVars() const
 
 	if(!vecScan.size())
 	{
-		tl::log_warn("Could not determine scan variable, using first column.");
+		tl::log_warn("Could not determine scan variable.");
 		if(m_vecQuantities.size() >= 1)
+		{
+			tl::log_warn("Using first column: \"", m_vecQuantities[0], "\".");
 			vecScan.push_back(m_vecQuantities[0]);
+		}
 	}
 
 	return vecScan;
@@ -1977,9 +1988,12 @@ std::vector<std::string> FileTrisp<t_real>::GetScannedVars() const
 
 	if(!vecScan.size())
 	{
-		tl::log_warn("Could not determine scan variable, using first column.");
+		tl::log_warn("Could not determine scan variable.");
 		if(m_vecQuantities.size() >= 1)
+		{
+			tl::log_warn("Using first column: \"", m_vecQuantities[0], "\".");
 			vecScan.push_back(m_vecQuantities[0]);
+		}
 	}
 
 	return vecScan;

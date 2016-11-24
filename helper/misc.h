@@ -1,4 +1,4 @@
-/*
+/**
  * misc helper
  * @author tweber
  * @date 07-mar-2013

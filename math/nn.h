@@ -1,5 +1,5 @@
-/*
- * next neighbours
+/**
+ * nearest neighbours
  * @author tweber
  * @date may-2016
  * @license GPLv2 or GPLv3
