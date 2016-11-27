@@ -87,7 +87,7 @@ T mag_formfact(T Q, T L, T S,
 }
 
 /**
- * form factor for transition metals (d orbitals, spin-only)
+ * form factor for transition metals (d orbitals, weak LS, spin-only)
  * @desc see: (Squires 2012), p. 138
  * @desc also see: http://www.neutron.ethz.ch/research/resources/magnetic-form-factors.html
  */
@@ -103,7 +103,7 @@ std::tuple<T,T,T> mag_formfact_d(T Q, T g,
 }
 
 /**
- * form factor for rare earths (f orbitals, LS)
+ * form factor for rare earths (f orbitals, strong LS, jj)
  * @desc see: (Squires 2012), p. 139
  * @desc also see: http://www.neutron.ethz.ch/research/resources/magnetic-form-factors.html
  */
@@ -115,7 +115,7 @@ std::tuple<T,T,T> mag_formfact_f(T Q, T L, T S, T J,
 	T j0 = j0_avg<T, t_vec>(Q, A0, a0);
 	T j2 = j2_avg<T, t_vec>(Q, A2, a2);
 
-	T gL = T(0.5) + (L*(L+T(1)) - S*(S+T(1))) / (T(2)*J* (J+T(1)));
+	T gL = T(0.5) + (L*(L+T(1)) - S*(S+T(1))) / (T(2)*J*(J+T(1)));
 	T gS = T(1) + (S*(S+T(1)) - L*(L+T(1))) / (J * (J+T(1)));
 
 	return std::tuple<T,T,T>(j0, j2, (gS*j0 + gL*(j0+j2)) / (gL + gS));

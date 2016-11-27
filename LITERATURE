@@ -1,4 +1,5 @@
 References for formulas and algorithms, which are employed in this software.
+============================================================================
 
 
 -------------------------------------------------------------------------------
@@ -10,12 +11,19 @@ Neutrons
 
 
 -------------------------------------------------------------------------------
-General Mathematics & Physics
+General Mathematics
 -------------------------------------------------------------------------------
 
 * (Bronstein 2008) I. N. Bronstein et al., "Taschenbuch der Mathematik", 2008, ISBN: 978-3-8171-2017-8.
 * (Merziger 2006), G. Merziger and T. Wirth, "Repetitorium der hoeheren Mathematik", 2006, ISBN: 3923923333.
 * (Scarpino 2011), M. Scarpino, "OpenCL in Action", 2011, ISBN: 9781617290176.
 * (Scherer 2010) P. O. J. Scherer, "Computational Physics", 2010, ISBN: 978-3-642-13989-5.
-* (Schroeder 2000) D. V. Schroeder, "Thermal Physics", 2000, ISBN: 0-321-27779-1.
 * (Stoecker 1999), H. Stoecker et al., "Taschenbuch mathematischer Formeln", 1999, ISBN: 3-8171-1573-3.
+
+
+-------------------------------------------------------------------------------
+General Physics
+-------------------------------------------------------------------------------
+
+* (Schroeder 2000) D. V. Schroeder, "Thermal Physics", 2000, ISBN: 0-321-27779-1.
+* (Khomskii 2014), D. I. Khomskii, "Transition Metal Compounds", 2014, ISBN: 978-1-107-02017-7

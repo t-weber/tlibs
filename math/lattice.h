@@ -9,6 +9,7 @@
 #define __TLIBS_LATTICE_H__
 
 #include "linalg.h"
+#include "quat.h"
 #include "math.h"
 #include "neutrons.h"
 #include <ostream>
@@ -138,7 +139,7 @@ void Lattice<T>::RotateEulerRecip(const t_vec& vecRecipX,
 	T dLenY = ublas::norm_2(vecY);
 	T dLenZ = ublas::norm_2(vecZ);
 
-	if(float_equal(dLenX, 0.) || float_equal(dLenY, 0.) || float_equal(dLenZ, 0.)
+	if(float_equal<T>(dLenX, 0.) || float_equal<T>(dLenY, 0.) || float_equal<T>(dLenZ, 0.)
 		|| std::isnan(dLenX) || std::isnan(dLenY) || std::isnan(dLenZ))
 	{
 		throw Err("Invalid reciprocal matrix.");
@@ -245,9 +246,10 @@ bool Lattice<T>::IsCubic() const
 	bool bEqualLen = float_equal<T>(GetA(), GetB()) && float_equal<T>(GetB(), GetC());
 	if(!bEqualLen) return false;
 
-	bool b90Deg = float_equal<T>(GetAlpha(), get_pi<T>()*T(0.5)) &&
-		float_equal<T>(GetBeta(), get_pi<T>()*T(0.5)) &&
-		float_equal<T>(GetGamma(), get_pi<T>()*T(0.5));
+	static const T pihalf = get_pi<T>()*T(0.5);
+	bool b90Deg = float_equal<T>(GetAlpha(), pihalf) &&
+		float_equal<T>(GetBeta(), pihalf) &&
+		float_equal<T>(GetGamma(), pihalf);
 
 	return b90Deg;
 }
@@ -259,7 +261,7 @@ bool Lattice<T>::IsCubic() const
 /**
  * B matrix converts rlu to 1/A
  */
-template<typename T=double>
+template<typename T = double>
 ublas::matrix<T> get_B(const Lattice<T>& lattice, bool bIsRealLattice=1)
 {
 	using t_mat = ublas::matrix<T>;
@@ -277,7 +279,7 @@ ublas::matrix<T> get_B(const Lattice<T>& lattice, bool bIsRealLattice=1)
 /**
  * U matrix expresses the coordinates in the basis of the scattering plane
  */
-template<typename T=double>
+template<typename T = double>
 ublas::matrix<T> get_U(const ublas::vector<T>& _vec1, const ublas::vector<T>& _vec2,
 	const ublas::matrix<T>* pmatB=nullptr)
 {
@@ -309,7 +311,7 @@ ublas::matrix<T> get_U(const ublas::vector<T>& _vec1, const ublas::vector<T>& _v
  * UB matrix converts rlu to 1/A and expresses it in the scattering plane coords:
  * Q = U*B*hkl
  */
-template<typename T=double>
+template<typename T = double>
 ublas::matrix<T> get_UB(const Lattice<T>& lattice_real,
 	const ublas::vector<T>& _vec1, const ublas::vector<T>& _vec2)
 {
@@ -329,7 +331,7 @@ ublas::matrix<T> get_UB(const Lattice<T>& lattice_real,
 /**
  * hklE -> TAS angles
  */
-template<typename T=double>
+template<typename T = double>
 void get_tas_angles(const Lattice<T>& lattice_real,
 	const ublas::vector<T>& _vec1, const ublas::vector<T>& _vec2,
 	T dKi, T dKf,
@@ -340,45 +342,42 @@ void get_tas_angles(const Lattice<T>& lattice_real,
 {
 	// distance for point to be considered inside scattering plane
 	static const T dDelta = std::cbrt(get_epsilon<T>());
-
+	static const auto angs = get_one_angstrom<T>();
+	static const auto rad = get_one_radian<T>();
 	using t_vec = ublas::vector<T>;
 	using t_mat = ublas::matrix<T>;
 
-	//try
+	t_mat matUB = get_UB(lattice_real, _vec1, _vec2);
+
+	t_vec vechkl = make_vec({dh, dk, dl});
+	t_vec vecQ = ublas::prod(matUB, vechkl);
+	if(pVecQ) *pVecQ = vecQ;
+
+	if(std::fabs(vecQ[2]) > dDelta)
 	{
-		t_mat matUB = get_UB(lattice_real, _vec1, _vec2);
-
-		t_vec vechkl = make_vec({dh, dk, dl});
-		t_vec vecQ = ublas::prod(matUB, vechkl);
-		if(pVecQ) *pVecQ = vecQ;
-
-		if(std::fabs(vecQ[2]) > dDelta)
-		{
-			std::ostringstream ostrErr;
-			ostrErr << "Position ("
-				<< vechkl[0] << vechkl[1] << vechkl[2]
-				<< ") is not in scattering plane.";
-			throw Err(ostrErr.str());
-		}
-
-		T dQ = ublas::norm_2(vecQ);
-		*pTwoTheta = get_sample_twotheta(dKi/get_one_angstrom<T>(), dKf/get_one_angstrom<T>(), dQ/get_one_angstrom<T>(), bSense) / get_one_radian<T>();
-		T dKiQ = get_angle_ki_Q(dKi/get_one_angstrom<T>(), dKf/get_one_angstrom<T>(), dQ/get_one_angstrom<T>(), /*bSense*/1) / get_one_radian<T>();
-		vecQ.resize(2, true);
-
-		// sample rotation = angle between ki and first orientation reflex (plus an arbitrary, but fixed constant)
-		T dAngleKiOrient1 = dKiQ + vec_angle(vecQ);
-		*pTheta = dAngleKiOrient1 - get_pi<T>()/T(2);	// a3 convention would be: kiorient1 - pi
-		if(bSense) *pTheta = -*pTheta;
+		std::ostringstream ostrErr;
+		ostrErr << "Position ("
+			<< vechkl[0] << vechkl[1] << vechkl[2]
+			<< ") is not in scattering plane.";
+		throw Err(ostrErr.str());
 	}
-	// catch(const std::exception& ex) { log_err(ex.what()); }
+
+	T dQ = ublas::norm_2(vecQ);
+	*pTwoTheta = get_sample_twotheta(dKi/angs, dKf/angs, dQ/angs, bSense) / rad;
+	T dKiQ = get_angle_ki_Q(dKi/angs, dKf/angs, dQ/angs, /*bSense*/1) / rad;
+	vecQ.resize(2, true);
+
+	// sample rotation = angle between ki and first orientation reflex (plus an arbitrary, but fixed constant)
+	T dAngleKiOrient1 = dKiQ + vec_angle(vecQ);
+	*pTheta = dAngleKiOrient1 - get_pi<T>()/T(2);	// a3 convention would be: kiorient1 - pi
+	if(bSense) *pTheta = -*pTheta;
 }
 
 
 /**
  * TAS angles -> hklE
  */
-template<typename T=double>
+template<typename T = double>
 void get_hkl_from_tas_angles(const Lattice<T>& lattice_real,
 	const ublas::vector<T>& _vec1, const ublas::vector<T>& _vec2,
 	T dm, T da, T th_m, T th_a, T _th_s, T _tt_s,
@@ -387,6 +386,8 @@ void get_hkl_from_tas_angles(const Lattice<T>& lattice_real,
 	T* pki=0, T* pkf=0, T* pE=0, T* pQ=0,
 	ublas::vector<T>* pVecQ = 0)
 {
+	static const auto angs = get_one_angstrom<T>();
+	static const auto rad = get_one_radian<T>();
 	using t_vec = ublas::vector<T>;
 	using t_mat = ublas::matrix<T>;
 
@@ -398,11 +399,11 @@ void get_hkl_from_tas_angles(const Lattice<T>& lattice_real,
 		tt_s = -tt_s;
 	}
 
-	T ki = get_mono_k(th_m*get_one_radian<T>(), dm*get_one_angstrom<T>(), bSense_m)*get_one_angstrom<T>();
-	T kf = get_mono_k(th_a*get_one_radian<T>(), da*get_one_angstrom<T>(), bSense_a)*get_one_angstrom<T>();
-	T E = get_energy_transfer(ki/get_one_angstrom<T>(), kf/get_one_angstrom<T>()) / get_one_meV<T>();
-	T Q = get_sample_Q(ki/get_one_angstrom<T>(), kf/get_one_angstrom<T>(), tt_s*get_one_radian<T>())*get_one_angstrom<T>();
-	T kiQ = get_angle_ki_Q(ki/get_one_angstrom<T>(), kf/get_one_angstrom<T>(), Q/get_one_angstrom<T>(), /*bSense_s*/1) / get_one_radian<T>();
+	T ki = get_mono_k(th_m*rad, dm*angs, bSense_m)*angs;
+	T kf = get_mono_k(th_a*rad, da*angs, bSense_a)*angs;
+	T E = get_energy_transfer(ki/angs, kf/angs) / get_one_meV<T>();
+	T Q = get_sample_Q(ki/angs, kf/angs, tt_s*rad)*angs;
+	T kiQ = get_angle_ki_Q(ki/angs, kf/angs, Q/angs, /*bSense_s*/1) / rad;
 
 	th_s += get_pi<T>()/T(2);			// theta here
 	T Qvec1 = get_pi<T>() - th_s - kiQ;	// a3 convention
@@ -433,7 +434,50 @@ void get_hkl_from_tas_angles(const Lattice<T>& lattice_real,
 }
 
 
-template<typename T=double>
+// -----------------------------------------------------------------------------
+
+
+/**
+ * hklE -> euler angles
+ * TODO (unfinished)
+ */
+template<typename T = double>
+void get_euler_angles(const Lattice<T>& lattice_real,
+	T dKi, T dh, T dk, T dl,
+	T *pTheta, T *pTwoTheta, T *pChi, T *pPsi)
+{
+	static const auto angs = get_one_angstrom<T>();
+	static const auto rad = get_one_radian<T>();
+	using t_vec = ublas::vector<T>;
+	using t_mat = ublas::matrix<T>;
+	using t_quat = math::quaternion<T>;
+
+	t_mat matB = get_B(lattice_real, 1);
+
+	t_vec vecQ = make_vec<t_vec>({T(1), T(0), T(0)});
+	t_vec vechkl = make_vec({dh, dk, dl});
+	t_vec vecG = ublas::prod(matB, vechkl);
+	tl::log_debug("G = ", vecG);
+
+	// matrix to rotate G into Q
+	t_quat quatRot = rotation_quat(vecG, vecQ);
+	t_mat matRot = quat_to_rot3<t_mat>(quatRot);
+	tl::log_debug("R*G = ", ublas::prod(matRot, vecG));
+
+	T dG = ublas::norm_2(vecG);
+	*pTwoTheta = get_sample_twotheta(dKi/angs, dKi/angs, dG/angs, 1) / rad;
+
+	std::vector<T> vecEuler = quat_to_euler(quatRot);
+	*pTheta = vecEuler[2];
+	*pChi = vecEuler[1];
+	*pPsi = vecEuler[0];
+}
+
+
+// -----------------------------------------------------------------------------
+
+
+template<typename T = double>
 std::ostream& operator<<(std::ostream& ostr, const Lattice<T>& lat)
 {
 	ostr << "a = " << lat.GetA() << ", ";
@@ -446,7 +490,6 @@ std::ostream& operator<<(std::ostream& ostr, const Lattice<T>& lat)
 
 	return ostr;
 }
-
 
 }
 

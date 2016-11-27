@@ -43,7 +43,7 @@ quat_type rot3_to_quat(const mat_type& rot)
 
 	if(tr > T(0))								// scalar component is largest
 	{
-		w    = T(0.5) * std::sqrt(tr+T(1));
+		w = T(0.5) * std::sqrt(tr+T(1));
 		v[0] = (rot(2,1) - rot(1,2)) / (T(4)*w);
 		v[1] = (rot(0,2) - rot(2,0)) / (T(4)*w);
 		v[2] = (rot(1,0) - rot(0,1)) / (T(4)*w);
@@ -58,10 +58,10 @@ quat_type rot3_to_quat(const mat_type& rot)
 
 			if(rot(iM,iM)>=rot(im1,im1) && rot(iM,iM)>=rot(im2,im2))
 			{
-				v[iM]  = T(0.5) * std::sqrt(T(1) + rot(iM,iM) - rot(im1,im1) - rot(im2,im2));
+				v[iM] = T(0.5) * std::sqrt(T(1) + rot(iM,iM) - rot(im1,im1) - rot(im2,im2));
 				v[im1] = (rot(im1, iM) + rot(iM, im1)) / (v[iM]*T(4));
 				v[im2] = (rot(iM, im2) + rot(im2, iM)) / (v[iM]*T(4));
-				w      = (rot(im2,im1) - rot(im1,im2)) / (v[iM]*T(4));
+				w = (rot(im2,im1) - rot(im1,im2)) / (v[iM]*T(4));
 
 				break;
 			}
@@ -129,14 +129,12 @@ mat_type quat_to_rot3(const quat_type& quat)
 /**
  * quat -> euler angles
  */
-template<class quat_type=math::quaternion<double>,
-	typename T=typename quat_type::value_type>
+template<class quat_type = math::quaternion<double>,
+	typename T = typename quat_type::value_type>
 std::vector<T> quat_to_euler(const quat_type& quat)
 {
-	T q[] = {quat.R_component_1(),
-		quat.R_component_2(),
-		quat.R_component_3(),
-		quat.R_component_4()};
+	T q[] = { quat.R_component_1(), quat.R_component_2(),
+		quat.R_component_3(), quat.R_component_4() };
 
 	// formulas from:
 	// http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
@@ -144,8 +142,7 @@ std::vector<T> quat_to_euler(const quat_type& quat)
 	T theta = std::asin(T(2)*(q[0]*q[2] - q[3]*q[1]));
 	T psi = std::atan2(T(2)*(q[0]*q[3] + q[1]*q[2]), T(1)-T(2)*(q[2]*q[2] + q[3]*q[3]));
 
-	std::vector<T> vec = { phi, theta, psi };
-	return vec;
+	return std::vector<T>({ phi, theta, psi });
 }
 
 
@@ -229,6 +226,24 @@ quat_type rotation_quat(const vec_type& vec, const T angle)
 
 	return quat_type(r, x,y,z);
 }
+
+/**
+ * quaternion to rotate vec0 into vec1
+ */
+template<class t_quat = math::quaternion<double>,
+	class t_vec = ublas::vector<typename t_quat::value_type>,
+	typename T = typename t_quat::value_type>
+t_quat rotation_quat(const t_vec& vec0, const t_vec& vec1)
+{
+	t_vec veccross = cross_3<t_vec>(vec0, vec1);
+
+	T dC = ublas::inner_prod(vec0, vec1);
+	T dS = ublas::norm_2(veccross);
+	T dAngle = std::atan2(dS, dC);
+
+	return rotation_quat(veccross, dAngle);
+}
+
 
 template<class quat_type=math::quaternion<double>, typename T = typename quat_type::value_type>
 quat_type rotation_quat_x(typename quat_type::value_type angle)

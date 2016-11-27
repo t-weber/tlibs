@@ -1256,7 +1256,7 @@ bool vec_is_collinear(const t_vec& _vec1, const t_vec& _vec2, T eps = get_epsilo
  */
 template<typename vec_type>
 typename vec_type::value_type vec_angle(const vec_type& vec0,
-	const vec_type& vec1, const vec_type* pvec_norm=0)
+	const vec_type& vec1, const vec_type* pvec_norm=nullptr)
 {
 	typedef typename vec_type::value_type real_type;
 
@@ -1269,9 +1269,6 @@ typename vec_type::value_type vec_angle(const vec_type& vec0,
 	}
 	if(vec0.size() == 3)
 	{
-		//real_type dNorm0 = ublas::norm_2(vec0);
-		//real_type dNorm1 = ublas::norm_2(vec1);
-
 		real_type dC = ublas::inner_prod(vec0, vec1);
 		vec_type veccross = cross_3<vec_type>(vec0, vec1);
 		real_type dS = ublas::norm_2(veccross);

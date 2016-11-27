@@ -23,7 +23,7 @@ namespace tl
 {
 	/**
 	 * Hund's rules
-	 *
+	 * see e.g.: (Khomskii 2014), ch. 2.2
 	 * @return [S, L, J]
 	 */
 	template<class t_real = double>
@@ -35,7 +35,7 @@ namespace tl
 			throw Err("Too many electrons.");
 
 		std::vector<std::uint8_t> vecOrbitals;	// orbitals
-		std::vector<std::int16_t> vec_ml;	// mag. q.number
+		std::vector<std::int16_t> vec_ml;		// mag. q.number
 		vecOrbitals.resize(iNumOrbitals);
 		vec_ml.resize(iNumOrbitals);
 		std::iota(vec_ml.rbegin(), vec_ml.rend(), -l);
@@ -107,7 +107,7 @@ namespace tl
 	}
 
 
-	/*
+	/**
 	 * gets term symbol from orbitals
 	 * @return [S, L, J]
 	 */
@@ -133,6 +133,19 @@ namespace tl
 		}
 
 		return tupTerm;
+	}
+
+	/**
+	 * effective g factor
+	 * see: (Khomskii 2014), equ. (2.13)
+	 */
+	template<class T = double>
+	T eff_gJ(T S, T L, T J, T gL=T(1), T gS=T(2))
+	{
+		T g = T(0.5) * (gL+gS) -
+			(S*(S+T(1)) - L*(L+T(1)))
+				/ (T(2)*J*(J+T(1))) * (gL-gS);
+		return g;
 	}
 }
 
