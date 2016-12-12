@@ -35,6 +35,15 @@ seexp_model(tau, gamma, P0)
 	return P0*exp(-gamma*tau / hbar_mueVps);
 }
 
+P_to_Gamma(P, P0, tau)
+{
+	return -log(P/P0)/tau * hbar_mueVps;
+}
+
+P_to_Gamma_err(P, Perr, P0, tau)
+{
+	return abs(1./(P/P0) * 1./P0 * Perr / tau * hbar_mueVps);
+}
 
 fit_sesine(x, y, yerr, thefreq=-1.)
 {
@@ -89,6 +98,10 @@ fit_seexp(tau, P, Perr, P0=-1.)
 	if(fixed_P0) 
 		fitmap["fixed"] = ["P0"];
 
+	#print("taus: " + str(tau));
+	#print("Ps: " + str(P));
+	#print("Perrs: " + str(Perr));
+	#print("P0: " + str(P0));
 	thefit = fit("seexp_model", tau, P, Perr, fitmap);
 
 	G = thefit["gamma"][0]; dG = thefit["gamma"][1];
@@ -182,6 +195,7 @@ do_Eshiftseries(files, tau, tempcol, Eoffs=0., freqs=[], outdir="tmp", thetitle=
 	phs = []; ph_errs = [];
 	Es = []; E_errs = [];
 	Ps = []; P_errs = [];
+	Gs = []; G_errs = [];
 	Ts = []; T_errs = [];
 
 	for(curfile : files)
@@ -218,9 +232,10 @@ do_Eshiftseries(files, tau, tempcol, Eoffs=0., freqs=[], outdir="tmp", thetitle=
 			"term" : theterm, "grid":0]);
 
 
-		append(Ps, P); append(P_errs, dP);
-		append(phs, ph); append(ph_errs, dph);
-		append(Es, phi2dE(ph, tau) + Eoffs); append(E_errs, phi2dE(dph, tau));
+		append(Ps, P);							append(P_errs, dP);
+		append(phs, ph);						append(ph_errs, dph);
+		append(Es, phi2dE(ph, tau) + Eoffs);	append(E_errs, phi2dE(dph, tau));
+		append(Gs, P_to_Gamma(P, 1., tau));		append(G_errs, P_to_Gamma_err(P, dP, 1., tau));
 
 		print("-"*80);
 	}
@@ -233,6 +248,14 @@ do_Eshiftseries(files, tau, tempcol, Eoffs=0., freqs=[], outdir="tmp", thetitle=
 		"title" : thetitle + "{/Symbol t} = " + tau + " ps",
 		"xlimits" : "0 " + (max(Ts)+10), "ylimits" : (min(Ps)-0.05) + " " + (max(Ps)+0.05),
 		"size" : size_pts, "outfile" : outdir + "/P.pdf",
+		"term" : theterm, "grid":0] + opts);
+
+	Gs -= Gs[0];	# only deltas
+	plot(Ts, Gs, G_errs, 
+		["xlabel" : "T (K)", "ylabel" : "{/Symbol D}{/Symbol G} ({/Symbol m}eV)",
+		"title" : thetitle + "{/Symbol t} = " + tau + " ps",
+		"xlimits" : "0 " + (max(Ts)+10), "ylimits" : (min(Gs)-max(G_errs)) + " " + (max(Gs)+max(G_errs)),
+		"size" : size_pts, "outfile" : outdir + "/G.pdf",
 		"term" : theterm, "grid":0] + opts);
 
 #	opts["arrow"] = "40 " + str(min(Es)-50.) + " 40 " + str(max(Es)+50.) + " 0, "+
@@ -250,12 +273,28 @@ do_Eshiftseries(files, tau, tempcol, Eoffs=0., freqs=[], outdir="tmp", thetitle=
 
 
 # Test
+#main()
+#{
+#	set_prec(4);
+#	files = ["/home/tweber/Messdaten/trisp-15/data/sc77165.log",
+#		"/home/tweber/Messdaten/trisp-15/data/sc77175.log",
+#		"/home/tweber/Messdaten/trisp-15/data/sc77166.log"];
+#	taus = [2., 3., 4.];
+#	do_seseries(files, taus);
+#}
+
+# Test2
 main()
 {
-	set_prec(4);
-	files = ["/home/tweber/Messdaten/trisp-15/data/sc77165.log",
-		"/home/tweber/Messdaten/trisp-15/data/sc77175.log",
-		"/home/tweber/Messdaten/trisp-15/data/sc77166.log"];
-	taus = [2., 3., 4.];
-	do_seseries(files, taus);
+	P0 = 1.;
+	tau = 2.;
+
+	while(1)
+	{
+		output("P = ");
+		P = real(input());
+		G = P_to_Gamma(P, P0, tau);
+
+		print("Gamma = " + str(G) + " mueV");
+	}
 }

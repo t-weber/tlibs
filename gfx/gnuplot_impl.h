@@ -351,6 +351,10 @@ std::string GnuPlot<t_real>::BuildCmd()
 			m_bHasLegend = 1;
 			ostr << " title \"" << obj.strLegend << "\" ";
 		}
+		else
+		{
+			ostr << " notitle ";
+		}
 
 		if(&obj != &(*m_vecObjs.rbegin()))
 			ostr << ", ";
