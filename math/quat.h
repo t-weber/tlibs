@@ -179,7 +179,6 @@ t_vec quat_vec_prod(const t_quat& q, const t_vec& v)
 // ------------------------------------------------------------------------------------------------
 
 
-
 /**
  * quat -> complex 2x2 matrix
  * @desc see e.g. (Scherer 2010), p.173
@@ -199,7 +198,6 @@ t_mat<std::complex<t_real>> quat_to_cmat(const t_quat& quat)
 		std::complex<t_real>(quat.R_component_4()) * vecS[2];
 	return mat;
 }
-
 
 
 // ------------------------------------------------------------------------------------------------

@@ -2072,6 +2072,22 @@ t_mat commutator(const t_mat& A, const t_mat& B)
 	return AB - BA;
 }
 
+/**
+ * spin rotation in SU(2)
+ */
+template<template<class...> class t_mat = ublas::matrix, class t_real = double>
+t_mat<std::complex<t_real>> rot_spin(int iComp, t_real dAngle)
+{
+	const auto vecS = get_spin_matrices<t_mat, ublas::vector, t_real>();
+	const auto matI = unit_matrix<t_mat<std::complex<t_real>>>(2);
+	const std::complex<t_real> I(0,1);
+
+	t_mat<std::complex<t_real>> mat =
+		std::complex<t_real>(std::cos(t_real(0.5)*dAngle)) * matI +
+		std::complex<t_real>(std::sin(t_real(0.5)*dAngle)) * I*vecS[iComp];
+	return mat;
+}
+
 }
 
 #endif

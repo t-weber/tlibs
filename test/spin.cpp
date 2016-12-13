@@ -11,9 +11,10 @@
 
 #include <iostream>
 
+using t_real = double;
 using namespace tl;
-using t_mat = ublas::matrix<std::complex<double>>;
-using t_vec = ublas::vector<std::complex<double>>;
+using t_mat = ublas::matrix<std::complex<t_real>>;
+using t_vec = ublas::vector<std::complex<t_real>>;
 
 int main()
 {
@@ -37,7 +38,7 @@ int main()
 
 
 	std::vector<t_vec> evecs;
-	std::vector<std::complex<double>> evals;
+	std::vector<std::complex<t_real>> evals;
 	if(!eigenvec_cplx(S1S2, evecs, evals))
 		std::cerr << "Cannot calculate eigenvectors." << std::endl;
 
@@ -62,5 +63,20 @@ int main()
 	//std::cout << int(tl::get_linalg_type<decltype(C)>::value) << std::endl;
 	//std::cout << int(tl::get_linalg_type<decltype(S1S2)>::value) << std::endl;
 	std::cout << std::boolalpha << (C == S1S2) << std::endl;
+
+
+	// ---------------------------------------------------------
+
+
+	ublas::matrix<std::complex<t_real>> mRot = tl::rot_spin(2, M_PI/2.);
+	ublas::vector<std::complex<t_real>> vecUp(2);
+	vecUp[0] = 1; vecUp[1] = 0;
+
+	std::cout << "0 deg: " << vecUp << std::endl;
+	std::cout << "90 deg: " << mRot*vecUp << std::endl;
+	std::cout << "180 deg: " << mRot*mRot*vecUp << std::endl;
+	std::cout << "270 deg: " << mRot*mRot*mRot*vecUp << std::endl;
+	std::cout << "360 deg: " << mRot*mRot*mRot*mRot*vecUp << std::endl;
+
 	return 0;
 }

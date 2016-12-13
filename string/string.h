@@ -335,14 +335,20 @@ void find_all_and_replace(t_str& str1, const t_str& str_old,
 
 
 template<class t_str=std::string>
-bool begins_with(const t_str& str, const t_str& strBeg)
+bool begins_with(const t_str& str, const t_str& strBeg, bool bCase=1)
 {
 	if(str.length() < strBeg.length())
 		return false;
 
 	for(std::size_t i=0; i<strBeg.length(); ++i)
-		if(str[i] != strBeg[i])
+	{
+		typename t_str::value_type c1, c2;
+		c1 = bCase ? str[i] : std::tolower(str[i]);
+		c2 = bCase ? strBeg[i] : std::tolower(strBeg[i]);
+
+		if(c1 != c2)
 			return false;
+	}
 
 	return true;
 }
