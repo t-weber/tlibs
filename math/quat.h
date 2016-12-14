@@ -11,6 +11,7 @@
 
 #include <boost/math/quaternion.hpp>
 #include "linalg.h"
+#include "spin.h"
 
 namespace tl {
 

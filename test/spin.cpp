@@ -8,6 +8,7 @@
 #include "../math/linalg_ops.h"
 #include "../math/linalg2.h"
 #include "../math/linalg2_impl.h"
+#include "../math/spin.h"
 
 #include <iostream>
 
@@ -48,13 +49,18 @@ int main()
 			<< ", eval: " << evals[iEV]
 			<< std::endl;
 	}
+	std::cout << std::endl;
 
 
 	// ---------------------------------------------------------
 
 
 	auto vecLadder = get_ladder_ops();
-	//std::cout << vecLadder << std::endl;
+	std::cout << "ladder ops: " << vecLadder << std::endl;
+	std::cout << "rot_x 180: " << tl::rot_spin(0, M_PI) << std::endl;
+	std::cout << "rot_y 180: " << tl::rot_spin(1, M_PI) << std::endl;
+	std::cout << "rot_z 180: " << tl::rot_spin(2, M_PI) << std::endl;
+	std::cout << std::endl;
 
 	t_mat C = 0.5 * (tensor_prod(vecLadder[0], I) * tensor_prod(I, vecLadder[1]) +
 		tensor_prod(vecLadder[1], I) * tensor_prod(I, vecLadder[0]))
@@ -63,7 +69,7 @@ int main()
 	//std::cout << int(tl::get_linalg_type<decltype(C)>::value) << std::endl;
 	//std::cout << int(tl::get_linalg_type<decltype(S1S2)>::value) << std::endl;
 	std::cout << std::boolalpha << (C == S1S2) << std::endl;
-
+	std::cout << std::endl;
 
 	// ---------------------------------------------------------
 
@@ -77,6 +83,7 @@ int main()
 	std::cout << "180 deg: " << mRot*mRot*vecUp << std::endl;
 	std::cout << "270 deg: " << mRot*mRot*mRot*vecUp << std::endl;
 	std::cout << "360 deg: " << mRot*mRot*mRot*mRot*vecUp << std::endl;
+	std::cout << std::endl;
 
 	return 0;
 }
