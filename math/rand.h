@@ -25,12 +25,13 @@
 
 namespace tl {
 
-extern std::mt19937/*_64*/ g_randeng;
+extern thread_local std::mt19937/*_64*/ g_randeng;
 
 
 // ----------------------------------------------------------------------------
 // initialisers
 
+extern unsigned int get_rand_seed();
 extern void init_rand();
 extern void init_rand_seed(unsigned int uiSeed);
 

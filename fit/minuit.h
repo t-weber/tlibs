@@ -436,6 +436,14 @@ bool fit(t_func&& func,
 
 	bool bDebug=1)
 {
+	// check if all params are fixed
+	if(pVecFixed && std::all_of(pVecFixed->begin(), pVecFixed->end(),
+		[](bool b)->bool { return b; }))
+		{
+			tl::log_err("All parameters are fixed.");
+			return false;
+		}
+
 	MinuitLamFuncModel<iNumArgs, t_func> mod(func);
 	Chi2Function<t_real_min> chi2(&mod, vecX.size(), vecX.data(), vecY.data(), vecYErr.data());
 

@@ -15,17 +15,17 @@
 
 namespace tl {
 
-std::mt19937/*_64*/ g_randeng;
+thread_local std::mt19937/*_64*/ g_randeng;
+static thread_local bool g_bHasEntropy = 0;
 
-void init_rand()
+unsigned int get_rand_seed()
 {
 	// seed 0: random device
 	unsigned int uiSeed0 = 0;
 	try
 	{
 		std::random_device rnd;
-		if(rnd.entropy() == 0)
-			log_debug("Random seed entropy is zero!");
+		g_bHasEntropy = (rnd.entropy() != 0);
 		uiSeed0 = rnd();
 	}
 	catch(const std::exception& ex)
@@ -34,22 +34,29 @@ void init_rand()
 		uiSeed0 = 0;
 	}
 
-
 	// seed 1: time based
 	struct timeval timev;
 	gettimeofday(&timev, 0);
 	unsigned int uiSeed1 = timev.tv_sec ^ timev.tv_usec;
 
-
 	// total seed
 	unsigned int uiSeed = uiSeed0 ^ uiSeed1;
 
-	log_debug("Random seed: ", uiSeed0, ", time seed: ", uiSeed1, ", total seed: ", uiSeed, ".");
-	init_rand_seed(uiSeed);
+	return uiSeed;
+}
+
+void init_rand()
+{
+	init_rand_seed(get_rand_seed());
 }
 
 void init_rand_seed(unsigned int uiSeed)
 {
+	std::string strEntr;
+	if(!g_bHasEntropy)
+		strEntr = ", but entropy is zero";
+	log_debug("Random seed: ", uiSeed, strEntr, ".");
+
 	srand(uiSeed);
 	g_randeng = std::mt19937/*_64*/(uiSeed);
 }

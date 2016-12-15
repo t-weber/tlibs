@@ -1,4 +1,4 @@
-/*
+/**
  * Thread helpers
  * @author tweber
  * @date aug-2015
@@ -7,7 +7,6 @@
 
 #ifndef __TLIBS_THREAD_H__
 #define __TLIBS_THREAD_H__
-
 
 #include <future>
 #include <thread>
@@ -37,17 +36,21 @@ class ThreadPool
 
 		mutable std::mutex m_mtx;
 
+		// signal to start jobs
 		std::promise<void> m_signalStartIn;
 		std::future<void> m_signalStartOut = std::move(m_signalStartIn.get_future());
 
 	public:
-		ThreadPool(unsigned int iNumThreads = std::thread::hardware_concurrency())
+		ThreadPool(unsigned int iNumThreads = std::thread::hardware_concurrency(),
+			void (*pThStartFunc)() = nullptr)
 		{
 			for(unsigned int i=0; i<iNumThreads; ++i)
 			{
 				m_lstThreads.emplace_back(
-				std::unique_ptr<std::thread>(new std::thread([this]()
+				std::unique_ptr<std::thread>(new std::thread([this, pThStartFunc]()
 				{
+					// callback to invoke before starting job thread
+					if(pThStartFunc) (*pThStartFunc)();
 					m_signalStartOut.wait();
 
 					while(1)
@@ -55,7 +58,8 @@ class ThreadPool
 						std::unique_lock<std::mutex> lock0(m_mtx);
 						if(m_lstTasks.size() > 0)
 						{
-							std::packaged_task<t_ret()> task = std::move(m_lstTasks.front());
+							std::packaged_task<t_ret()> task =
+								std::move(m_lstTasks.front());
 							m_lstTasks.pop_front();
 
 							lock0.unlock();
