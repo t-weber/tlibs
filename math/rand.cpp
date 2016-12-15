@@ -41,7 +41,6 @@ unsigned int get_rand_seed()
 
 	// total seed
 	unsigned int uiSeed = uiSeed0 ^ uiSeed1;
-
 	return uiSeed;
 }
 

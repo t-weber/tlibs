@@ -263,20 +263,24 @@ struct _rand_nd
 		t_vec<t_iter> vecIters;
 		for(const t_vec<t_real>& vec : vecParams)
 			vecIters.push_back(vec.begin());
+
 		while(1)
 		{
 			t_vec<t_real> vecArgs;
 			for(t_iter iter : vecIters)
 				vecArgs.push_back(*iter);
 
-			auto fkt = [this, vecArgs]() -> t_real
+			auto fkt = [this, vecArgs](/*std::mt19937 randeng*/) -> t_real
 			{
+				//g_randeng = randeng;	// copy to thread-local mem
 				return tl::call<iNumArgs, t_func, t_real, t_vec>(m_func, vecArgs);
 			};
 
 			vecFut.emplace_back(
-				std::async(std::launch::deferred | std::launch::async,
-					fkt));
+				std::async(std::launch::deferred /*| std::launch::async*/,
+					fkt/*, g_randeng*/));
+			// sync with advances by sub-threads
+			//g_randeng.discard(iNumArgs);
 
 			for(t_iter& iter : vecIters)
 				++iter;
