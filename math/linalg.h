@@ -1466,6 +1466,7 @@ t_vec get_gcd_vec(const t_vec& vec)
 
 /**
  * Householder reflection matrix
+ * @desc for the algo, see (Scarpino 2011), p. 268
  */
 template<class t_mat = ublas::matrix<double>,
 	class t_vec = ublas::vector<typename t_mat::value_type>,
@@ -1520,6 +1521,7 @@ template<class t_mat = ublas::matrix<double>,
 
 /**
  * QR decomposition via householder reflections
+ * @desc for the algo, see (Scarpino 2011), pp. 269--272
  */
 template<class t_mat = ublas::matrix<double>,
 	class t_vec = ublas::vector<typename t_mat::value_type>,

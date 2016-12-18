@@ -1,8 +1,9 @@
-/*
+/**
  * dft stuff
  * @author tweber
  * @date 2012, jan-2015
  * @license GPLv2 or GPLv3
+ * @desc see (Scarpino 2011), ch. 14, for an explanation of the fft algorithms employed here.
  */
 
 #ifndef __TLIBS_DFT_H__
@@ -19,10 +20,11 @@
 
 namespace tl
 {
-//------------------------------------------------------------------------------
-// standard dft
-// dft formulas from here:
-// http://www.fftw.org/fftw3_doc/The-1d-Discrete-Fourier-Transform-_0028DFT_0029.html#The-1d-Discrete-Fourier-Transform-_0028DFT_0029
+/**
+ * standard dft
+ * dft formulas from here:
+ * http://www.fftw.org/fftw3_doc/The-1d-Discrete-Fourier-Transform-_0028DFT_0029.html#The-1d-Discrete-Fourier-Transform-_0028DFT_0029
+ */
 template<typename T=double>
 std::complex<T> dft_coeff(int k,
 	const T *pReal, const T *pImag, std::size_t n,
@@ -123,8 +125,10 @@ void cvec_to_arrs(const std::vector<std::complex<T>>& vec, T* pReal, T* pImag)
 //------------------------------------------------------------------------------
 
 
-// tShift=1: shift 1 sample to the right
-// tShift=-11: shift 1 sample to the left
+/**
+ * tShift=1: shift 1 sample to the right
+ * tShift=-11: shift 1 sample to the left
+ */
 template<typename T=double>
 std::vector<std::complex<T>> dft_shift(const std::vector<std::complex<T>>& vecIn, T tShift=1.)
 {
@@ -302,7 +306,9 @@ class Fourier_base
 			T* pOutR, T* pOutI, bool bInv=0) = 0;
 };
 
-// dft with pre-calculated coefficients
+/**
+ * dft with pre-calculated coefficients
+ */
 template<class T=double>
 class DFT : public Fourier_base<T>
 {
@@ -370,7 +376,9 @@ class DFT : public Fourier_base<T>
 };
 
 
-// fft with pre-calculated coefficients
+/**
+ * fft with pre-calculated coefficients
+ */
 template<class T=double>
 class FFT : public Fourier_base<T>
 {
