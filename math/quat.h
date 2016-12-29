@@ -21,6 +21,12 @@ namespace math = boost::math;
 // ------------------------------------------------------------------------------------------------
 // ops
 
+template<class t_quat = math::quaternion<double>>
+t_quat unit_quat()
+{
+	return t_quat(1, 0,0,0);
+}
+
 /**
  * calculates the quaternion inverse
  * @desc see e.g.: (Bronstein 2008), Ch. 4
@@ -250,7 +256,7 @@ T rotation_angle(const math::quaternion<T>& quat)
  * quat -> rotation axis
  * @desc see e.g.: (Bronstein 2008), Ch. 4
  */
-template<class t_vec=ublas::vector<double>>
+template<class t_vec = ublas::vector<double>>
 t_vec rotation_axis(const math::quaternion<typename t_vec::value_type>& quat)
 {
 	using T = typename t_vec::value_type;
@@ -271,8 +277,8 @@ t_vec rotation_axis(const math::quaternion<typename t_vec::value_type>& quat)
  * rotation axis -> quat
  * @desc see e.g.: (Bronstein 2008), formula (4.193)
  */
-template<class quat_type=math::quaternion<double>,
-	class vec_type=ublas::vector<typename quat_type::value_type>,
+template<class quat_type = math::quaternion<double>,
+	class vec_type = ublas::vector<typename quat_type::value_type>,
 	typename T = typename quat_type::value_type>
 quat_type rotation_quat(const vec_type& vec, const T angle)
 {
@@ -295,15 +301,31 @@ quat_type rotation_quat(const vec_type& vec, const T angle)
 template<class t_quat = math::quaternion<double>,
 	class t_vec = ublas::vector<typename t_quat::value_type>,
 	typename T = typename t_quat::value_type>
-t_quat rotation_quat(const t_vec& vec0, const t_vec& vec1)
+t_quat rotation_quat(const t_vec& _vec0, const t_vec& _vec1)
 {
+	t_vec vec0 = _vec0 / ublas::norm_2(_vec0);
+	t_vec vec1 = _vec1 / ublas::norm_2(_vec1);
+
+	if(vec_equal(vec0, vec1))
+	{ // parallel vectors -> do nothing
+		return unit_quat<t_quat>();
+	}
+	else if(vec_equal(vec0, t_vec(-vec1)))
+	{ // antiparallel vectors -> rotate about any perpendicular axis
+		t_vec vecPerp(3);
+		vecPerp[0] = vec0[2];
+		vecPerp[1] = 0;
+		vecPerp[2] = -vec0[0];
+		return rotation_quat<t_quat, t_vec, T>(vecPerp, get_pi<T>());
+	}
+
 	t_vec veccross = cross_3<t_vec>(vec0, vec1);
 
 	T dC = ublas::inner_prod(vec0, vec1);
 	T dS = ublas::norm_2(veccross);
 	T dAngle = std::atan2(dS, dC);
 
-	return rotation_quat(veccross, dAngle);
+	return rotation_quat<t_quat, t_vec, T>(veccross, dAngle);
 }
 
 

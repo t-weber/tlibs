@@ -22,7 +22,6 @@
 
 namespace tl {
 
-
 template<typename T=double>
 T max3(T t1, T t2, T t3)
 {
@@ -59,9 +58,11 @@ template<typename T> T safe_log10(T t, T tInvalid=T(-10))
 	return tInvalid;
 }
 
-// pixel -> val
-template<typename T=double>
-T tic_trafo(unsigned int iDim, T dMin, T dMax, bool bLog, T dPix)
+/**
+ * pixel -> val
+ */
+template<typename T = double, typename INT = std::size_t>
+T tic_trafo(INT iDim, T dMin, T dMax, bool bLog, T dPix)
 {
 	if(bLog)
 	{
@@ -71,13 +72,16 @@ T tic_trafo(unsigned int iDim, T dMin, T dMax, bool bLog, T dPix)
 
 	T dval = dMin + dPix/T(iDim) * (dMax-dMin);
 	if(bLog)
-		dval = pow(10., dval);
+		dval = pow(T(10), dval);
 
 	return dval;
 }
-// val -> pixel
-template<typename T=double>
-T tic_trafo_inv(unsigned int iDim, T dMin, T dMax, bool bLog, T dVal)
+
+/**
+ * val -> pixel
+ */
+template<typename T = double, typename INT = std::size_t>
+INT tic_trafo_inv(INT iDim, T dMin, T dMax, bool bLog, T dVal)
 {
 	if(bLog)
 	{
@@ -87,8 +91,8 @@ T tic_trafo_inv(unsigned int iDim, T dMin, T dMax, bool bLog, T dVal)
 		dVal = safe_log10<T>(dVal);
 	}
 
-	T dpix = (dVal-dMin)/(dMax-dMin) * double(iDim);
-	return dpix;
+	INT ipix = INT((dVal-dMin)/(dMax-dMin) * T(iDim));
+	return ipix;
 }
 
 template<typename T1, typename T2>
@@ -256,9 +260,6 @@ bool has_map_all_keys(const t_map& map, const std::initializer_list<typename t_m
 			return false;
 	return true;
 }
-
-
-// -----------------------------------------------------------------------------
 
 }
 #endif

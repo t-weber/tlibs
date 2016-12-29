@@ -708,12 +708,13 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 template<class t_real=double>
 t_real bose(t_real E, t_real T)
 {
-	t_real kB = get_kB<t_real>() * units::si::kelvin/get_one_meV<t_real>();
+	const t_real kB = get_kB<t_real>() * units::si::kelvin/get_one_meV<t_real>();
 
-	if(E >= 0.)
-		return 1./(std::exp(std::abs(E)/(kB*T)) - 1.) + 1.;
-	else
-		return 1./(std::exp(std::abs(E)/(kB*T)) - 1.);
+	t_real n = t_real(1)/(std::exp(std::abs(E)/(kB*T)) - t_real(1));
+	if(E >= t_real(0))
+		n += t_real(1);
+
+	return n;
 }
 
 /**
@@ -722,11 +723,13 @@ t_real bose(t_real E, t_real T)
 template<class t_real=double>
 t_real bose_cutoff(t_real E, t_real T, t_real E_cutoff=t_real(0.02))
 {
-	t_real dB = bose<t_real>(E, T);
+	t_real dB;
 
 	E_cutoff = std::abs(E_cutoff);
 	if(std::abs(E) < E_cutoff)
 		dB = bose<t_real>(sign(E)*E_cutoff, T);
+	else
+		dB = bose<t_real>(E, T);
 
 	return dB;
 }
