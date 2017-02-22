@@ -1,4 +1,4 @@
-/*
+/**
  * Custom type traits
  * @author Tobias Weber
  * @date 19-nov-2014
@@ -188,12 +188,15 @@ namespace tl{
 
 	template<class T, T... idx>
 	using integer_sequence = std::integer_sequence<T, idx...>;
-	template<class T, T NUM> 
-	using make_integer_sequence = std::make_integer_sequence<T, NUM>; 
+	template<class T, T NUM>
+	using make_integer_sequence = std::make_integer_sequence<T, NUM>;
 
 #endif
 
 
+/**
+ * function call implementation
+ */
 template<class t_func,
 	class t_arg = double, template<class ...> class t_cont = std::vector,
 	std::size_t... idx>
@@ -204,6 +207,17 @@ t_arg _call_impl(t_func func, const t_cont<t_arg>& args,
 }
 
 /**
+ * function call implementation (specialisation for std::array)
+ */
+template<class t_func, class t_arg = double, std::size_t... idx>
+t_arg _call_impl(t_func func, const std::array<t_arg, sizeof...(idx)>& args,
+	const /*std::*/integer_sequence<std::size_t, idx...>&)
+{
+	return func(args[idx]...);
+}
+
+
+/**
  * call a function with the args from an STL container
  */
 template<std::size_t iNumArgs, class t_func,
@@ -212,6 +226,16 @@ t_arg call(t_func func, const t_cont<t_arg>& args)
 {
 	using t_seq = /*std::*/make_integer_sequence<std::size_t, iNumArgs>;
 	return _call_impl<t_func, t_arg, t_cont>(func, args, t_seq());
+}
+
+/**
+ * call a function with the args from a std::array
+ */
+template<std::size_t iNumArgs, class t_func, class t_arg = double>
+t_arg call(t_func func, const std::array<t_arg, iNumArgs>& args)
+{
+	using t_seq = /*std::*/make_integer_sequence<std::size_t, iNumArgs>;
+	return _call_impl<t_func, t_arg>(func, args, t_seq());
 }
 
 // -----------------------------------------------------------------------------

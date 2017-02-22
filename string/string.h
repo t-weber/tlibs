@@ -382,6 +382,9 @@ split_first(const t_str& str, const t_str& strSep, bool bTrim=0, bool bSeq=0)
 }
 
 
+// ----------------------------------------------------------------------------
+
+
 template<typename T, class t_str=std::string, bool bTIsStr=0>
 struct _str_to_var_impl
 {
@@ -522,11 +525,15 @@ void get_tokens_seq(const t_str& str, const t_str& strDelim, t_cont<T>& vecRet,
 #endif
 
 
+
 template<typename T, class t_str=std::string>
 T str_to_var(const t_str& str)
 {
 	return _str_to_var_impl<T, t_str, std::is_convertible<T, t_str>::value>()(str);
 }
+
+
+// ----------------------------------------------------------------------------
 
 
 template<class T, class t_ch,
@@ -621,6 +628,31 @@ t_str var_to_str(const T& t,
 }
 
 
+/**
+ * converts a container (e.g. a vector) to a string
+ */
+template<class t_cont, class t_str=std::string>
+t_str cont_to_str(const t_cont& cont, const char* pcDelim=",",
+	std::streamsize iPrec = std::numeric_limits<typename t_cont::value_type>::max_digits10-1)
+{
+	using t_elem = typename t_cont::value_type;
+
+	t_str str;
+
+	for(typename t_cont::const_iterator iter=cont.begin(); iter!=cont.end(); ++iter)
+	{
+		const t_elem& elem = *iter;
+
+		str += var_to_str<t_elem, t_str>(elem, iPrec);
+		if(iter+1 != cont.end())
+			str += pcDelim;
+	}
+	return str;
+}
+
+// ----------------------------------------------------------------------------
+
+
 template<typename t_char=char>
 bool skip_after_line(std::basic_istream<t_char>& istr,
 	const std::basic_string<t_char>& strLineBegin,
@@ -660,6 +692,8 @@ void skip_after_char(std::basic_istream<t_char>& istr, t_char ch, bool bCase=0)
 			break;
 	}
 }
+
+// ----------------------------------------------------------------------------
 
 
 }

@@ -284,6 +284,12 @@ static Symbol* fkt_loadinstr(const std::vector<Symbol*>& vecSyms,
 	// misc
 	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("cki"), new SymbolInt(pInstr->IsKiFixed())));
 	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("kfix"), new SymbolReal(pInstr->GetKFix())));
+	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("lattice_a"), new SymbolReal(pInstr->GetSampleLattice()[0])));
+	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("lattice_b"), new SymbolReal(pInstr->GetSampleLattice()[1])));
+	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("lattice_c"), new SymbolReal(pInstr->GetSampleLattice()[2])));
+	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("lattice_alpha"), new SymbolReal(pInstr->GetSampleAngles()[0])));
+	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("lattice_beta"), new SymbolReal(pInstr->GetSampleAngles()[1])));
+	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("lattice_gamma"), new SymbolReal(pInstr->GetSampleAngles()[2])));
 	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("countvar"), new SymbolString(pInstr->GetCountVar())));
 	pmapRet->GetMap().insert(SymbolMap::t_map::value_type(t_string("monvar"), new SymbolString(pInstr->GetMonVar())));
 

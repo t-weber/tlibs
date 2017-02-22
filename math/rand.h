@@ -53,6 +53,9 @@ extern unsigned int simple_rand(unsigned int iMax);
 template<typename INT>
 INT rand_int(INT iMin, INT iMax)
 {
+	if(iMin > iMax)
+		std::swap(iMin, iMax);
+
 	std::uniform_int_distribution<INT> dist(iMin, iMax);
 	return dist(get_randeng());
 }
@@ -63,6 +66,9 @@ INT rand_int(INT iMin, INT iMax)
 template<typename REAL>
 REAL rand_real(REAL dMin, REAL dMax)
 {
+	if(dMin > dMax)
+		std::swap(dMin, dMax);
+
 	std::uniform_real_distribution<REAL> dist(dMin, dMax);
 	return dist(get_randeng());
 }
@@ -296,6 +302,16 @@ struct _rand_nd
 	}
 };
 
+
+/**
+ * generates n-dimensional uniformly distributed random numbers
+ */
+template<class t_real=double, template<class...> class t_vec=std::vector>
+t_vec<t_real> rand_minmax_nd(const t_vec<t_real>& vecMin, const t_vec<t_real>& vecMax)
+{
+	_rand_nd<decltype(rand_minmax<t_real>), t_vec> rnd(rand_minmax<t_real>);
+	return rnd(t_vec<t_vec<t_real>>({vecMin, vecMax}));
+}
 
 /**
  * generates n-dimensional Gaussian-distributed random numbers

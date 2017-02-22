@@ -1,4 +1,4 @@
-/*
+/**
  * Compression
  * @author tweber
  * @date 15-aug-2013

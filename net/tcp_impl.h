@@ -64,10 +64,6 @@ TcpTxtClient<t_ch, t_str>::~TcpTxtClient()
 	m_sigRecv.disconnect_all_slots();
 	m_sigDisconn.disconnect_all_slots();
 	m_sigConn.disconnect_all_slots();
-
-	const t_str* pstr = nullptr;
-	while(m_listWriteBuffer.pop(pstr))
-		if(pstr) delete pstr;
 }
 
 template<class t_ch, class t_str>
@@ -151,6 +147,11 @@ void TcpTxtClient<t_ch, t_str>::disconnect(bool bAlwaysSendSignal)
 		m_sigDisconn(m_strHost, m_strService);
 		m_strHost = m_strService = "";
 	}
+
+	// clean up write buffer
+	const t_str* pstr = nullptr;
+	while(m_listWriteBuffer.pop(pstr))
+		if(pstr) delete pstr;
 }
 
 template<class t_ch, class t_str>
@@ -196,10 +197,8 @@ void TcpTxtClient<t_ch, t_str>::flush_write()
 	if(m_listWriteBuffer.empty()) return;
 	if(!m_listWriteBuffer.pop(pstr)) return;
 	if(!pstr) return;
-	const t_str& str = *pstr;
 
-	//tl::log_debug("str = ", str);
-	asio::async_write(*m_psock, asio::buffer(str.data(), str.length()),
+	asio::async_write(*m_psock, asio::buffer(pstr->data(), pstr->length()),
 	[this, pstr](const sys::error_code& err, std::size_t len)
 	{
 		if(pstr) delete pstr;

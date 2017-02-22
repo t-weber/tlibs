@@ -96,6 +96,19 @@ matrix_type unit_matrix(std::size_t N)
 
 
 /**
+ * create a vector of size N filled with value val
+ */
+template<class vector_type = ublas::vector<double>>
+vector_type fill_vector(std::size_t N, typename vector_type::value_type val)
+{
+	vector_type vec(N);
+	for(std::size_t i=0; i<N; ++i)
+		vec[i] = val;
+	return vec;
+}
+
+
+/**
  * resize matrix, filling up with unity
  */
 template<class t_mat = ublas::matrix<double>>
@@ -116,7 +129,7 @@ void resize_unity(t_mat& mat, std::size_t N)
 
 
 /**
- * converts vector
+ * converts vector t_vec<t_from> to t_vec<t_to>
  */
 template<class t_from, class t_to, template<class...> class t_vec = ublas::vector>
 t_vec<t_to> convert_vec(const t_vec<t_from>& vec)
@@ -131,6 +144,23 @@ t_vec<t_to> convert_vec(const t_vec<t_from>& vec)
 
 	return vecRet;
 }
+
+/**
+ * converts vector t_vec_from<t_from> to t_vec_to<t_to>
+ */
+template<class t_from, class t_to,
+	template<class...> class t_vec_from = std::vector,
+	template<class...> class t_vec_to = ublas::vector>
+t_vec_to<t_to> convert_vec_full(const t_vec_from<t_from>& vec)
+{
+	t_vec_to<t_to> vecRet(vec.size());
+
+	for(std::size_t i=0; i<vec.size(); ++i)
+		vecRet[i] = t_to(vec[i]);
+
+	return vecRet;
+}
+
 
 
 template<class vec_type>
@@ -346,11 +376,29 @@ matrix_type rotation_matrix_2d(typename matrix_type::value_type angle)
 /**
  * generates points in an arc defined by vec1 and vec2 at an angle phi around vec1
  */
-template<class t_mat=ublas::matrix<double>, class t_vec=ublas::vector<double>>
+template<class t_vec=ublas::vector<double>>
 t_vec arc(const t_vec& vec1, const t_vec& vec2, tl::underlying_value_type_t<t_vec> phi)
 {
 	//using t_real = tl::underlying_value_type_t<t_vec>;
 	return std::cos(phi)*vec1 + std::sin(phi)*vec2;
+}
+
+/**
+ * generates points in a spherical shell
+ */
+template<class t_vec=ublas::vector<double>>
+t_vec sph_shell(const t_vec& vec,
+	tl::underlying_value_type_t<t_vec> phi, tl::underlying_value_type_t<t_vec> theta)
+{
+	using t_real = tl::underlying_value_type_t<t_vec>;
+
+	t_real rho, curphi, curtheta;
+	std::tie(rho, curphi, curtheta) = cart_to_sph<t_real>(vec[0], vec[1], vec[2]);
+
+	t_real x,y,z;
+	std::tie(x,y,z) = sph_to_cart<t_real>(rho, curphi+phi, curtheta+theta);
+	t_vec vecRet = make_vec<t_vec>({x,y,z});
+	return vecRet;
 }
 
 

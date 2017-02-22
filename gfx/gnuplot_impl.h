@@ -8,7 +8,6 @@
 #ifndef __GPL_PLOTTER_IMPL_H__
 #define __GPL_PLOTTER_IMPL_H__
 
-#include "../helper/flags.h"
 #include "../helper/misc.h"
 #include "../string/string.h"
 #include "../log/log.h"
@@ -23,19 +22,11 @@
 
 namespace tl {
 
-namespace ios = boost::iostreams;
-
 template<class t_real>
 void GnuPlot<t_real>::DeInit()
 {
-	m_postr.reset();
-	m_psbuf.reset();
-	m_pfds.reset();
-
-	if(m_pipe) ::pclose(m_pipe);
-	m_pipe = 0;
-
 	m_iStartCounter = 0;
+	m_pProc.reset(nullptr);
 }
 
 template<class t_real>
@@ -44,71 +35,65 @@ void GnuPlot<t_real>::Init()
 	if(IsReady()) return;
 	DeInit();
 
-	m_pipe = (FILE*)::/*my_*/popen("gnuplot -p 2>/dev/null 1>/dev/null", "w");
-	if(!m_pipe)
-	{
-		log_err("Could not load gnuplot.");
-		return;
-	}
+	m_pProc.reset(new PipeProc<char>("gnuplot -p 2>/dev/null 1>/dev/null", 1));
+	if(!m_pProc || !m_pProc->IsReady()) return;
 
-	m_pfds.reset(new ios::file_descriptor_sink(fileno(m_pipe), ios::close_handle /*ios::never_close_handle*/));
-	m_psbuf.reset(new ios::stream_buffer<ios::file_descriptor_sink>(*m_pfds));
-	m_postr.reset(new std::ostream(m_psbuf.get()));
-
-	(*m_postr) << "set grid\n";
-	(*m_postr) << "set nokey\n";
-	//(*m_postr) << "set noborder\n";
-	(*m_postr) << "set size 1,1\n";
-	(*m_postr) << "set palette rgbformulae 33,13,10\n";
+	m_pProc->GetOstr().precision(m_iPrec);
+	m_pProc->GetOstr() << "set grid\n";
+	m_pProc->GetOstr() << "set nokey\n";
+	//m_pProc->GetOstr() << "set noborder\n";
+	m_pProc->GetOstr() << "set size 1,1\n";
+	m_pProc->GetOstr() << "set palette rgbformulae 33,13,10\n";
 }
 
 template<class t_real>
 void GnuPlot<t_real>::SetTerminal(int iWnd, const char* pcBackend, t_real dW, t_real dH)
 {
+	if(!IsReady()) return;
 	if(m_bTermLocked) return;
 
-	(*m_postr) << "set output\n";
-	(*m_postr) << "set obj 1 rectangle behind fillcolor rgbcolor \"white\" from screen 0,0 to screen 1,1\n";
+	m_pProc->GetOstr() << "set output\n";
+	m_pProc->GetOstr() << "set obj 1 rectangle behind fillcolor rgbcolor \"white\" from screen 0,0 to screen 1,1\n";
 
-	(*m_postr) << "set term " << pcBackend <<  " " << iWnd << " "
+	m_pProc->GetOstr() << "set term " << pcBackend <<  " " << iWnd << " "
 		<< "enhanced font \"NimbusSanL-Regu,12\" persist dashed "
 //		<< "title \"" << "Plot " << (iWnd+1) << "\" noraise "
 		;
 
 	if(dW>=t_real(0) && dH>=t_real(0))
-		(*m_postr) << "size " << dW << "," << dH << " ";
+		m_pProc->GetOstr() << "size " << dW << "," << dH << " ";
 	else
-		(*m_postr) << "size 640,480 ";
+		m_pProc->GetOstr() << "size 640,480 ";
 
-	(*m_postr) << "\n";
+	m_pProc->GetOstr() << "\n";
 }
 
 template<class t_real>
 void GnuPlot<t_real>::SetFileTerminal(const char* pcFile, t_real dW, t_real dH)
 {
+	if(!IsReady()) return;
 	if(m_bTermLocked) return;
 
 	std::string strFile = pcFile;
 	std::string strExt = get_fileext(strFile);
-	//std::cout << "File: " << strFile << "\nExtension: " << strExt << std::endl;
 
 	if(str_is_equal(strExt, std::string("pdf"), 0))
 	{
-		(*m_postr) << "set term pdf "
+		m_pProc->GetOstr() << "set term pdf "
 			<< "enhanced color font \"NimbusSanL-Regu,16\" ";
 
 		if(dW>=t_real(0) && dH>=t_real(0))
-			(*m_postr) << "size " << dW << "," << dH << " ";
-		(*m_postr) << "\n";
+			m_pProc->GetOstr() << "size " << dW << "," << dH << " ";
+		m_pProc->GetOstr() << "\n";
 	}
 	else if(str_is_equal(strExt, std::string("ps"), 0))
 	{
-		(*m_postr) << "set term postscript eps "
+		m_pProc->GetOstr() << "set term postscript eps "
 			<< "enhanced color font \"NimbusSanL-Regu,16\" ";
 
 		if(dW>=t_real(0) && dH>=t_real(0))
-			(*m_postr) << "size " << dW << "," << dH << " ";
-		(*m_postr) << "\n";
+			m_pProc->GetOstr() << "size " << dW << "," << dH << " ";
+		m_pProc->GetOstr() << "\n";
 	}
 	else
 	{
@@ -116,17 +101,29 @@ void GnuPlot<t_real>::SetFileTerminal(const char* pcFile, t_real dW, t_real dH)
 		return;
 	}
 
-	(*m_postr) << "set output \"" << strFile << "\"\n";
+	m_pProc->GetOstr() << "set output \"" << strFile << "\"\n";
+}
+
+template<class t_real>
+void GnuPlot<t_real>::SetPrec(unsigned int iPrec)
+{
+	if(!IsReady()) return;
+
+	m_iPrec = iPrec;
+	if(m_pProc)
+		m_pProc->GetOstr().precision(m_iPrec);
 }
 
 template<class t_real>
 void GnuPlot<t_real>::RefreshVars()
 {
+	if(!IsReady()) return;
+
 	if(m_bHasLegend)
-		(*m_postr) << "set key on " << m_strLegendPlacement
+		m_pProc->GetOstr() << "set key on " << m_strLegendPlacement
 			<< " box 1 " << m_strLegendOpts << "\n";
 	else
-		(*m_postr) << "set nokey\n";
+		m_pProc->GetOstr() << "set nokey\n";
 }
 
 template<class t_real>
@@ -135,25 +132,25 @@ void GnuPlot<t_real>::SimplePlot(const std::vector<t_real>& vecX, const std::vec
 	LineStyle style)
 {
 	if(!IsReady()) return;
-	(*m_postr) << "plot \"-\" ";
+	m_pProc->GetOstr() << "plot \"-\" ";
 
 	switch(style)
 	{
 		case STYLE_LINES_SOLID:
-			(*m_postr) << "with lines linetype 1 linewidth 1 ";
+			m_pProc->GetOstr() << "with lines linetype 1 linewidth 1 ";
 			break;
 		case STYLE_LINES_DASHED:
-			(*m_postr) << "with lines linetype 2 linewidth 1 ";
+			m_pProc->GetOstr() << "with lines linetype 2 linewidth 1 ";
 			break;
 		default:
 		case STYLE_POINTS:
 			break;
 	}
-	(*m_postr) << "\n";
+	m_pProc->GetOstr() << "\n";
 
 	std::string strTable = BuildTable(vecX, vecY, vecYErr, vecXErr);
-	(*m_postr) << strTable;
-	m_postr->flush();
+	m_pProc->GetOstr() << strTable;
+	m_pProc->GetOstr().flush();
 }
 
 
@@ -163,19 +160,19 @@ void GnuPlot<t_real>::SimplePlot2d(const std::vector<std::vector<t_real> >& vec,
 {
 	if(!IsReady()) return;
 
-	std::vector<unsigned int> vecSizes;
+	std::vector<std::size_t> vecSizes;
 	vecSizes.reserve(vec.size());
 
-	for(unsigned int iY=0; iY<vec.size(); ++iY)
+	for(std::size_t iY=0; iY<vec.size(); ++iY)
 		vecSizes.push_back(vec[iY].size());
 
-	std::vector<unsigned int>::iterator iterMin =
+	std::vector<std::size_t>::iterator iterMin =
 		std::min_element(vecSizes.begin(), vecSizes.end());
-	unsigned int iXCntMin = *iterMin;
+	std::size_t iXCntMin = *iterMin;
 
 
-	unsigned int iYDim = vec.size();
-	unsigned int iXDim = iXCntMin;
+	std::size_t iYDim = vec.size();
+	std::size_t iXDim = iXCntMin;
 
 	// invalid values select image dimensions
 	if(dMinX > dMaxX)
@@ -191,42 +188,44 @@ void GnuPlot<t_real>::SimplePlot2d(const std::vector<std::vector<t_real> >& vec,
 
 	// ----------------------------------------
 	// ranges
-	(*m_postr) << "set tics out scale 0.8\n";
+	m_pProc->GetOstr() << "set tics out scale 0.75\n";
 
 	t_real dRangeMinX = tic_trafo<t_real>(iXDim, dMinX, dMaxX, 0, -0.5);
 	t_real dRangeMaxX = tic_trafo<t_real>(iXDim, dMinX, dMaxX, 0, t_real(iXDim)-0.5);
 	t_real dRangeMinY = tic_trafo<t_real>(iYDim, dMinY, dMaxY, 0, -0.5);
 	t_real dRangeMaxY = tic_trafo<t_real>(iYDim, dMinY, dMaxY, 0, t_real(iYDim)-0.5);
 
-	(*m_postr) << "set xrange [" << dRangeMinX << ":" << dRangeMaxX << "]\n";
-	(*m_postr) << "set yrange [" << dRangeMinY << ":" << dRangeMaxY << "]\n";
+	m_pProc->GetOstr() << "set xrange [" << dRangeMinX << ":" << dRangeMaxX << "]\n";
+	m_pProc->GetOstr() << "set yrange [" << dRangeMinY << ":" << dRangeMaxY << "]\n";
 	// ----------------------------------------
 
 	// ----------------------------------------
 	// tics
-	std::ostringstream ostrTicsX, ostrTicsY;
-	ostrTicsX << "(" << dMinX << " + " << "($1)/" << iXDim
-			<< " * (" << dMaxX << "-" << dMinX << "))";
-	ostrTicsY << "(" << dMinY << " + " << "($2)/" << iYDim
-			<< " * (" << dMaxY << "-" << dMinY << "))";
+	std::ostringstream ostrTics;
+	ostrTics.precision(m_iPrec);
 
-	std::string strTics = "using " + ostrTicsX.str() + ":" + ostrTicsY.str() + ":3";
+	ostrTics << "using (" << dMinX << " + " << "($1)/" << iXDim
+		<< " * (" << dMaxX << "-" << dMinX << "))" << " : "
+		<< "(" << dMinY << " + " << "($2)/" << iYDim
+		<< " * (" << dMaxY << "-" << dMinY << "))" << " : ($3)";
+
+	std::string strTics = ostrTics.str();
 	// ----------------------------------------
 
-	(*m_postr) << "plot \"-\" " << strTics << " matrix with image\n";
+	m_pProc->GetOstr() << "plot \"-\" " << strTics << " matrix with image\n";
 
 
-	for(unsigned int iY=0; iY<vec.size(); ++iY)
+	for(std::size_t iY=0; iY<vec.size(); ++iY)
 	{
-		for(unsigned int iX=0; iX<iXCntMin; ++iX)
-			(*m_postr) << vec[iY][iX] << " ";
-		(*m_postr) << "\n";
+		for(std::size_t iX=0; iX<iXCntMin; ++iX)
+			m_pProc->GetOstr() << vec[iY][iX] << " ";
+		m_pProc->GetOstr() << "\n";
 	}
 
-	(*m_postr) << "end\nend\n";
+	m_pProc->GetOstr() << "end\nend\n";
 
 
-	m_postr->flush();
+	m_pProc->GetOstr().flush();
 }
 
 template<class t_real>
@@ -277,10 +276,9 @@ void GnuPlot<t_real>::FinishPlot()
 			}
 		}
 
-		//std::cout << "Plot cmd: " << strCmd << std::endl;
-		(*m_postr) << strCmd;
-		//(*m_postr) << "replot\n";
-		m_postr->flush();
+		m_pProc->GetOstr() << strCmd;
+		//m_pProc->GetOstr() << "replot\n";
+		m_pProc->GetOstr().flush();
 		m_vecObjs.clear();
 	}
 }
@@ -291,6 +289,8 @@ std::string GnuPlot<t_real>::BuildCmd()
 	m_bHasLegend = 0;
 
 	std::ostringstream ostr;
+	ostr.precision(m_iPrec);
+
 	ostr << "plot ";
 
 	for(const PlotObj<t_real>& obj : m_vecObjs)
@@ -313,7 +313,6 @@ std::string GnuPlot<t_real>::BuildCmd()
 			ostrTmp << "with points";
 
 		ostrTmp << " pointtype 7 pointsize " << dSize;
-		//std::cout << "*** point size: " << dSize << std::endl;
 		strPointStyle = ostrTmp.str();
 
 
@@ -375,12 +374,13 @@ std::string GnuPlot<t_real>::BuildTable(const std::vector<t_real>& vecX, const s
 	const std::vector<t_real>& vecYErr, const std::vector<t_real>& vecXErr)
 {
 	std::ostringstream ostr;
+	ostr.precision(m_iPrec);
 
-	const unsigned int iSize = std::min(vecX.size(), vecY.size());
+	const std::size_t iSize = std::min(vecX.size(), vecY.size());
 	const bool bHasXErr = (vecXErr.size() != 0);
 	const bool bHasYErr = (vecYErr.size() != 0);
 
-	for(unsigned int iDat=0; iDat<iSize; ++iDat)
+	for(std::size_t iDat=0; iDat<iSize; ++iDat)
 	{
 		ostr << vecX[iDat] << " " << vecY[iDat];
 
@@ -398,63 +398,70 @@ template<class t_real>
 void GnuPlot<t_real>::SetXLabel(const char* pcLab)
 {
 	if(!IsReady()) return;
-	(*m_postr) << "set xlabel \"" << pcLab << "\"\n";
-	//m_postr->flush();
+
+	m_pProc->GetOstr() << "set xlabel \"" << pcLab << "\"\n";
+	//m_pProc->GetOstr().flush();
 }
 
 template<class t_real>
 void GnuPlot<t_real>::SetYLabel(const char* pcLab)
 {
 	if(!IsReady()) return;
-	(*m_postr) << "set ylabel \"" << pcLab << "\"\n";
-	//m_postr->flush();
+
+	m_pProc->GetOstr() << "set ylabel \"" << pcLab << "\"\n";
+	//m_pProc->GetOstr().flush();
 }
 
 template<class t_real>
 void GnuPlot<t_real>::SetTitle(const char* pcTitle)
 {
 	if(!IsReady()) return;
-	(*m_postr) << "set title \"" << pcTitle << "\"\n";
-	//m_postr->flush();
+
+	m_pProc->GetOstr() << "set title \"" << pcTitle << "\"\n";
+	//m_pProc->GetOstr().flush();
 }
 
 template<class t_real>
 void GnuPlot<t_real>::SetXRange(t_real dMin, t_real dMax)
 {
 	if(!IsReady()) return;
+
 	//std::cout << "xmin: "  << dMin << ", xmax: " << dMax << std::endl;
-	(*m_postr) << "set xrange [" << dMin << ":" << dMax << "]\n";
-	m_postr->flush();
+	m_pProc->GetOstr() << "set xrange [" << dMin << ":" << dMax << "]\n";
+	m_pProc->GetOstr().flush();
 }
 
 template<class t_real>
 void GnuPlot<t_real>::SetYRange(t_real dMin, t_real dMax)
 {
 	if(!IsReady()) return;
-	(*m_postr) << "set yrange [" << dMin << ":" << dMax << "]\n";
-	m_postr->flush();
+
+	m_pProc->GetOstr() << "set yrange [" << dMin << ":" << dMax << "]\n";
+	m_pProc->GetOstr().flush();
 }
 
 template<class t_real>
 void GnuPlot<t_real>::SetLogX(t_real tBase)
 {
 	if(!IsReady()) return;
+
 	if(tBase >= 0.)
-		(*m_postr) << "set logscale x " << tBase << "\n";
+		m_pProc->GetOstr() << "set logscale x " << tBase << "\n";
 	else
-		(*m_postr) << "unset logscale x\n";
-	m_postr->flush();
+		m_pProc->GetOstr() << "unset logscale x\n";
+	m_pProc->GetOstr().flush();
 }
 
 template<class t_real>
 void GnuPlot<t_real>::SetLogY(t_real tBase)
 {
 	if(!IsReady()) return;
+
 	if(tBase >= 0.)
-		(*m_postr) << "set logscale y " << tBase << "\n";
+		m_pProc->GetOstr() << "set logscale y " << tBase << "\n";
 	else
-		(*m_postr) << "unset logscale y\n";
-	m_postr->flush();
+		m_pProc->GetOstr() << "unset logscale y\n";
+	m_pProc->GetOstr().flush();
 }
 
 template<class t_real>
@@ -463,11 +470,11 @@ void GnuPlot<t_real>::SetGrid(bool bOn)
 	if(!IsReady()) return;
 
 	if(bOn)
-		(*m_postr) << "set grid\n";
+		m_pProc->GetOstr() << "set grid\n";
 	else
-		(*m_postr) << "unset grid\n";
+		m_pProc->GetOstr() << "unset grid\n";
 
-	m_postr->flush();
+	m_pProc->GetOstr().flush();
 }
 
 template<class t_real>
@@ -475,8 +482,8 @@ void GnuPlot<t_real>::ClearArrows()
 {
 	if(!IsReady()) return;
 
-	(*m_postr) << "unset arrow\n";
-	m_postr->flush();
+	m_pProc->GetOstr() << "unset arrow\n";
+	m_pProc->GetOstr().flush();
 }
 
 template<class t_real>
@@ -484,13 +491,13 @@ void GnuPlot<t_real>::AddArrow(t_real dX0, t_real dY0, t_real dX1, t_real dY1, b
 {
 	if(!IsReady()) return;
 
-	(*m_postr) << "set arrow from " << dX0 << "," << dY0
+	m_pProc->GetOstr() << "set arrow from " << dX0 << "," << dY0
 			<< " to " << dX1 << "," << dY1;
 	if(!bHead)
-		(*m_postr) << " nohead";
+		m_pProc->GetOstr() << " nohead";
 
-	(*m_postr) << "\n";
-	m_postr->flush();
+	m_pProc->GetOstr() << "\n";
+	m_pProc->GetOstr().flush();
 }
 
 template<class t_real>
@@ -498,21 +505,21 @@ void GnuPlot<t_real>::SetColorBarRange(t_real dMin, t_real dMax, bool bCyclic)
 {
 	if(!IsReady()) return;
 
-	(*m_postr) << "set cbrange [" << dMin << ":" << dMax << "]\n";
+	m_pProc->GetOstr() << "set cbrange [" << dMin << ":" << dMax << "]\n";
 
 	if(bCyclic)
-		(*m_postr) << "set palette defined (0 \"blue\", 0.25 \"cyan\", 0.5 \"yellow\", 0.75 \"red\", 1 \"blue\")\n";
+		m_pProc->GetOstr() << "set palette defined (0 \"#0000ff\", 0.33333 \"#ff0000\", 0.66666 \"#ff9900\", 1 \"#0000ff\")\n";
 	else
-		(*m_postr) << "set palette defined (0 \"blue\", 0.3333 \"cyan\", 0.6666 \"yellow\", 1 \"red\")\n";
+		m_pProc->GetOstr() << "set palette defined (0 \"#0000ff\", 1 \"#ff0000\")\n";
 
-	m_postr->flush();
+	m_pProc->GetOstr().flush();
 }
 
 template<class t_real>
-bool GnuPlot<t_real>::IsReady() const { return m_postr!=0; }
+bool GnuPlot<t_real>::IsReady() const { return m_pProc && m_pProc->IsReady(); }
 
 template<class t_real>
-std::ostream& GnuPlot<t_real>::GetStream() { return *m_postr; }
+std::ostream& GnuPlot<t_real>::GetStream() { return m_pProc->GetOstr(); }
 
 }
 

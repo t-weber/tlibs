@@ -1,4 +1,4 @@
-/*
+/**
  * data point interpolation
  *
  * @author: Tobias Weber

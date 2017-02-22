@@ -75,6 +75,36 @@ template<class t_str> struct StringComparer<t_str, 0>
 // ----------------------------------------------------------------------------
 
 
+template<class t_str = std::string>
+boost::optional<prop::string_path<t_str, prop::id_translator<t_str>>>
+get_prop_path(const std::string& _strAddr, const typename t_str::value_type& chSep)
+{
+	using t_ret = boost::optional<prop::string_path<t_str, prop::id_translator<t_str>>>;
+
+	t_str strAddr = _strAddr;
+	trim(strAddr);
+
+	if(strAddr.length() == 0)
+		return t_ret();
+
+	if(strAddr[0] == chSep)
+		strAddr = strAddr.substr(1);
+
+	try
+	{
+		prop::string_path<t_str, prop::id_translator<t_str>> path(strAddr, chSep);
+		return boost::optional<decltype(path)>(path);
+	}
+	catch(const prop::ptree_bad_path& ex) {}
+	catch(const std::exception& ex) {}
+
+	return t_ret();
+}
+
+
+// ----------------------------------------------------------------------------
+
+
 template<class _t_str = std::string, bool bCaseSensitive=0>
 class Prop
 {
@@ -247,34 +277,24 @@ public:
 
 
 	template<typename T>
-	T Query(const t_str& _strAddr, const T* pDef=nullptr, bool *pbOk=nullptr) const
+	T Query(const t_str& strAddr, const T* pDef=nullptr, bool *pbOk=nullptr) const
 	{
-		t_str strAddr = _strAddr;
-		trim(strAddr);
-
-		if(strAddr.length() == 0)
-		{
-			if(pbOk) *pbOk = 0;
-			return T();
-		}
-
-		if(strAddr[0] == m_chSep)
-			strAddr = strAddr.substr(1);
-
 		T tOut;
 		try
 		{
-			prop::string_path<t_str, prop::id_translator<t_str>> path(strAddr, m_chSep);
-			//tOut = m_prop.template get<T>(path);
-			tOut = tl::str_to_var<T, t_str>(m_prop.template get<t_str>(path));
+			auto optPath = get_prop_path<t_str>(strAddr, m_chSep);
+			if(!optPath) throw std::exception();
+
+			tOut = tl::str_to_var<T, t_str>(m_prop.template get<t_str>(*optPath));
 		}
-		catch(const prop::ptree_bad_path& ex)
+		catch(const std::exception& ex)
 		{
 			if(pbOk) *pbOk = 0;
 			if(pDef) return *pDef;
 			return T();
 		}
 
+		// if T is a string type, trim it
 		if(std::is_same<t_str, T>::value)
 			trim(*reinterpret_cast<t_str*>(&tOut));
 
@@ -336,6 +356,25 @@ public:
 	}
 #endif
 
+	/**
+	 * get a list of children to a node
+	 */
+	std::vector<t_str> GetChildNodes(const t_str& strAddr) const
+	{
+		std::vector<t_str> vecRet;
+		try
+		{
+			auto optPath = get_prop_path<t_str>(strAddr, m_chSep);
+			if(!optPath) throw std::exception();
+
+			for(const auto &node : m_prop.get_child(*optPath))
+				vecRet.push_back(node.first);
+		}
+		catch(const std::exception& ex) {}
+
+		return vecRet;
+	}
+
 	bool Exists(const t_str& strAddr) const
 	{
 		bool bOk = 0;
@@ -358,19 +397,19 @@ public:
 	template<class T>
 	void Add(const t_str& strKey, T&& tVal)
 	{
-		prop::string_path<t_str, prop::id_translator<t_str>>
-			path(strKey, m_chSep);
+		auto optPath = get_prop_path<t_str>(strKey, m_chSep);
+		if(!optPath) return;
 
 		//std::cout << "type: " << get_typename<remove_constref_t<T>>() << std::endl;
 		if(std::is_convertible<T, t_str>::value)
 		{
 			//std::cout << "string: " << tVal << std::endl;
-			m_prop.add(std::move(path), std::forward<T>(tVal));
+			m_prop.add(std::move(*optPath), std::forward<T>(tVal));
 		}
 		else
 		{
 			t_str strVal = var_to_str<T, t_str>(tVal);
-			m_prop.add(std::move(path), std::move(strVal));
+			m_prop.add(std::move(*optPath), std::move(strVal));
 		}
 	}
 

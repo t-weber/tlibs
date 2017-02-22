@@ -8,13 +8,12 @@
 #ifndef __M_PLOTTER_GPL__
 #define __M_PLOTTER_GPL__
 
-#include <boost/iostreams/device/file_descriptor.hpp>
-#include <boost/iostreams/stream.hpp>
 #include <boost/optional.hpp>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <memory>
+#include "../helper/proc.h"
+
 
 namespace tl {
 enum LineStyle
@@ -46,10 +45,7 @@ template<class t_real = double>
 class GnuPlot
 {
 protected:
-	FILE *m_pipe = nullptr;
-	std::unique_ptr<boost::iostreams::file_descriptor_sink> m_pfds;
-	std::unique_ptr<boost::iostreams::stream_buffer<boost::iostreams::file_descriptor_sink>> m_psbuf;
-	std::unique_ptr<std::ostream> m_postr;
+	std::unique_ptr<PipeProc<char>> m_pProc;
 
 	std::vector<PlotObj<t_real>> m_vecObjs;
 	// has to be 0 to show plot
@@ -62,6 +58,7 @@ protected:
 	std::string m_strLegendPlacement = std::string("default");
 
 	std::string m_strCmdFileOutput;
+	unsigned int m_iPrec = 8;
 
 protected:
 	std::string BuildCmd();
@@ -112,6 +109,8 @@ public:
 
 	void SetLegendOpts(const std::string& strOpts) { m_strLegendOpts = strOpts; }
 	void SetLegendPlace(const std::string& strPlace) { m_strLegendPlacement = strPlace; }
+
+	void SetPrec(unsigned int iPrec);
 };
 
 }

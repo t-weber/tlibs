@@ -127,7 +127,9 @@ bool equ(
 }
 
 
-#ifdef TLIBS_USE_GLOBAL_OPS
+#ifndef TLIBS_USE_GLOBAL_OPS
+namespace tl_ops {
+#endif
 
 template<class T1, class T2>
 typename tl::linalg_mult_op_impl<T1, T2>::ret_type operator*
@@ -144,6 +146,8 @@ bool operator==(const T1& t1, const T2& t2)
 	return tl::equ<T1, T2>(t1, t2, eps);
 }
 
+#ifndef TLIBS_USE_GLOBAL_OPS
+}	// tl_ops
 #endif
 
 #endif

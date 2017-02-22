@@ -165,11 +165,18 @@ bool float_equal(T t1, T t2, typename _get_epsilon_impl<T>::t_eps eps = get_epsi
 // -----------------------------------------------------------------------------
 
 
+template<class T, typename REAL=double>
+T lerp(const T& a, const T& b, REAL val)
+{
+	return a + T((b-a)*val);
+}
+
+
 // x=0..1
 template<typename T=double>
 T linear_interp(T x0, T x1, T x)
 {
-	return x0 + (x1 - x0)*x;
+	return lerp<T,T>(x0, x1, x);
 }
 
 
@@ -183,12 +190,6 @@ T bilinear_interp(T x0y0, T x1y0, T x0y1, T x1y1, T x, T y)
 	return linear_interp<T>(bottom, top, y);
 }
 
-template<class T, typename REAL=double>
-T lerp(const T& a, const T& b, REAL val)
-{
-	return a + T((b-a)*val);
-}
-
 
 template<typename T=double, typename REAL=double,
 	template<class...> class t_vec=std::vector>
@@ -198,7 +199,7 @@ t_vec<T> linspace(const T& tmin, const T& tmax, std::size_t iNum)
 	vec.reserve(iNum);
 
 	for(std::size_t i=0; i<iNum; ++i)
-		vec.push_back(REAL(i)*(tmax-tmin)/REAL(iNum-1) + tmin);
+		vec.push_back(lerp<T,REAL>(tmin, tmax, REAL(i)/REAL(iNum-1)));
 	return vec;
 }
 
@@ -264,6 +265,9 @@ std::vector<T> quadratic_solve(T a, T b, T c)
 // -----------------------------------------------------------------------------
 
 
+/**
+ * calculates chi^2 distance of a function model to data points
+ */
 template<class T, class t_func, class t_iter_dat=T*>
 T chi2(const t_func& func, std::size_t N,
 	const t_iter_dat x, const t_iter_dat y, const t_iter_dat dy)
