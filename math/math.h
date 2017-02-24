@@ -223,6 +223,17 @@ T clamp(T t, T min, T max)
 	return t;
 }
 
+
+template<class T>
+bool is_in_range(T val, T centre, T pm)
+{
+	pm = std::abs(pm);
+
+	if(val < centre-pm) return false;
+	if(val > centre+pm) return false;
+	return true;
+}
+
 // -----------------------------------------------------------------------------
 
 

@@ -60,9 +60,9 @@ protected:
 	const t_real *m_pDatY = nullptr;
 	const t_real *m_pDatYErr = nullptr;
 
-	t_real m_dVelScale = 1;
-	t_real m_dPartScale = 1;
-	t_real m_dSwarmScale = 1;
+	t_real m_dVelScale = 1.;
+	t_real m_dPartScale = 1.2;
+	t_real m_dSwarmScale = 1.4;
 	t_real m_dTimeDelta = 1;
 	t_real m_dEps = get_epsilon<t_real>();
 
@@ -161,7 +161,7 @@ public:
 	}
 
 
-	void Run()	// TODO
+	void Run()
 	{
 		if(!m_vecRavens.size()) return;
 		const std::size_t iDim = m_vecRavens[0].vecPos.size();
@@ -235,7 +235,6 @@ public:
 // -----------------------------------------------------------------------------
 template<typename t_real, std::size_t iNumArgs, typename t_func>
 bool swarmfit(t_func&& func,
-
 	const std::vector<t_real>& vecX,
 	const std::vector<t_real>& vecY,
 	const std::vector<t_real>& vecYErr,
@@ -243,9 +242,8 @@ bool swarmfit(t_func&& func,
 	const std::vector<std::string>& vecParamNames,	// size: iNumArgs-1
 	std::vector<t_real>& vecVals,
 	std::vector<t_real>& vecErrs,
-	//const std::vector<bool>* pVecFixed = nullptr,
 
-	bool bDebug=1)
+	bool bDebug = 1)
 {
 	std::size_t iParamSize = iNumArgs-1;
 	if(iParamSize != vecVals.size())
@@ -255,8 +253,9 @@ bool swarmfit(t_func&& func,
 	}
 
 	std::size_t iDatSize = std::min(vecY.size(), vecYErr.size());
-	std::size_t iNumRavens = 1024;
+	std::size_t iNumRavens = 256*iParamSize;
 	std::size_t iMaxCalls = 128;
+	std::size_t iMaxBestIters = 4;
 
 	ublas::vector<t_real> vecMin(iParamSize), vecMax(iParamSize);
 	for(std::size_t iY=0; iY<iParamSize; ++iY)
@@ -265,32 +264,46 @@ bool swarmfit(t_func&& func,
 		vecMax[iY] = vecVals[iY] + vecErrs[iY];
 	}
 
-	/*
-	// check if all params are fixed
-	if(pVecFixed && std::all_of(pVecFixed->begin(), pVecFixed->end(),
-		[](bool b)->bool { return b; }))
-		{
-			tl::log_err("All parameters are fixed.");
-			return false;
-		}
-	*/
-
 	FitterLamFuncModel<t_real, iNumArgs, t_func> mod(func);
 	tl::Unkindness<t_real, ublas::vector> unk;
 	unk.SetData(iDatSize, vecX.data(), vecY.data(), vecYErr.data());
 	unk.SetMaxCalls(iMaxCalls);
-	unk.SetMaxBestIters(iMaxCalls/10);
+	unk.SetMaxBestIters(iMaxBestIters);
 	unk.Init(iNumRavens, &mod, vecMin, vecMax);
 	unk.Run();
 
 	const auto& vecBest = unk.GetBestPos();
+
+	// check if results are within error ranges
+	bool bInRange = 1;
+	for(std::size_t iParam=0; iParam<vecBest.size(); ++iParam)
+	{
+		if(!is_in_range<t_real>(vecBest[iParam], vecVals[iParam], vecErrs[iParam]))
+		{
+			bInRange = 0;
+			break;
+		}
+	}
+
+	// copy results
 	for(std::size_t iParam=0; iParam<vecBest.size(); ++iParam)
 	{
 		vecVals[iParam] = vecBest[iParam];
-		vecErrs[iParam] = 0.;
+		//vecErrs[iParam] = 0.;
 	}
 
-	return unk.IsBestPosValid();
+	if(bDebug)
+	{
+		std::ostringstream ostrRes;
+		for(std::size_t iParam=0; iParam<vecBest.size(); ++iParam)
+			ostrRes << vecParamNames[iParam] << " = " << vecVals[iParam] << ", ";
+
+		tl::log_debug("Swarm fit: valid = ", unk.IsBestPosValid(),
+			", in_range = ", bInRange,
+			", result: ", ostrRes.str());
+	}
+
+	return unk.IsBestPosValid() /*&& bInRange*/;
 }
 // -----------------------------------------------------------------------------
 
