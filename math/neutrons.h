@@ -106,6 +106,7 @@ t_wavenumber<Sys,Y> v2k(const t_velocity<Sys,Y>& v)
 
 
 
+
 // --------------------------------------------------------------------------------
 // E = hbar*omega
 
@@ -222,6 +223,21 @@ t_length<Sys,Y> bragg_recip_lam(const t_wavenumber<Sys,Y>& Q,
 {
 	return Y(4)*get_pi<Y>() / Q * units::sin(twotheta/Y(2)) / n;
 }
+
+
+// G = 2pi / d
+template<class Sys, class Y>
+t_length<Sys,Y> G2d(const t_wavenumber<Sys,Y>& G)
+{
+	return Y(2.)*get_pi<Y>() / G;
+}
+
+template<class Sys, class Y>
+t_wavenumber<Sys,Y> d2G(const t_length<Sys,Y>& d)
+{
+	return Y(2.)*get_pi<Y>() / d;
+}
+
 // --------------------------------------------------------------------------------
 
 
@@ -803,6 +819,49 @@ t_length<Sys, Y> foc_curv(const t_length<Sys, Y>& lenBefore, const t_length<Sys,
 }
 
 
+// --------------------------------------------------------------------------------
+
+
+// --------------------------------------------------------------------------------
+/**
+ * disc chopper burst time (in units of sigma)
+ * see: NIMA 492, pp. 97-104 (2002)
+ */
+
+template<class Sys, class Y=double>
+t_time<Sys,Y> burst_time(const t_length<Sys,Y>& r, 
+	const t_length<Sys,Y>& L, const t_freq<Sys,Y>& om, bool bCounterRot)
+{
+	Y tScale = bCounterRot ? Y(2) : Y(1);
+	return L / (r * om * tScale) * get_FWHM2SIGMA<Y>();
 }
 
+template<class Sys, class Y=double>
+t_length<Sys,Y> burst_time_L(const t_length<Sys,Y>& r,
+	const t_time<Sys,Y>& dt, const t_freq<Sys,Y>& om, bool bCounterRot)
+{
+	Y tScale = bCounterRot ? Y(2) : Y(1);
+	return dt * r * om * tScale / get_FWHM2SIGMA<Y>();
+}
+
+template<class Sys, class Y=double>
+t_length<Sys,Y> burst_time_r(const t_time<Sys,Y>& dt,
+	const t_length<Sys,Y>& L, const t_freq<Sys,Y>& om, bool bCounterRot)
+{
+	Y tScale = bCounterRot ? Y(2) : Y(1);
+	return L / (dt * om * tScale) * get_FWHM2SIGMA<Y>();
+}
+
+template<class Sys, class Y=double>
+t_freq<Sys,Y> burst_time_om(const t_length<Sys,Y>& r, 
+	const t_length<Sys,Y>& L, const t_time<Sys,Y>& dt, bool bCounterRot)
+{
+	Y tScale = bCounterRot ? Y(2) : Y(1);
+	return L / (r * dt * tScale) * get_FWHM2SIGMA<Y>();
+}
+
+// --------------------------------------------------------------------------------
+
+
+}
 #endif

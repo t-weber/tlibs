@@ -209,6 +209,7 @@ void TcpTxtClient<t_ch, t_str>::flush_write()
 			return;
 		}
 
+		// call this function again if buffer is not yet empty
 		if(!m_listWriteBuffer.empty())
 			flush_write();
 	});
@@ -217,11 +218,8 @@ void TcpTxtClient<t_ch, t_str>::flush_write()
 template<class t_ch, class t_str>
 void TcpTxtClient<t_ch, t_str>::read_loop()
 {
-	static const std::size_t iBufLen = 512;
-	static t_ch pcBuf[iBufLen];
-
 	//tl::log_debug("In read loop.");
-	asio::async_read(*m_psock, asio::buffer(pcBuf, iBufLen), asio::transfer_at_least(1),
+	asio::async_read(*m_psock, asio::buffer(m_pcReadBuffer, m_iReadBufLen), asio::transfer_at_least(1),
 	[this](const sys::error_code& err, std::size_t len)
 	{
 		if(err)
@@ -232,7 +230,7 @@ void TcpTxtClient<t_ch, t_str>::read_loop()
 			return;
 		}
 
-		t_str strCurMsg(pcBuf, len);
+		t_str strCurMsg(m_pcReadBuffer, len);
 		m_strReadBuffer.append(strCurMsg);
 
 		//tl::log_debug("read buffer: ", m_strReadBuffer);
@@ -247,6 +245,7 @@ void TcpTxtClient<t_ch, t_str>::read_loop()
 			}
 		}
 
+		// call this function again
 		read_loop();
 	});
   }

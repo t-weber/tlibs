@@ -1,4 +1,4 @@
-/*
+/**
  * Calculation of first Brillouin zone
  * @author Tobias Weber
  * @date jun-2014
