@@ -155,6 +155,8 @@ template<class Y=double> t_time<units::si::system, Y> get_one_picosecond()
 { return Y(1e-12) * units::si::seconds; }
 template<class Y=double> t_angle<units::si::system, Y> get_one_radian()
 { return Y(1) * units::si::radians; }
+template<class Y=double> t_angle<units::si::system, Y> get_one_deg()
+{ return Y(get_pi<Y>()/Y(180.)) * units::si::radians; }
 template<class Y=double> t_flux<units::si::system, Y> get_one_tesla()
 { return Y(1) * units::si::teslas; }
 template<class Y=double> t_flux<units::si::system, Y> get_one_kilogauss()
