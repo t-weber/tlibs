@@ -382,6 +382,22 @@ split_first(const t_str& str, const t_str& strSep, bool bTrim=0, bool bSeq=0)
 }
 
 
+/**
+ * get string between strSep1 and strSep2
+ */
+template<class t_str=std::string>
+t_str str_between(const t_str& str, const t_str& strSep1, const t_str& strSep2,
+	bool bTrim=0, bool bSeq=0)
+{
+	t_str str1, str2;
+	std::tie(str1, str2) = split_first<t_str>(str, strSep1, bTrim, bSeq);
+	if(str2 == "") return t_str("");
+
+	std::tie(str1, str2) = split_first<t_str>(str2, strSep2, bTrim, bSeq);
+	return str1;
+}
+
+
 // ----------------------------------------------------------------------------
 
 

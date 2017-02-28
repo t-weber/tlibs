@@ -305,41 +305,50 @@ bool fit(t_func&& func,
 	std::vector<t_real_min>& vecErrs,
 	const std::vector<bool>* pVecFixed = nullptr,
 
-	bool bDebug=1)
+	bool bDebug=1) noexcept
 {
-	// check if all params are fixed
-	if(pVecFixed && std::all_of(pVecFixed->begin(), pVecFixed->end(),
-		[](bool b)->bool { return b; }))
+	try
+	{
+		// check if all params are fixed
+		if(pVecFixed && std::all_of(pVecFixed->begin(), pVecFixed->end(),
+			[](bool b)->bool { return b; }))
+			{
+				tl::log_err("All parameters are fixed.");
+				return false;
+			}
+
+		MinuitLamFuncModel<iNumArgs, t_func> mod(func);
+		Chi2Function<t_real_min> chi2(&mod, vecX.size(), vecX.data(), vecY.data(), vecYErr.data());
+
+		ROOT::Minuit2::MnUserParameters params;
+		for(std::size_t iParam=0; iParam<vecParamNames.size(); ++iParam)
 		{
-			tl::log_err("All parameters are fixed.");
-			return false;
+			params.Add(vecParamNames[iParam], vecVals[iParam], vecErrs[iParam]);
+			if(pVecFixed && (*pVecFixed)[iParam])
+				params.Fix(vecParamNames[iParam]);
 		}
 
-	MinuitLamFuncModel<iNumArgs, t_func> mod(func);
-	Chi2Function<t_real_min> chi2(&mod, vecX.size(), vecX.data(), vecY.data(), vecYErr.data());
+		ROOT::Minuit2::MnMigrad migrad(chi2, params, 2);
+		ROOT::Minuit2::FunctionMinimum mini = migrad();
+		bool bValidFit = mini.IsValid() && mini.HasValidParameters() && mini.UserState().IsValid();
 
-	ROOT::Minuit2::MnUserParameters params;
-	for(std::size_t iParam=0; iParam<vecParamNames.size(); ++iParam)
+		for(std::size_t iParam=0; iParam<vecParamNames.size(); ++iParam)
+		{
+			vecVals[iParam] = mini.UserState().Value(vecParamNames[iParam]);
+			vecErrs[iParam] = std::fabs(mini.UserState().Error(vecParamNames[iParam]));
+		}
+
+		if(bDebug)
+			tl::log_debug(mini);
+
+		return bValidFit;
+	}
+	catch(const std::exception& ex)
 	{
-		params.Add(vecParamNames[iParam], vecVals[iParam], vecErrs[iParam]);
-		if(pVecFixed && (*pVecFixed)[iParam])
-			params.Fix(vecParamNames[iParam]);
+		tl::log_err(ex.what());
 	}
 
-	ROOT::Minuit2::MnMigrad migrad(chi2, params, 2);
-	ROOT::Minuit2::FunctionMinimum mini = migrad();
-	bool bValidFit = mini.IsValid() && mini.HasValidParameters() && mini.UserState().IsValid();
-
-	for(std::size_t iParam=0; iParam<vecParamNames.size(); ++iParam)
-	{
-		vecVals[iParam] = mini.UserState().Value(vecParamNames[iParam]);
-		vecErrs[iParam] = std::fabs(mini.UserState().Error(vecParamNames[iParam]));
-	}
-
-	if(bDebug)
-		tl::log_debug(mini);
-
-	return bValidFit;
+	return false;
 }
 
 // ----------------------------------------------------------------------------
