@@ -245,6 +245,12 @@ bool swarmfit(t_func&& func,
 
 	bool bDebug = 1)
 {
+	if(!vecX.size() || !vecY.size() || !vecYErr.size())
+	{
+		tl::log_err("No data given to fitter.");
+		return false;
+	}
+
 	std::size_t iParamSize = iNumArgs-1;
 	if(iParamSize != vecVals.size())
 	{

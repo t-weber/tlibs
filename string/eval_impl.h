@@ -119,11 +119,14 @@ namespace tl
 		typename std::enable_if<std::is_integral<t_val>::value>::type* =nullptr>
 	t_val get_const(const t_str& strName)
 	{
-		static const std::unordered_map</*t_str*/std::string, t_val> s_consts =
+		/*static const std::unordered_map<std::string, t_val> s_consts =
 		{
+			{ "pi", 3 },
 		};
 
-		return s_consts.at(wstr_to_str(strName));
+		return s_consts.at(wstr_to_str(strName));*/
+
+		throw std::out_of_range("Undefined constant.");
 	}
 
 

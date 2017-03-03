@@ -309,6 +309,12 @@ bool fit(t_func&& func,
 {
 	try
 	{
+		if(!vecX.size() || !vecY.size() || !vecYErr.size())
+		{
+			tl::log_err("No data given to fitter.");
+			return false;
+		}
+
 		// check if all params are fixed
 		if(pVecFixed && std::all_of(pVecFixed->begin(), pVecFixed->end(),
 			[](bool b)->bool { return b; }))
