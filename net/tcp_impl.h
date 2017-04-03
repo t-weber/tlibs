@@ -1,6 +1,6 @@
 /**
  * TcpClient
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date aug-2014
  * @license GPLv2 or GPLv3
  *
@@ -233,7 +233,7 @@ void TcpTxtClient<t_ch, t_str>::read_loop()
 		t_str strCurMsg(m_pcReadBuffer, len);
 		m_strReadBuffer.append(strCurMsg);
 
-		//tl::log_debug("read buffer: ", m_strReadBuffer);
+		//tl::log_debug("read buffer: \"", m_strReadBuffer, "\", capacity: ", m_strReadBuffer.capacity());
 		std::vector<t_str> vecCmds;
 		if(get_cmd_tokens(m_strReadBuffer, m_strCmdDelim, vecCmds, m_strReadBuffer))
 		{

@@ -1,6 +1,6 @@
 /**
  * calculating term symbols
- * @author Tobias Weber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 2016
  * @license GPLv2 or GPLv3
  */
@@ -146,6 +146,17 @@ namespace tl
 			(S*(S+T(1)) - L*(L+T(1)))
 				/ (T(2)*J*(J+T(1))) * (gL-gS);
 		return g;
+	}
+
+
+	/**
+	 * effective magneton number in units of muB
+	 * see: (Khomskii 2014), p. 33
+	 */
+	template<class T = double>
+	T eff_magnetons(T gJ, T J)
+	{
+		return gJ * std::sqrt(J * (J+T(1)));
 	}
 }
 

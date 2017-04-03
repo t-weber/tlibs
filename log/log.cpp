@@ -1,6 +1,6 @@
 /**
  * Simple logger
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 12-sep-2014
  * @license GPLv2 or GPLv3
  */
@@ -26,9 +26,10 @@ std::string Log::get_timestamp()
 
 	// milliseconds
 	ch::milliseconds msecs = ch::duration_cast<ch::milliseconds>(now.time_since_epoch());
-	msecs -= ch::duration_cast<ch::milliseconds>(ch::duration_cast<ch::seconds>(msecs));
+	auto secs = ch::duration_cast<ch::seconds>(msecs);
+	msecs -= ch::duration_cast<ch::milliseconds>(secs);
 	std::ostringstream ostrmsecs;
-	ostrmsecs << std::setw(3) << std::setfill('0') << msecs.count();
+	ostrmsecs << std::setw(3) << std::right << std::setfill('0') << msecs.count();
 
 	// time and date
 	std::time_t tm = system_clock::to_time_t(now);
@@ -38,8 +39,18 @@ std::string Log::get_timestamp()
 
 	std::string::value_type cTime[64];
 	std::strftime(cTime, sizeof cTime, "%Y-%b-%d %H:%M:%S.", &tmNow);
-	std::strcat(cTime, ostrmsecs.str().c_str());
-	return std::string(cTime);
+	if(std::strlen(cTime))
+	{	// if a time string is available, return it
+		std::strcat(cTime, ostrmsecs.str().c_str());
+		return std::string(cTime);
+	}
+	else
+	{	// else return the raw seconds
+		std::ostringstream ostrsecs;
+		ostrsecs << secs.count();
+		ostrsecs << "." << ostrmsecs.str();
+		return ostrsecs.str();
+	}
 }
 
 std::string Log::get_thread_id()
@@ -85,7 +96,11 @@ void Log::begin_log()
 		if(bCol)
 			(*pOstr) << get_color(m_col, 1);
 		if(m_bShowDate)
-			(*pOstr) << get_timestamp() << ", ";
+		{
+			std::string strTimeStamp = get_timestamp();
+			if(strTimeStamp != "")
+				(*pOstr) << strTimeStamp << ", ";
+		}
 		if(m_bShowThread)
 		{
 			using t_threadmap = std::unordered_map<std::thread::id, std::string>;

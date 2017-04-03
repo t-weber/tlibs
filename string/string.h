@@ -1,6 +1,6 @@
 /**
  * string helper
- * @author Tobias Weber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 2013-2016
  * @license GPLv2 or GPLv3
  */
@@ -15,6 +15,10 @@
 #include <locale>
 #include <limits>
 #include <map>
+#include <algorithm>
+#include <type_traits>
+#include <cctype>
+#include <cwctype>
 
 #ifndef NO_BOOST
 	#include <boost/tokenizer.hpp>
@@ -268,6 +272,10 @@ t_str trimmed(const t_str& str)
 	return strret;
 }
 
+
+/**
+ * removes all occurrences of a char in a string
+ */
 template<class t_str=std::string>
 t_str remove_char(const t_str& str, typename t_str::value_type ch)
 {
@@ -276,6 +284,33 @@ t_str remove_char(const t_str& str, typename t_str::value_type ch)
 	for(typename t_str::value_type c : str)
 		if(c != ch)
 			strRet.push_back(c);
+
+	return strRet;
+}
+
+/**
+ * removes all occurrences of specified chars in a string
+ */
+template<class t_str=std::string>
+t_str remove_chars(const t_str& str, const t_str& chs)
+{
+	t_str strRet;
+
+	for(typename t_str::value_type c : str)
+	{
+		bool bRemove = 0;
+		for(typename t_str::value_type ch : chs)
+		{
+			if(c == ch)
+			{
+				bRemove = 1;
+				break;
+			}
+		}
+
+		if(!bRemove)
+			strRet.push_back(c);
+	}
 
 	return strRet;
 }
@@ -709,8 +744,56 @@ void skip_after_char(std::basic_istream<t_char>& istr, t_char ch, bool bCase=0)
 	}
 }
 
+
 // ----------------------------------------------------------------------------
 
+
+/**
+ * functions working on chars
+ */
+template<class t_ch, typename=void> struct char_funcs {};
+
+/**
+ * specialisation for char
+ */
+template<class t_ch>
+struct char_funcs<t_ch, typename std::enable_if<std::is_same<t_ch, char>::value>::type>
+{
+	static bool is_digit(t_ch c) { return std::isdigit(c); }
+};
+
+/**
+ * specialisation for wchar_t
+ */
+template<class t_ch>
+struct char_funcs<t_ch, typename std::enable_if<std::is_same<t_ch, wchar_t>::value>::type>
+{
+	static bool is_digit(t_ch c) { return std::iswdigit(c); }
+};
+
+
+// ----------------------------------------------------------------------------
+
+
+/**
+ * tests if a string consists entirely of numbers
+ */
+template<class t_str = std::string>
+bool str_is_digits(const t_str& str)
+{
+	using t_ch = typename t_str::value_type;
+	using t_fkt = char_funcs<t_ch>;
+
+	bool bAllNums = std::all_of(str.begin(), str.end(),
+		[](t_ch c) -> bool
+		{
+			return t_fkt::is_digit(c);
+		});
+	return bAllNums;
+}
+
+
+// ----------------------------------------------------------------------------
 
 }
 #endif

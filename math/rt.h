@@ -1,6 +1,6 @@
-/*
+/**
  * wrapper for boost r*trees
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date oct-2015
  * @license GPLv2 or GPLv3
  */

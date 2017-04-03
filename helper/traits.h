@@ -1,6 +1,6 @@
 /**
  * Custom type traits
- * @author Tobias Weber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 19-nov-2014
  * @license GPLv2 or GPLv3
  */

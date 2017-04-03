@@ -1,6 +1,6 @@
 /**
- * distributions
- * @author tweber
+ * random distributions
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date sep-2016
  * @license GPLv2 or GPLv3
  */

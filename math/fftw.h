@@ -1,7 +1,6 @@
-/*
+/**
  * fftw interface
- *
- * @author Tobias Weber <tweber@frm2.tum.de>
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date August 2012
  * @license GPLv2 or GPLv3
  */

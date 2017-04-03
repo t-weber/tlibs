@@ -1,7 +1,6 @@
-/*
+/**
  * advanced linalg helpers (which depend on lapack/e)
- *
- * @author: tweber
+ * @author: Tobias Weber <tobias.weber@tum.de>
  * @date: 30-apr-2013
  * @license GPLv2 or GPLv3
  */

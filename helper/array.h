@@ -1,8 +1,7 @@
 /**
  * array helpers
- *
- * @author: tweber
- * @date: nov-2015
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @date nov-2015
  * @license GPLv2 or GPLv3
  */
 
@@ -179,10 +178,13 @@ struct container2_cast
 {
 	using t_from_al = std::allocator<t_from>;
 	using t_to_al = std::allocator<t_to>;
+	using t_from_al2 = std::allocator<t_cont<t_from, t_from_al>>;
+	using t_to_al2 = std::allocator<t_cont<t_to, t_to_al>>;
 
-	t_cont<t_cont<t_to, t_to_al>> operator()(const t_cont<t_cont<t_from, t_from_al>>& vec) const
+	t_cont<t_cont<t_to, t_to_al>, t_to_al2>
+	operator()(const t_cont<t_cont<t_from, t_from_al>, t_from_al2>& vec) const
 	{
-		t_cont<t_cont<t_to, t_to_al>> vecvecTo;
+		t_cont<t_cont<t_to, t_to_al>, t_to_al2> vecvecTo;
 		for(const auto& vecInner : vec)
 		{
 			t_cont<t_to, t_to_al> vecTo;
@@ -204,11 +206,15 @@ struct container2_cast<t_to, t_from, t_cont, 1>
 {
 	using t_from_al = std::allocator<t_from>;
 	using t_to_al = std::allocator<t_to>;
+	using t_from_al2 = std::allocator<t_cont<t_from, t_from_al>>;
+	using t_to_al2 = std::allocator<t_cont<t_to, t_to_al>>;
 
-	const t_cont<t_cont<t_to, t_to_al>>& operator()(const t_cont<t_cont<t_from, t_from_al>>& vec) const
+	const t_cont<t_cont<t_to, t_to_al>, t_to_al2>&
+	operator()(const t_cont<t_cont<t_from, t_from_al>, t_from_al2>& vec) const
 	{ return vec; }
 
-	t_cont<t_cont<t_to, t_to_al>>& operator()(t_cont<t_cont<t_from, t_from_al>>& vec) const
+	t_cont<t_cont<t_to, t_to_al>, t_to_al2>&
+	operator()(t_cont<t_cont<t_from, t_from_al>, t_from_al2>& vec) const
 	{ return vec; }
 };
 

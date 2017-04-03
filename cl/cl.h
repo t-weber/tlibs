@@ -1,6 +1,6 @@
-/*
+/**
  * CL helpers
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 20-jan-2015
  * @copyright GPLv2 or GPLv3
  */

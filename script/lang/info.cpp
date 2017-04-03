@@ -1,6 +1,6 @@
-/*
+/**
  * Parse & Runtime Info
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 12-oct-14
  * @license GPLv2 or GPLv3
  */

@@ -1,6 +1,6 @@
-/*
+/**
  * Compiler- and system-specific stuff
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date jan-2014
  * @license GPLv2 or GPLv3
  */

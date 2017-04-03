@@ -1,6 +1,6 @@
 /**
  * neutron formulas
- * @author Tobias Weber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 2012-2016
  * @license GPLv2 or GPLv3
  */
@@ -145,7 +145,7 @@ t_wavenumber<Sys,Y> E2k_direct(const t_energy<Sys,Y>& _E, bool &bImag)
 // --------------------------------------------------------------------------------
 
 
-// ----------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
 // indirect calculations using conversion factors for numerical stability
 
 template<class Sys, class Y>
@@ -166,15 +166,16 @@ t_wavenumber<Sys,Y> E2k(const t_energy<Sys,Y>& _E, bool &bImag)
 	return dk / get_one_angstrom<Y>();
 }
 
-// ----------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
 
 
 
 
 // --------------------------------------------------------------------------------
-// Bragg
-// real: n * lam = 2d * sin(twotheta/2)
-
+/**
+ * Bragg equation
+ * real: n * lam = 2d * sin(twotheta/2)
+ */
 template<class Sys, class Y>
 t_length<Sys,Y> bragg_real_lam(const t_length<Sys,Y>& d,
 	const t_angle<Sys,Y>& twotheta, Y n)
@@ -199,7 +200,10 @@ t_angle<Sys,Y> bragg_real_twotheta(const t_length<Sys,Y>& d,
 	return units::asin(dS) * Y(2.);
 }
 
-// reciprocal: Q * lam = 4pi * sin(twotheta/2)
+
+/**
+ * reciprocal Bragg equation: Q * lam = 4pi * sin(twotheta/2)
+ */
 template<class Sys, class Y>
 t_angle<Sys,Y> bragg_recip_twotheta(const t_wavenumber<Sys,Y>& Q,
 	const t_length<Sys,Y>& lam, Y n)
@@ -236,6 +240,27 @@ template<class Sys, class Y>
 t_wavenumber<Sys,Y> d2G(const t_length<Sys,Y>& d)
 {
 	return Y(2.)*get_pi<Y>() / d;
+}
+
+// --------------------------------------------------------------------------------
+
+
+// --------------------------------------------------------------------------------
+/**
+ * differentiated Bragg equation:
+ * n lam = 2d sin(th)						| diff
+ * n dlam = 2dd sin(th) + 2d cos(th) dth	| / Bragg equ
+ * dlam/lam = dd/d + cos(th)/sin(th) dth
+ *
+ * n G = 2k sin(th)
+ * n dG = 2dk sin(th) + 2k cos(th) dth
+ * dG/G = dk/k + cos(th)/sin(th) dth
+ */
+template<class Sys, class Y=double>
+Y bragg_diff(Y dDoverD, const t_angle<Sys,Y>& theta, Y dTheta)
+{
+	Y dLamOverLam = dDoverD + units::cos(theta)/units::sin(theta) * dTheta;
+	return dLamOverLam;
 }
 
 // --------------------------------------------------------------------------------
@@ -718,7 +743,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 // --------------------------------------------------------------------------------
 
 /**
- * Bose factor
+ * Bose distribution
  * see e.g.: (Shirane 2002), p. 28
  */
 template<class t_real=double>
@@ -732,6 +757,7 @@ t_real bose(t_real E, t_real T)
 
 	return n;
 }
+
 
 /**
  * Bose factor with a lower cutoff energy
@@ -750,6 +776,7 @@ t_real bose_cutoff(t_real E, t_real T, t_real E_cutoff=t_real(0.02))
 	return dB;
 }
 
+
 template<class Sys, class Y>
 Y bose(const t_energy<Sys,Y>& E, const t_temperature<Sys,Y>& T,
 	t_energy<Sys,Y> E_cutoff = -get_one_meV<Y>())
@@ -760,6 +787,7 @@ Y bose(const t_energy<Sys,Y>& E, const t_temperature<Sys,Y>& T,
 		return bose_cutoff<Y>(Y(E/get_one_meV<Y>()), Y(T/kelvin),
 			Y(E_cutoff/get_one_meV<Y>()));
 }
+
 
 /**
  * see: B. Fak, B. Dorner, Physica B 234-236 (1997) pp. 1107-1108
@@ -773,6 +801,27 @@ t_real DHO_model(t_real E, t_real T, t_real E0, t_real hwhm, t_real amp, t_real 
 		+ offs;
 }
 
+
+// --------------------------------------------------------------------------------
+
+/**
+ * Fermi distribution
+ */
+template<class t_real=double>
+t_real fermi(t_real E, t_real mu, t_real T)
+{
+	const t_real kB = get_kB<t_real>() * units::si::kelvin/get_one_meV<t_real>();
+	t_real n = t_real(1)/(std::exp((E-mu)/(kB*T)) + t_real(1));
+	return n;
+}
+
+template<class Sys, class Y>
+Y fermi(const t_energy<Sys,Y>& E, const t_energy<Sys,Y>& mu,
+	const t_temperature<Sys,Y>& T)
+{
+	return fermi<Y>(Y(E/get_one_meV<Y>()), Y(mu/get_one_meV<Y>()),
+		Y(T/kelvin));
+}
 
 // --------------------------------------------------------------------------------
 

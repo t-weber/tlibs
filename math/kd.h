@@ -1,6 +1,6 @@
-/*
+/**
  * kd trees
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date jun-2015
  * @license GPLv2 or GPLv3
  * @desc see e.g.: https://en.wikipedia.org/wiki/K-d_tree

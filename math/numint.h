@@ -1,6 +1,6 @@
-/*
+/**
  * simple numerical integration
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date june-2015
  * @license GPLv2 or GPLv3
  */

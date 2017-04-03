@@ -1,6 +1,6 @@
-/*
+/**
  * file helper
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 07-mar-2013
  * @license GPLv2 or GPLv3
  */
@@ -8,10 +8,33 @@
 #ifndef __TLIB_TMPFILE__
 #define __TLIB_TMPFILE__
 
-#include <string>
+#include "../math/rand.h"
+#include "../string/string.h"
+
+#include <boost/filesystem.hpp>
 
 
 namespace tl {
+
+
+// -------------------------------------------------------------------------
+// simple version
+
+
+template<class t_ch = char>
+std::basic_string<t_ch> create_tmp_file(const char* pcPrefix)
+{
+	namespace fs = boost::filesystem;
+
+	fs::path pathTmp = fs::temp_directory_path();
+	pathTmp /= std::string(pcPrefix) + "_" + tl::rand_name<std::string>(8);
+	std::string strTmp = pathTmp.string();
+
+	return std::basic_string<t_ch>(strTmp.begin(), strTmp.end());
+}
+
+
+// -------------------------------------------------------------------------
 
 
 class TmpFile

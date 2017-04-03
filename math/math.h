@@ -1,7 +1,6 @@
 /**
  * math helpers
- *
- * @author: tweber
+ * @author: Tobias Weber <tobias.weber@tum.de>
  * @date: 23-apr-2013
  * @license GPLv2 or GPLv3
  */
@@ -49,14 +48,21 @@ T sign(T t)
 
 template<typename T> T cot(T t)
 {
-	//return T(1)/std::tan(t);
+	//return T(1) / std::tan(t);
 	return std::tan(T(0.5)*get_pi<T>() - t);
 }
 
+template<typename T> T coth(T t)
+{
+	return T(1) / std::tanh(t);
+}
 
 // -----------------------------------------------------------------------------
 
 
+/**
+ * mean value
+ */
 template<class vec_type>
 typename vec_type::value_type mean_value(const vec_type& vec)
 {
@@ -72,22 +78,73 @@ typename vec_type::value_type mean_value(const vec_type& vec)
 	return tMean;
 }
 
-// standard deviation of mean value
+/**
+ * mean value with given probability
+ */
+template<class vec_type_prob, class vec_type>
+typename vec_type::value_type mean_value(const vec_type_prob& vecP, const vec_type& vec)
+{
+	typedef typename vec_type::value_type T;
+	std::size_t iSize = std::min(vecP.size(), vec.size());
+
+	if(iSize==0) return T(0);
+
+	T tMean = vecP[0]*vec[0];
+	T tProbTotal = vecP[0];
+	for(std::size_t i=1; i<iSize; ++i)
+	{
+		tMean += vecP[i]*vec[i];
+		tProbTotal += vecP[i];
+	}
+	tMean /= tProbTotal;
+
+	return tMean;
+}
+
+
+/**
+ * standard deviation of mean value, with correction factor
+ * see e.g.: https://en.wikipedia.org/wiki/Bessel%27s_correction
+ */
 template<class vec_type>
-typename vec_type::value_type std_dev(const vec_type& vec)
+typename vec_type::value_type std_dev(const vec_type& vec, bool bCorr=1)
 {
 	typedef typename vec_type::value_type T;
 	if(vec.size()<=1) return T(0);
+
+	T tProb = T(vec.size());
+	if(bCorr) tProb -= T(1);
 
 	T tMean = mean_value(vec);
 	T t = T(0);
 	for(const T& tval : vec)
 		t += (tval-tMean) * (tval-tMean);
+	t /= tProb;
 
-	T tN = T(vec.size());
-	t /= tN-T(1);
+	return std::sqrt(t);
+}
 
-	//std::cout << t << " " << std::sqrt(t) << std::endl;
+/**
+ * standard deviation with given probability
+ */
+template<class vec_type_prob, class vec_type>
+typename vec_type::value_type std_dev(const vec_type_prob& vecP, const vec_type& vec)
+{
+	typedef typename vec_type::value_type T;
+	std::size_t iSize = std::min(vecP.size(), vec.size());
+	if(iSize<=1) return T(0);
+
+	T tMean = mean_value<vec_type_prob, vec_type>(vecP, vec);
+	T t = T(0);
+	T tProbTotal = T(0);
+
+	for(std::size_t iIdx = 0; iIdx<iSize; ++iIdx)
+	{
+		t += (vec[iIdx]-tMean)*(vec[iIdx]-tMean) * vecP[iIdx];
+		tProbTotal += vecP[iIdx];
+	}
+	t /= tProbTotal;
+
 	return std::sqrt(t);
 }
 

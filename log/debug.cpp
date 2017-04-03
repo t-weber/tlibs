@@ -1,6 +1,6 @@
 /**
  * Debug helpers
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 12-sep-2014
  * @license GPLv2 or GPLv3
  */

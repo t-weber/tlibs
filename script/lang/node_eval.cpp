@@ -1,7 +1,7 @@
-/*
+/**
  * Script interpreter
  * Node evaluation
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 10 oct 2013
  * @license GPLv2 or GPLv3
  */

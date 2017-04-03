@@ -1,7 +1,6 @@
 /**
  * process helpers
- *
- * @author: tweber
+ * @author: Tobias Weber <tobias.weber@tum.de>
  * @date: feb-2017
  * @license GPLv2 or GPLv3
  */

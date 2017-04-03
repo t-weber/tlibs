@@ -1,6 +1,6 @@
-/*
+/**
  * external math functions
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 2013
  * @license GPLv2 or GPLv3
  */

@@ -1,6 +1,6 @@
-/*
+/**
  * hashes
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date apr-2015
  * @license GPLv2 or GPLv3
  */

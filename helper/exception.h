@@ -1,6 +1,6 @@
-/*
- * Exception
- * @author tweber
+/**
+ * Exceptions
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 04-mar-2014
  * @license GPLv2 or GPLv3
  */

@@ -1,6 +1,6 @@
-/*
+/**
  * Optimizer
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 27-sep-2014
  * @license GPLv2 or GPLv3
  */

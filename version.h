@@ -8,7 +8,7 @@
 #ifndef __TLIBS_VER_H__
 #define __TLIBS_VER_H__
 
-#define TLIBS_VERSION "0.7.7"
+#define TLIBS_VERSION "0.7.8"
 
 namespace tl {
 

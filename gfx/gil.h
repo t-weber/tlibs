@@ -1,6 +1,6 @@
 /**
  * gil wrappers
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date dec-2015
  * @license GPLv2 or GPLv3
  */

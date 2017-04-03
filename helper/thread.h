@@ -1,6 +1,6 @@
 /**
  * Thread helpers
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date aug-2015
  * @license GPLv2 or GPLv3
  */

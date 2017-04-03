@@ -1,7 +1,6 @@
 /**
  * basic linalg helpers
- *
- * @author: Tobias Weber
+ * @author: Tobias Weber <tobias.weber@tum.de>
  * @date: 2013-2016
  * @license GPLv2 or GPLv3
  */
@@ -768,12 +767,14 @@ bool inverse(const mat_type& mat, mat_type& inv)
 
 /**
  * R = T^(-1) M T
+ * bCongr==1: do a congruence trafo
+ * bCongr==0: do a similarity trafo
  */
 template<class mat_type=ublas::matrix<double>>
-mat_type transform(const mat_type& mat, const mat_type& matTrafo, bool bOrtho=0)
+mat_type transform(const mat_type& mat, const mat_type& matTrafo, bool bCongr=0)
 {
 	mat_type matTrafoInv;
-	if(bOrtho)
+	if(bCongr)
 		matTrafoInv = ublas::trans(matTrafo);
 	else
 		inverse(matTrafo, matTrafoInv);
@@ -786,12 +787,14 @@ mat_type transform(const mat_type& mat, const mat_type& matTrafo, bool bOrtho=0)
 
 /**
  * R = T M T^(-1)
+ * bCongr==1: do a congruence trafo
+ * bCongr==0: do a similarity trafo
  */
 template<class mat_type=ublas::matrix<double>>
-mat_type transform_inv(const mat_type& mat, const mat_type& matTrafo, bool bOrtho=0)
+mat_type transform_inv(const mat_type& mat, const mat_type& matTrafo, bool bCongr=0)
 {
 	mat_type matTrafoInv;
-	if(bOrtho)
+	if(bCongr)
 		matTrafoInv = ublas::trans(matTrafo);
 	else
 		inverse(matTrafo, matTrafoInv);
@@ -1410,6 +1413,7 @@ T slerp(const T& q1, const T& q2, typename T::value_type t)
 
 
 /**
+ * calculates the covariance matrix
  * see e.g.: http://www.itl.nist.gov/div898/handbook/pmc/section5/pmc541.htm
  */
 template<typename T=double>

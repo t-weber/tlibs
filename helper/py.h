@@ -1,6 +1,6 @@
-/*
+/**
  * Py helpers
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 27-aug-2014, 17-feb-2015
  * @copyright GPLv2 or GPLv3
  */

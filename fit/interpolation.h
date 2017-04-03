@@ -1,7 +1,7 @@
 /**
  * data point interpolation
  *
- * @author: Tobias Weber
+ * @author: Tobias Weber <tobias.weber@tum.de>
  * @date: 25-04-2013
  * @license GPLv2 or GPLv3
  */

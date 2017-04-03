@@ -1,6 +1,6 @@
 /**
  * simple stopwatch for debugging
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date jan-2015
  */
 

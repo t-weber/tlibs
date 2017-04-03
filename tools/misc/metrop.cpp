@@ -1,7 +1,8 @@
 /**
  * metropolis test
- * @author tw
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 8-oct-16
+ * @license GPLv2 or GPLv3
  */
 // gcc -march=native -O3 -std=c++11 -DNO_JPEG -DNO_TIFF -o metrop metrop.cpp ../../log/log.cpp ../../math/rand.cpp -lstdc++ -lm -lpng
 

@@ -1,8 +1,7 @@
 /**
  * Swarm-fitting algorithms
- *
- * @author Tobias Weber
- * @date Feb-17
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @date feb-2017
  * @license GPLv2 or GPLv3
  */
 

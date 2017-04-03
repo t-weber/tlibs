@@ -1,16 +1,13 @@
 /**
  * file helper
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 07-mar-2013
  * @license GPLv2 or GPLv3
  */
 
 #include "tmp.h"
 #include "file.h"
-#include "../math/rand.h"
-#include "../string/string.h"
 
-#include <boost/filesystem.hpp>
 #include <unistd.h>
 #include <fcntl.h>
 #include <cstdio>

@@ -1,6 +1,6 @@
 /**
  * gfx stuff
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 22-dec-2014
  * @license GPLv2 or GPLv3
  */

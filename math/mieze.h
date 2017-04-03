@@ -1,6 +1,6 @@
 /*
  * MIEZE formulas
- * @author Tobias Weber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date May 2012, 29-may-2013
  * @license GPLv2 or GPLv3
  */

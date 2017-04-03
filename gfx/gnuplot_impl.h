@@ -1,6 +1,6 @@
 /**
- * invoke gnuplot
- * @autor tweber
+ * invokation of gnuplot
+ * @autor Tobias Weber <tobias.weber@tum.de>
  * @date 24-dec-2013
  * @license GPLv2 or GPLv3
  */

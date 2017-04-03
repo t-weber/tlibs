@@ -1,7 +1,7 @@
 #
 # tlibs
-# @author tweber
-# @date 2012-2016
+# @author Tobias Weber <tobias.weber@tum.de>
+# @date 2012-2017
 # @license GPLv2 or GPLv3
 #
 

@@ -1,6 +1,6 @@
 /**
- * Calculation of first Brillouin zone
- * @author Tobias Weber
+ * Calculation of first Brillouin zone (approximation in 2d)
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date jun-2014
  * @license GPLv2 or GPLv3
  */

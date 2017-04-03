@@ -1,7 +1,6 @@
 /**
  * basic quaternion helpers
- *
- * @author: tweber
+ * @author: Tobias Weber <tobias.weber@tum.de>
  * @date: 2013-2016
  * @license GPLv2 or GPLv3
  */

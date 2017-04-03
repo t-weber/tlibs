@@ -1,6 +1,6 @@
 /**
  * TcpClient
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date aug-2014
  * @license GPLv2 or GPLv3
  *

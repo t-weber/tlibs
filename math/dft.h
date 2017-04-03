@@ -1,6 +1,6 @@
 /**
  * dft stuff
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 2012, jan-2015
  * @license GPLv2 or GPLv3
  * @desc see (Scarpino 2011), ch. 14, for an explanation of the fft algorithms employed here.

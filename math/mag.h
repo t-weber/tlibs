@@ -1,6 +1,6 @@
 /**
- * magnetic dispersion relations
- * @author tweber
+ * magnetism
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 7-jul-15
  * @license GPLv2 or GPLv3
  */
@@ -138,7 +138,7 @@ t_vec get_S_perp_Q(const t_vec& S, const t_vec& Q)
  * @param lstAtoms list of atom positions
  * @param lstAtoms list of spins
  * @param vecG lattice vector
- * @param lstf G-dependent Atomic form factors (x-rays) or coherent scattering length (neutrons)
+ * @param lstf G-dependent magnetic form factor
  * @param lstg g factors, 2 if none given
  * @param pF0 optional total form factor.
  * @param dVuc optionally normalise by the unit cell volume
@@ -357,7 +357,37 @@ void metrop(
 }
 
 
+
 // ----------------------------------------------------------------------------
+// special paramagnetic functions
+// see e.g.: https://en.wikipedia.org/wiki/Brillouin_and_Langevin_functions
+
+/**
+ * Langevin function for mean cosine
+ */
+template<class T=double>
+T langevin(T x)
+{
+	return tl::coth(x) - T(1)/x;
+}
+
+
+/**
+ * Brillouin function ~ magnetisation
+ * @param x = g muB J B / (kB T)
+ */
+template<class T=double>
+T brillouin(T J, T x)
+{
+	T Jfact = T(1)+T(1)/(T(2)*J);
+	T Jfact2 = T(1)/(T(2)*J);
+
+	return Jfact * tl::coth(Jfact*x)
+		- Jfact2 * tl::coth(Jfact2*x);
+}
+
+// ----------------------------------------------------------------------------
+
 
 }
 #endif

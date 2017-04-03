@@ -1,6 +1,6 @@
 /**
  * random numbers
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date 16-aug-2013
  * @license GPLv2 or GPLv3
  */

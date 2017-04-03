@@ -1,3 +1,9 @@
+#
+# finds the minuit libs
+# @author Tobias Weber <tobias.weber@tum.de>
+# @license GPLv2 or GPLv3
+#
+
 find_path(Minuit2_INCLUDE_DIRS
 	NAMES MnMigrad.h
 	PATH_SUFFIXES root Minuit2 Minuit root/Minuit2 root/Minuit
