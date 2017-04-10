@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // clang -DNO_IOSTR -o loaddat loaddat.cpp ../log/log.cpp -std=c++11 -lstdc++ -lboost_iostreams -lm
 
 #include <iostream>

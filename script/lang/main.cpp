@@ -31,7 +31,7 @@ static bool g_bShowTiming = 0;
 static inline void usage(const char* pcProg)
 {
 	G_COUT << "This is the " << g_pcVersion << ".\n";
-	G_COUT << "Written by Tobias Weber, 2013-2014.\n";
+	G_COUT << "Written by Tobias Weber <tobias.weber@tum.de>, 2013-2014.\n";
 	G_COUT << "Built on " << __DATE__ << ", " << __TIME__;
 	//G_COUT << " with CC version " << __VERSION__ << ".\n\n";
 	G_COUT << " with " << BOOST_COMPILER << ".\n";

@@ -1,3 +1,8 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
 // gcc -o x3d x3d.cpp ../file/x3d.cpp -std=c++11 -lstdc++
 
 #include "../file/x3d.h"

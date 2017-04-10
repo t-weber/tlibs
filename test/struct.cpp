@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // clang -o struct test/struct.cpp -lstdc++ -lm -std=c++11
 
 #define TLIBS_USE_GLOBAL_OPS

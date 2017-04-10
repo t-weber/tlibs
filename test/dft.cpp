@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // gcc -DUSE_FFTW -o dft dft.cpp ../math/fourier.cpp ../math/fftw.cpp ../log/log.cpp -lstdc++ -lm -std=c++11 -lfftw3
 // gcc -o dft dft.cpp ../math/fourier.cpp ../log/log.cpp -lstdc++ -lm -std=c++11
 

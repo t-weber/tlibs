@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // clang -o typeidx typeidx.cpp -std=c++11 -lstdc++ -lm
 
 #include "../log/debug.h"

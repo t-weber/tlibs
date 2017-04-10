@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // clang -o ferro ferro.cpp ../gfx/gnuplot.cpp ../log/log.cpp -lstdc++ -lm -lboost_iostreams -std=c++11
 
 #include "../math/mag.h"

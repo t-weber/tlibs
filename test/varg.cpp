@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // clang -o varg varg.cpp -std=c++14 -lstdc++ -lm
 // ideas for future tl::ThreadPool class with args
 

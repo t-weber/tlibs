@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // gcc -o rand rand.cpp ../math/rand.cpp ../log/log.cpp -lstdc++ -lm -lpthread -std=c++11
 
 #include "../math/rand.h"

@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // gcc -o cl_dev cl_dev.cpp -std=c++11 -lOpenCL -lstdc++
 
 #include "../cl/cl.h"

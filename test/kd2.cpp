@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // test for k-d implementation: sort image into tree and recreate it again
 // clang -march=native -O2 -o kd2 kd2.cpp -std=c++11 -lstdc++ -ljpeg
 

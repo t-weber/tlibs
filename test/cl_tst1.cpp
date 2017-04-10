@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // gcc -o cl_tst1 cl_tst1.cpp ../log/log.cpp -std=c++11 -lOpenCL -lstdc++ -ljpeg -lpng -ltiff
 
 #include "../cl/cl.h"

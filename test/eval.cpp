@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // gcc -o eval eval.cpp ../log/log.cpp -std=c++11 -lstdc++ -lm
 
 #include "../string/eval.h"

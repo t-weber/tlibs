@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // gcc -I/usr/include/lapacke -o eig5 eig5.cpp ../math/linalg2.cpp ../log/log.cpp -lstdc++ -lm -llapacke -llapack -std=c++11
 
 #define TLIBS_INC_HDR_IMPLS
@@ -71,6 +77,11 @@ int main()
 	ublas::matrix<T> matD = tl::diag_matrix(vecSvals);
 	ublas::matrix<T> matDVt = ublas::prod(matD, ublas::trans(matV));
 	std::cout << "U*D*V^t = " << ublas::prod(matU, matDVt) << std::endl;
+	std::cout << std::endl;
+
+	ublas::matrix<T> Mp;
+	tl::pseudoinverse(M, Mp);
+	std::cout << "M+ = " << Mp << std::endl;
 
 	return 0;
 }

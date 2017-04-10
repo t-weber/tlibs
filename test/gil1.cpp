@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // gcc -I . -o gil1 gil1.cpp ../log/log.cpp -std=c++11 -lstdc++ -ljpeg -lpng -ltiff
 
 #include "../gfx/gil.h"

@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // gcc -o quat quat.cpp -std=c++11 -lstdc++ -lm
 
 #include "../math/quat.h"

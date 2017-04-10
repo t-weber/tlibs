@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // gcc -o cofactor test/cofactor.cpp -lm -lstdc++ -std=c++11
 
 #include <iostream>

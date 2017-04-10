@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // gcc -std=c++11 -o distr distr.cpp ../gfx/gnuplot.cpp ../log/log.cpp -lboost_iostreams -lstdc++ -lm
 
 /**

@@ -1,6 +1,8 @@
-/*
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
  * clang -I/usr/include/lapacke -o spin ../test/spin.cpp ../log/log.cpp -lstdc++ -std=c++11 -lm -llapacke -llapack
- * @author tweber
  */
 
 #define TLIBS_USE_GLOBAL_OPS

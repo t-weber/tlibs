@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // gcc -o dft2 dft2.cpp ../math/fourier.cpp ../log/log.cpp -lstdc++ -lm -std=c++11
 
 #include "../math/fourier.h"

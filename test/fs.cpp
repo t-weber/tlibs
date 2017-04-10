@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // gcc -o fs fs.cpp -lstdc++ -lboost_system -lboost_filesystem -std=c++11
 
 #include <iostream>

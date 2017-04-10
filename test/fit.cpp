@@ -1,3 +1,9 @@
+/**
+ * tlibs test file
+ * @author Tobias Weber <tobias.weber@tum.de>
+ * @license GPLv2 or GPLv3
+ */
+
 // gcc -std=c++14 -I/usr/include/root -o fit fit.cpp ../log/log.cpp -lstdc++ -L/usr/lib64/root -lMinuit2
 
 #include "../fit/minuit.h"
