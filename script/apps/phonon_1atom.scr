@@ -2,7 +2,8 @@
 
 #
 # Calculate phonon dispersion
-# Author: tw
+# @author Tobias Weber <tobias.weber@tum.de>
+# @license GPLv2 or GPLv3
 #
 
 phonon_disp_beta(beta, m, q, a)

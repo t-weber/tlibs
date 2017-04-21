@@ -1,4 +1,8 @@
 #!./hermelin
+#
+# @author Tobias Weber <tobias.weber@tum.de>
+# @license GPLv2 or GPLv3
+#
 
 get_atten(a,b,c, vol_uc, atoms_per_uc, sig_a, sig_coh, sig_inc, lam, len)
 {

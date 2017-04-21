@@ -486,8 +486,11 @@ matrix_type skew(const vector_type& vec)
 }
 
 
+/**
+ * diagonal matrix
+ */
 template<class matrix_type = ublas::matrix<double>,
-		class cont_type = std::initializer_list<typename matrix_type::value_type>>
+	class cont_type = std::initializer_list<typename matrix_type::value_type>>
 matrix_type diag_matrix(const cont_type& lst)
 {
 	matrix_type mat = unit_matrix<matrix_type>(lst.size());
@@ -498,6 +501,23 @@ matrix_type diag_matrix(const cont_type& lst)
 
 	return mat;
 }
+
+/**
+ * vector of diagonal matrix elements
+ */
+template<class t_vec = ublas::vector<double>,
+	class t_mat = ublas::matrix<double>>
+t_vec diag_vec(const t_mat& mat)
+{
+	std::size_t N = std::min(mat.size1(), mat.size2());
+
+	t_vec vec(N);
+	for(std::size_t i=0; i<N; ++i)
+		vec[i] = mat(i,i);
+
+	return vec;
+}
+
 
 template<class matrix_type = ublas::matrix<double>,
 		class cont_type = std::initializer_list<typename matrix_type::value_type>>
@@ -1411,48 +1431,6 @@ T slerp(const T& q1, const T& q2, typename T::value_type t)
 
 // --------------------------------------------------------------------------------
 
-
-/**
- * calculates the covariance matrix
- * see e.g.: http://www.itl.nist.gov/div898/handbook/pmc/section5/pmc541.htm
- */
-template<typename T=double>
-ublas::matrix<T> covariance(const std::vector<ublas::vector<T>>& vecVals,
-	const std::vector<T>* pProb = 0)
-{
-	if(vecVals.size() == 0) return ublas::matrix<T>();
-
-	using t_vecvec = typename std::remove_reference<decltype(vecVals)>::type;
-	using t_innervec_org = decltype(vecVals[0]);
-	using t_innervec = typename std::remove_const<
-		typename std::remove_reference<t_innervec_org>::type>::type;
-
-	t_innervec vecMean = mean_value<t_vecvec>(vecVals);
-	//std::cout << "Mean: " << vecMean << std::endl;
-
-	ublas::matrix<T> matCov(vecVals[0].size(), vecVals[0].size());
-
-	T tSum = T(0);
-	const std::size_t N = vecVals.size();
-	for(std::size_t i=0; i<N; ++i)
-	{
-		T tprob = 1.;
-
-		t_innervec vec = vecVals[i] - vecMean;
-		ublas::matrix<T> matOuter = ublas::outer_prod(vec, vec);
-
-		if(pProb)
-		{
-			tprob = (*pProb)[i];
-			matOuter *= tprob;
-		}
-
-		matCov += matOuter;
-		tSum += tprob;
-	}
-	matCov /= tSum;
-	return matCov;
-}
 
 
 /**

@@ -16,7 +16,7 @@
 	#include "../file/comp.h"
 #endif
 #include "../math/math.h"
-#include "../math/neutrons.h"
+#include "../phys/neutrons.h"
 
 #ifndef USE_BOOST_REX
 	#include <regex>

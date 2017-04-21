@@ -32,6 +32,7 @@
 #include "funcmod.h"
 #include "../helper/misc.h"
 #include "../log/log.h"
+#include "../math/stat.h"
 
 
 namespace tl {

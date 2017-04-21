@@ -9,8 +9,8 @@
 #define __BZ_H__
 
 #include "../helper/exception.h"
-#include "math.h"
-#include "geo.h"
+#include "../math/math.h"
+#include "../math/geo.h"
 #include "../log/log.h"
 #include <vector>
 

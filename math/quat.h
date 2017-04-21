@@ -10,7 +10,7 @@
 
 #include <boost/math/quaternion.hpp>
 #include "linalg.h"
-#include "spin.h"
+#include "../phys/spin.h"
 
 namespace tl {
 

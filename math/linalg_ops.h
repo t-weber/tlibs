@@ -12,6 +12,7 @@
 #include <boost/numeric/ublas/matrix_expression.hpp>
 
 #include "math.h"
+#include "../helper/exception.h"
 #include "../helper/traits.h"
 
 namespace tl {

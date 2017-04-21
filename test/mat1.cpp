@@ -32,10 +32,12 @@ int main()
 
 	t_mat mat = tl::column_matrix(vecs);
 
-	t_mat matCov1 = tl::covariance(vecs);
+	t_mat matCov1, matCorr1;
+	std::tie(matCov1, matCorr1) = tl::covariance(vecs);
 	t_mat matCov2 = tl::ublas::prod(mat, tl::ublas::trans(mat));
 
 	std::cout << "cov(...) = " << matCov1 << std::endl;
+	std::cout << "corr(...) = " << matCorr1 << std::endl;
 	std::cout << "AA^t =     " <<  matCov2/matCov2(0,0)*matCov1(0,0) << std::endl;
 
 	return 0;

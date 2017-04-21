@@ -14,7 +14,7 @@
 #include <cmath>
 #include <complex>
 
-#include "linalg.h"
+#include "../math/linalg.h"
 #include "../helper/misc.h"
 
 

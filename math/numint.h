@@ -14,43 +14,55 @@
 namespace tl {
 
 
+/**
+ * trapezoid rule
+ * see e.g.: https://en.wikipedia.org/wiki/Trapezoidal_rule
+ */
 template<class R=double, class A=double>
 R numint_trap(const std::function<R(A)>& fkt,
 	A x0, A x1)
 {
-	return 0.5*(x1-x0) * (fkt(x0) + fkt(x1));
+	return R(0.5)*R(x1-x0) * (fkt(x0) + fkt(x1));
 }
 
 template<class R=double, class A=double>
 R numint_trapN(const std::function<R(A)>& fkt,
-	A x0, A x1, unsigned int N)
+	A x0, A x1, std::size_t N)
 {
-	const A xstep = (x1-x0)/A(N);
+	const A xstep = A(x1-x0)/A(N);
 
 	R xsum = fkt(x0) + fkt(x1);
-	for(unsigned int i=1; i<N; ++i)
-		xsum += 2.*fkt(x0 + i*xstep);
+	for(std::size_t i=1; i<N; ++i)
+		xsum += R(2)*fkt(x0 + A(i)*xstep);
 
-	xsum *= 0.5*xstep;
-	return xsum;
+	xsum *= R(0.5)*R(xstep);
+	return R(xsum);
 }
 
 
+/**
+ * rectangle rule
+ * see e.g.: https://en.wikipedia.org/wiki/Rectangle_method
+ */
 template<class R=double, class A=double>
 R numint_rect(const std::function<R(A)>& fkt,
-	A x0, A x1, unsigned int N)
+	A x0, A x1, std::size_t N)
 {
 	const A xstep = (x1-x0)/A(N);
 
 	R xsum = R(0);
-	for(unsigned int i=0; i<N; ++i)
-		xsum += fkt(x0 + i*xstep);
+	for(std::size_t i=0; i<N; ++i)
+		xsum += fkt(x0 + A(i)*xstep);
 
-	xsum *= xstep;
+	xsum *= R(xstep);
 	return xsum;
 }
 
 
+/**
+ * Simpson's rule
+ * see e.g.: https://en.wikipedia.org/wiki/Simpson%27s_rule
+ */
 template<class R=double, class A=double>
 R numint_simp(const std::function<R(A)>& fkt,
 	A x0, A x1)
@@ -60,30 +72,33 @@ R numint_simp(const std::function<R(A)>& fkt,
 
 template<class R=double, class A=double>
 R numint_simpN(const std::function<R(A)>& fkt,
-	A x0, A x1, unsigned int N)
+	A x0, A x1, std::size_t N)
 {
 	const A xstep = (x1-x0)/A(N);
 	R xsum = fkt(x0) + fkt(x1);
 
-	for(unsigned int i=1; i<=N/2; ++i)
+	for(std::size_t i=1; i<=N/2; ++i)
 	{
-		xsum += 2.*fkt(x0 + 2.*i*xstep);
-		xsum += 4.*fkt(x0 + (2.*i - 1.)*xstep);
+		xsum += R(2) * fkt(x0 + A(2*i)*xstep);
+		xsum += R(4) * fkt(x0 + A(2*i-1)*xstep);
 	}
-	xsum -= 2.*fkt(x0 + 2.*N/2*xstep);
+	xsum -= R(2)*fkt(x0 + A(2*N/2)*xstep);
 
-	xsum *= xstep/3.;
+	xsum *= R(xstep)/R(3);
 	return xsum;
 }
 
 
 // --------------------------------------------------------------------------------
 
+
+/**
+ * convolution integral of fkt0 and fkt1
+ */
 template<class R=double, class A=double>
-R convolute(const std::function<R(A)>& fkt0, const std::function<R(A)>& fkt1, 
-	A x, A x0, A x1, unsigned int N)
+R convolute(const std::function<R(A)>& fkt0, const std::function<R(A)>& fkt1,
+	A x, A x0, A x1, std::size_t N)
 {
-	// convolution of fkt0 and fkt1...
 	std::function<R(A,A)> fkt = [&fkt0, &fkt1](A t, A tau) -> R
 	{
 		return fkt0(tau) * fkt1(t-tau);

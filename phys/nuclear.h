@@ -9,8 +9,8 @@
 #define __TLIBS_NUCLEAR__
 
 
-#include "math.h"
 #include "units.h"
+#include "../math/math.h"
 #include "../helper/exception.h"
 #include <cmath>
 

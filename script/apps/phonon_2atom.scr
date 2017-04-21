@@ -1,5 +1,9 @@
 #!./hermelin
 
+#
+# @author Tobias Weber <tobias.weber@tum.de>
+# @license GPLv2 or GPLv3
+#
 
 # branch = 1	=>	optic phonon
 # branch = -1	=>	acoustic phonon

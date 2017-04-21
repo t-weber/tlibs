@@ -1,4 +1,4 @@
-/*
+/**
  * MIEZE formulas
  * @author Tobias Weber <tobias.weber@tum.de>
  * @date May 2012, 29-may-2013
@@ -9,10 +9,7 @@
 #define __MIEZE_FORMULAS__
 
 #include "neutrons.h"
-#include "linalg.h"
-
-#include <boost/numeric/ublas/vector.hpp>
-#include <boost/numeric/ublas/matrix.hpp>
+#include "../math/linalg.h"
 
 
 namespace tl {

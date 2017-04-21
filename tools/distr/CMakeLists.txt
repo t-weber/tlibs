@@ -11,6 +11,7 @@ cmake_minimum_required(VERSION 3.0)
 
 set(CMAKE_VERBOSE_MAKEFILE TRUE)
 #set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
@@ -22,7 +23,6 @@ find_package(Threads REQUIRED)
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Gui REQUIRED)
 find_package(Qt5Widgets REQUIRED)
-
 
 add_definitions(-I${CMAKE_CURRENT_BINARY_DIR})
 add_definitions(-DINSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}")

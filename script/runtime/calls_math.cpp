@@ -13,6 +13,7 @@
 #include "math/linalg.h"
 #include "math/linalg2.h"
 #include "math/rand.h"
+#include "math/stat.h"
 #include "math/distr.h"
 #include "log/log.h"
 #include <boost/math/special_functions/erf.hpp>

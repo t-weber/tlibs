@@ -12,7 +12,7 @@
 #include "runtime/calls_fit.h"
 #include "runtime/calls_file.h"
 #include "runtime/calls_thread.h"
-#include "math/neutrons.h"
+#include "phys/neutrons.h"
 
 #include <boost/units/systems/si/codata/electron_constants.hpp>
 #include <boost/units/systems/si/codata/electromagnetic_constants.hpp>

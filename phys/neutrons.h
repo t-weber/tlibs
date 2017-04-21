@@ -8,9 +8,9 @@
 #ifndef __TLIBS_NEUTRONS__
 #define __TLIBS_NEUTRONS__
 
-#include "math.h"
-#include "linalg.h"
 #include "units.h"
+#include "../math/math.h"
+#include "../math/linalg.h"
 #include "../helper/exception.h"
 
 #include <boost/units/pow.hpp>

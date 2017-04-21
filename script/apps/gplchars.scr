@@ -1,3 +1,8 @@
+#
+# @author Tobias Weber <tobias.weber@tum.de>
+# @license GPLv2 or GPLv3
+#
+
 module_init()
 {
 	global gpl_deg = "{/Symbol \\260}";	# degrees

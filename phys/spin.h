@@ -8,7 +8,7 @@
 #ifndef __TLIBS_SPIN_H__
 #define __TLIBS_SPIN_H__
 
-#include "linalg.h"
+#include "../math/linalg.h"
 
 namespace tl {
 

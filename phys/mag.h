@@ -15,10 +15,10 @@
 #include <complex>
 #include <cassert>
 
-#include "linalg.h"
+#include "../math/linalg.h"
+#include "../math/rand.h"
 #include "atoms.h"
 #include "nn.h"
-#include "rand.h"
 
 
 namespace tl {

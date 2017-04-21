@@ -1,7 +1,8 @@
 #!./hermelin
 #
 # Routines for invoking McStas
-# Author: TW
+# @author Tobias Weber <tobias.weber@tum.de>
+# @license GPLv2 or GPLv3
 #
 
 __init__()

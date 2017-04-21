@@ -1,8 +1,8 @@
 #!./hermelin
-
 #
 # Eiger data file loading
-# Author: tw
+# @author Tobias Weber <tobias.weber@tum.de>
+# @license GPLv2 or GPLv3
 #
 
 module_init()

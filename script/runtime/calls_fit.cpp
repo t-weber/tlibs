@@ -20,6 +20,8 @@ template<typename T> using t_stdvec = std::vector<T>;
 // fitting
 
 #include "fit/minuit.h"
+#include "math/distr.h"
+
 #include <algorithm>
 #include <exception>
 
@@ -594,7 +596,10 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 
 
 	tl::t_real_min dChi2 = chi2fkt(vecLastParams);
-	tl::t_real_min dChi2red = dChi2 / tl::t_real_min(iSize-(vecLastParams.size()-vecFixedParams.size()));
+	tl::t_real_min dNDF = tl::t_real_min(iSize-(vecLastParams.size()-vecFixedParams.size()));
+	tl::t_real_min dChi2red = dChi2 / dNDF;
+	tl::t_chi2_dist<tl::t_real_min> chi2distr(dNDF);
+	tl::t_real_min dProbChi2 = chi2distr.cdf(dChi2);
 
 	if(bFitterDebug)
 	{
@@ -619,13 +624,19 @@ static Symbol* fkt_fit(const std::vector<Symbol*>& vecSyms,
 			}
 		}
 
+		// chi^2
+		tl::log_info("ndf = ", dNDF);
 		tl::log_info("Chi^2 = ", dChi2);
 		tl::log_info("Chi^2 / ndf = ", dChi2red);
+
+		// probability for chi^2 <= dChi2
+		tl::log_info("P(Chi^2 <= ", dChi2, ") = ", dProbChi2);
 	}
 
 	pSymMap->GetMap()[SymbolMapKey("<model>")] = new SymbolString(strFkt);
 	pSymMap->GetMap()[SymbolMapKey("<valid>")] = new SymbolInt(bValidFit);
 	pSymMap->GetMap()[SymbolMapKey("<chi2_red>")] = new SymbolReal(dChi2red);
+	pSymMap->GetMap()[SymbolMapKey("<P_chi2_smaller>")] = new SymbolReal(dProbChi2);
 	//if(!bValidFit)
 	//	G_CERR << "Error: Fit invalid!" << std::endl;
 	return pSymMap;

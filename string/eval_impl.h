@@ -1,6 +1,6 @@
 /**
  * minimalistic expression evaluator
- * @author tweber
+ * @author Tobias Weber <tobias.weber@tum.de>
  * @date apr-2016
  * @license GPLv2 or GPLv3
  */
@@ -19,7 +19,7 @@
 #include "string.h"
 #include "../log/log.h"
 #include "../math/math.h"
-#include "../math/units.h"
+#include "../phys/units.h"
 
 namespace tl
 {

@@ -9,8 +9,8 @@
 #define __TLIBS_ATOMS_H__
 
 
-#include "linalg.h"
-#include "linalg_ops.h"
+#include "../math/linalg.h"
+#include "../math/linalg_ops.h"
 #include "lattice.h"
 #include <tuple>
 

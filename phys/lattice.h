@@ -8,9 +8,9 @@
 #ifndef __TLIBS_LATTICE_H__
 #define __TLIBS_LATTICE_H__
 
-#include "linalg.h"
-#include "quat.h"
-#include "math.h"
+#include "../math/linalg.h"
+#include "../math/quat.h"
+#include "../math/math.h"
 #include "neutrons.h"
 #include <ostream>
 
