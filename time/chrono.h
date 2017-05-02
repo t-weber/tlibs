@@ -13,7 +13,9 @@
 
 namespace tl {
 
-// like std::chrono::seconds/minutes/hours, but with variable type
+/**
+ * like std::chrono::seconds/minutes/hours, but with variable type
+ */
 template<typename T = long >
 using t_dur_secs = std::chrono::duration<T, std::ratio<1, 1>>;
 template<typename T = long >
@@ -28,7 +30,9 @@ template<typename T = long >
 using t_dur_weeks = std::chrono::duration<T, std::ratio<60*60*24*7, 1>>;
 
 
-// duration since epoch
+/**
+ * duration since epoch
+ */
 template<typename t_dur = std::chrono::seconds>
 t_dur epoch_dur()
 {
@@ -36,13 +40,18 @@ t_dur epoch_dur()
 	return ch::duration_cast<t_dur>(ch::system_clock::now().time_since_epoch());
 }
 
-// seconds since epoch
+/**
+ * seconds since epoch
+ */
 template<typename T=double>
 T epoch()
 {
 	return epoch_dur<t_dur_secs<T>>().count();
 }
 
+/**
+ * create a string representation of epoch
+ */
 template<typename T=double>
 std::string epoch_to_str(T tSeconds)
 {

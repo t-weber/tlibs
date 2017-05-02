@@ -11,4 +11,7 @@
 
 namespace tl {
 
+template class GlFontMap<GLdouble>;
+template class GlFontMap<GLfloat>;
+
 }

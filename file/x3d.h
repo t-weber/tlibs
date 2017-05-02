@@ -145,6 +145,26 @@ class X3dPolygon : public X3dElem
 		void SetColor(const t_vec& vecCol) { m_vecColor = vecCol; }
 };
 
+// lines
+class X3dLines : public X3dElem
+{
+	protected:
+		bool m_bCloseLines = 1;
+		std::vector<t_vec> m_vertices;
+		t_vec m_vecColor;
+
+	public:
+		X3dLines() = default;
+		virtual ~X3dLines() = default;
+
+		virtual void Write(std::ostream& ostr) const override;
+
+		void AddVertex(const t_vec& vec) { m_vertices.push_back(vec); }
+		void SetColor(const t_vec& vecCol) { m_vecColor = vecCol; }
+
+		void SetCloseLines(bool b) { m_bCloseLines = b; }
+};
+
 // -----------------------------------------------------------------------------
 
 

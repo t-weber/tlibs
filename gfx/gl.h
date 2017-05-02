@@ -1,5 +1,5 @@
 /**
- * gfx stuff
+ * GL drawing
  * @author Tobias Weber <tobias.weber@tum.de>
  * @date 22-dec-2014
  * @license GPLv2 or GPLv3
@@ -18,24 +18,92 @@
 
 namespace tl {
 
-using t_real_gl = GLdouble;
+// ----------------------------------------------------------------------------
+/**
+ * GL type traits
+ */
+template<class T = GLdouble> struct gl_traits {};
 
-template<class T = t_real_gl>
+template<> struct gl_traits<GLdouble>
+{
+	using value_type = GLdouble;
+
+	static void GetProjMatrix(value_type *pdMat) { glGetDoublev(GL_PROJECTION_MATRIX, pdMat); }
+	static void GetModelMatrix(value_type *pdMat) { glGetDoublev(GL_MODELVIEW_MATRIX, pdMat); }
+
+	static void SetScale(value_type x, value_type y, value_type z) { glScaled(x, y, z); }
+	static void SetTranslate(value_type x, value_type y, value_type z) { glTranslated(x, y, z); }
+
+	static void SetVertex(value_type x, value_type y) { glVertex2d(x, y); }
+	static void SetVertex(value_type x, value_type y, value_type z) { glVertex3d(x, y, z); }
+	static void SetNorm(value_type x, value_type y, value_type z) { glNormal3d(x, y, z); }
+	static void SetNorm(const value_type* px) { glNormal3dv(px); }
+	static void SetTextureCoord(value_type u, value_type v) { glTexCoord2d(u, v); }
+
+	static void SetColor(value_type r, value_type g, value_type b) { glColor3d(r, g, b); }
+	static void SetColor(value_type r, value_type g, value_type b, value_type a) { glColor4d(r, g, b, a); }
+	//static void SetMaterial(GLenum param1, GLenum param2, const value_type* pVal) { glMaterialdv(param1, param2, pVal); }
+	//static void SetLight(GLenum param1, GLenum param2, const value_type *pVec) { glLightdv(param1, param2, pVec); }
+	static void SetMaterial(GLenum param1, GLenum param2, const value_type* pVal)
+	{ // not available as "double"
+		using T = GLfloat;
+		T tconv[] = { T(pVal[0]), T(pVal[1]), T(pVal[2]), T(pVal[3]) };
+		glMaterialfv(param1, param2, tconv);
+	}
+	static void SetLight(GLenum param1, GLenum param2, const value_type *pVec)
+	{ // not available as "double"
+		using T = GLfloat;
+		T tconv[] = { T(pVec[0]), T(pVec[1]), T(pVec[2]), T(pVec[3]) };
+		glLightfv(param1, param2, tconv);
+	}
+};
+
+template<> struct gl_traits<GLfloat>
+{
+	using value_type = GLfloat;
+
+	static void GetProjMatrix(value_type *pdMat) { glGetFloatv(GL_PROJECTION_MATRIX, pdMat); }
+	static void GetModelMatrix(value_type *pdMat) { glGetFloatv(GL_MODELVIEW_MATRIX, pdMat); }
+
+	static void SetScale(value_type x, value_type y, value_type z) { glScalef(x, y, z); }
+	static void SetTranslate(value_type x, value_type y, value_type z) { glTranslatef(x, y, z); }
+
+	static void SetVertex(value_type x, value_type y) { glVertex2f(x, y); }
+	static void SetVertex(value_type x, value_type y, value_type z) { glVertex3f(x, y, z); }
+	static void SetNorm(value_type x, value_type y, value_type z) { glNormal3f(x, y, z); }
+	static void SetNorm(const value_type* px) { glNormal3fv(px); }
+	static void SetTextureCoord(value_type u, value_type v) { glTexCoord2f(u, v); }
+
+	static void SetColor(value_type r, value_type g, value_type b) { glColor3f(r, g, b); }
+	static void SetColor(value_type r, value_type g, value_type b, value_type a) { glColor4f(r, g, b, a); }
+	static void SetMaterial(GLenum param1, GLenum param2, const value_type* pVal) { glMaterialfv(param1, param2, pVal); }
+	static void SetLight(GLenum param1, GLenum param2, const value_type *pVec) { glLightfv(param1, param2, pVec); }
+};
+
+
+template<class T = GLdouble>
 using t_mat4_gen = ublas::matrix<T, ublas::row_major, ublas::bounded_array<T,4*4>>;
-template<class T = t_real_gl>
+template<class T = GLdouble>
 using t_mat3_gen = ublas::matrix<T, ublas::row_major, ublas::bounded_array<T,3*3>>;
-template<class T = t_real_gl>
+template<class T = GLdouble>
 using t_vec4_gen = ublas::vector<T, ublas::bounded_array<T,4>>;
-template<class T = t_real_gl>
+template<class T = GLdouble>
 using t_vec3_gen = ublas::vector<T, ublas::bounded_array<T,3>>;
 
-typedef t_mat4_gen<t_real_gl> t_mat4;
-typedef t_mat3_gen<t_real_gl> t_mat3;
-typedef t_vec4_gen<t_real_gl> t_vec4;
-typedef t_vec3_gen<t_real_gl> t_vec3;
+typedef t_mat4_gen<GLdouble> t_mat4d;
+typedef t_mat3_gen<GLdouble> t_mat3d;
+typedef t_vec4_gen<GLdouble> t_vec4d;
+typedef t_vec3_gen<GLdouble> t_vec3d;
+
+typedef t_mat4_gen<GLfloat> t_mat4f;
+typedef t_mat3_gen<GLfloat> t_mat3f;
+typedef t_vec4_gen<GLfloat> t_vec4f;
+typedef t_vec3_gen<GLfloat> t_vec3f;
+// ----------------------------------------------------------------------------
 
 
-template<typename T=t_real_gl, typename... Args>
+
+template<typename T=GLdouble, typename... Args>
 void to_gl_array(const ublas::matrix<T, Args...>& mat, T* glmat)
 {
 	glmat[0]=mat(0,0);  glmat[1]=mat(1,0);  glmat[2]=mat(2,0);
@@ -54,7 +122,7 @@ void to_gl_array(const ublas::matrix<T, Args...>& mat, T* glmat)
 	}
 }
 
-template<typename t_mat = t_mat4>
+template<typename t_mat = t_mat4_gen<GLdouble>>
 t_mat from_gl_array(const typename t_mat::value_type* glmat)
 {
 	t_mat mat(4,4);
@@ -67,7 +135,7 @@ t_mat from_gl_array(const typename t_mat::value_type* glmat)
 }
 
 
-template<typename t_mat = t_mat4, typename t_vec = t_vec4,
+template<typename t_mat = t_mat4_gen<GLdouble>, typename t_vec = t_vec4_gen<GLdouble>,
 	typename T = typename t_mat::value_type>
 void proj_pt(T dX, T dY, T dZ, const t_mat& matProj, const t_mat& matMV,
 	T& dXProj, T& dYProj)
@@ -76,18 +144,17 @@ void proj_pt(T dX, T dY, T dZ, const t_mat& matProj, const t_mat& matMV,
 	t_vec vec = ublas::prod(mat, make_vec<t_vec>({dX, dY, dZ, 1.}));
 	vec /= vec[3];
 
-	//std::cout << vec << std::endl;
 	dXProj = vec[0];
 	dYProj = vec[1];
 }
 
-template<typename t_mat = t_mat4, typename t_vec = t_vec4,
+template<typename t_mat = t_mat4_gen<GLdouble>, typename t_vec = t_vec4_gen<GLdouble>,
 	typename T = typename t_mat::value_type>
 void gl_proj_pt(T dX, T dY, T dZ, T& dXProj, T& dYProj)
 {
-	t_real_gl dMatMV[16], dMatProj[16];
-	glGetDoublev(GL_PROJECTION_MATRIX, dMatProj);
-	glGetDoublev(GL_MODELVIEW_MATRIX, dMatMV);
+	T dMatMV[16], dMatProj[16];
+	gl_traits<T>::GetProjMatrix(dMatProj);
+	gl_traits<T>::GetModelMatrix(dMatMV);
 
 	t_mat matProj = from_gl_array<t_mat>(dMatProj);
 	t_mat matMV = from_gl_array<t_mat>(dMatMV);
@@ -96,12 +163,13 @@ void gl_proj_pt(T dX, T dY, T dZ, T& dXProj, T& dYProj)
 }
 
 
-template<typename t_mat = t_mat4, typename t_vec = t_vec4,
+template<typename t_mat = t_mat4_gen<GLdouble>, typename t_vec = t_vec4_gen<GLdouble>,
 	typename T = typename t_mat::value_type>
 void gl_mv_pt(const t_vec& vec, t_vec& vecOut)
 {
-	t_real_gl dMatMV[16];
-	glGetDoublev(GL_MODELVIEW_MATRIX, dMatMV);
+	T dMatMV[16];
+	gl_traits<T>::GetModelMatrix(dMatMV);
+
 	t_mat matMV = from_gl_array<t_mat>(dMatMV);
 	t_mat matMV_inv;
 	tl::inverse(matMV, matMV_inv);
@@ -109,8 +177,10 @@ void gl_mv_pt(const t_vec& vec, t_vec& vecOut)
 	vecOut = ublas::prod(matMV_inv, vec);
 }
 
-// distance to the object defined by the current modelview matrix
-template<typename t_mat = t_mat4, typename t_vec = t_vec4,
+/**
+ * distance to the object defined by the current modelview matrix
+ */
+template<typename t_mat = t_mat4_gen<GLdouble>, typename t_vec = t_vec4_gen<GLdouble>,
 	typename T = typename t_mat::value_type>
 T gl_dist_mv()
 {
@@ -119,45 +189,48 @@ T gl_dist_mv()
 	vecPos /= vecPos[3];
 	vecPos[3] = 0.;
 	T dDist = ublas::norm_2(vecPos);
-	//std::cout << "dist: " << dDist << std::endl;
 	return dDist;
 }
 
-// size of projected sphere using fov angle
-template<typename t_mat = t_mat4, typename t_vec = t_vec4,
+/**
+ * size of projected sphere using fov angle
+ */
+template<typename t_mat = t_mat4_gen<GLdouble>, typename t_vec = t_vec4_gen<GLdouble>,
 	typename T = typename t_mat::value_type>
 T gl_proj_sphere_size(T dFOV, T dRadius)
 {
 	return 2.*dRadius / (2.*gl_dist_mv<t_mat, t_vec, T>() * std::tan(0.5*dFOV));
 }
 
-// size of projected sphere using projection matrix
-template<typename t_mat = t_mat4, typename t_vec = t_vec4,
+/**
+ * size of projected sphere using projection matrix
+ */
+template<typename t_mat = t_mat4_gen<GLdouble>, typename t_vec = t_vec4_gen<GLdouble>,
 	typename T = typename t_mat::value_type>
 T gl_proj_sphere_size(T dRadius)
 {
-	t_real_gl dMatProj[16];
-	glGetDoublev(GL_PROJECTION_MATRIX, dMatProj);
+	T dMatProj[16];
+	gl_traits<T>::GetProjMatrix(dMatProj);
 	t_mat matProj = from_gl_array<t_mat>(dMatProj);
 
 	T dDist = gl_dist_mv<t_mat, t_vec, T>();
-	//std::cout << "dist: "<< dDist << std::endl;
 	t_vec vec1 = make_vec<t_vec>({0., dRadius, dDist, 1.});
 	t_vec vec2 = make_vec<t_vec>({0., -dRadius, dDist, 1.});
 
 	t_vec vecProj1 = ublas::prod(matProj, vec1); vecProj1 /= vecProj1[3];
 	t_vec vecProj2 = ublas::prod(matProj, vec2); vecProj2 /= vecProj2[3];
 	t_vec vecProj = vecProj2 - vecProj1;
-	//std::cout << "proj: " << vecProj << std::endl;
 
 	vecProj[3] = vecProj[2] = 0.;
 	return ublas::norm_2(vecProj);
 }
 
 
-// ray through screen coordinates (dX, dY)
-// similar to: https://www.opengl.org/sdk/docs/man2/xhtml/gluUnProject.xml
-template<typename t_mat = t_mat4, typename t_vec = t_vec4,
+/**
+ * ray through screen coordinates (dX, dY)
+ * similar to: https://www.opengl.org/sdk/docs/man2/xhtml/gluUnProject.xml
+ */
+template<typename t_mat = t_mat4_gen<GLdouble>, typename t_vec = t_vec4_gen<GLdouble>,
 	typename T = typename t_mat::value_type>
 Line<T> screen_ray(T dX, T dY, const t_mat& matProj, const t_mat& matMV)
 {
@@ -174,20 +247,19 @@ Line<T> screen_ray(T dX, T dY, const t_mat& matProj, const t_mat& matMV)
 	vecNear /= vecNear[3];
 	vecFar /= vecFar[3];
 
-	//std::cout << "near: " << vecNear << ", far: " << vecFar << std::endl;
 	ublas::vector<T> vecPos = vecNear; vecPos.resize(3, 1);
 	ublas::vector<T> vecDir = vecFar-vecNear; vecDir.resize(3, 1);
 	Line<T> line(vecPos, vecDir);
 	return line;
 }
 
-template<typename t_mat = t_mat4, typename t_vec = t_vec4,
+template<typename t_mat = t_mat4_gen<GLdouble>, typename t_vec = t_vec4_gen<GLdouble>,
 	typename T = typename t_mat::value_type>
 Line<T> gl_screen_ray(T dX, T dY)
 {
-	t_real_gl dMatMV[16], dMatProj[16];
-	glGetDoublev(GL_PROJECTION_MATRIX, dMatProj);
-	glGetDoublev(GL_MODELVIEW_MATRIX, dMatMV);
+	T dMatMV[16], dMatProj[16];
+	gl_traits<T>::GetProjMatrix(dMatProj);
+	gl_traits<T>::GetModelMatrix(dMatMV);
 
 	t_mat matProj = from_gl_array<t_mat>(dMatProj);
 	t_mat matMV = from_gl_array<t_mat>(dMatMV);
@@ -198,7 +270,7 @@ Line<T> gl_screen_ray(T dX, T dY)
 // --------------------------------------------------------------------------------
 
 
-template<typename t_mat = ublas::matrix<t_real_gl>, typename t_vec = ublas::vector<t_real_gl>,
+template<typename t_mat = ublas::matrix<GLdouble>, typename t_vec = ublas::vector<GLdouble>,
 	typename T = typename t_mat::value_type>
 class Cam
 {
@@ -339,12 +411,13 @@ class FontMap
 };
 
 
+template<class T = GLdouble>
 class GlFontMap : public FontMap
 {
 	protected:
 		bool m_bOk = 0;
 		GLuint m_tex = 0;
-		t_real_gl m_dScale = 0.01;
+		T m_dScale = 0.01;
 
 	protected:
 		bool CreateFontTexture();
@@ -358,10 +431,10 @@ class GlFontMap : public FontMap
 		virtual bool IsOk() const override { return m_bOk && FontMap::IsOk(); }
 
 		void BindTexture();
-		void DrawText(t_real_gl dX, t_real_gl dY, const std::string& str, bool bCenter=1);
-		void DrawText(t_real_gl dX, t_real_gl dY, t_real_gl dZ, const std::string& str, bool bCenter=1);
+		void DrawText(T dX, T dY, const std::string& str, bool bCenter=1);
+		void DrawText(T dX, T dY, T dZ, const std::string& str, bool bCenter=1);
 
-		void SetScale(t_real_gl dScale) { m_dScale = dScale; }
+		void SetScale(T dScale) { m_dScale = dScale; }
 };
 
 // --------------------------------------------------------------------------------

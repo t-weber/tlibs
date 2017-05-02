@@ -20,6 +20,23 @@
 
 namespace tl {
 
+
+template<class t_vec = ublas::vector<double>,
+	template<class...> class t_cont = std::vector>
+t_cont<t_vec>
+get_atoms_by_idx(const t_cont<t_vec>& vecAtoms, const t_cont<std::size_t>& vecIdx)
+{
+	t_cont<t_vec> vecRet;
+	vecRet.reserve(vecIdx.size());
+
+	for(std::size_t iIdx : vecIdx)
+		vecRet.push_back(vecAtoms[iIdx]);
+
+	return vecRet;
+}
+
+
+
 /**
  * get nearest neighbours
  * @return vector of neighbours
@@ -46,9 +63,8 @@ get_neighbours(const t_cont<t_vec>& vecAtoms, const t_vec& vecCentre,
 		return len0 < len1;
 	};
 
-	t_cont<std::size_t> vecIdx = sorted_idx
-		<std::vector, t_real, decltype(fktSort)>
-			(vecLens, fktSort);
+	t_cont<std::size_t> vecIdx = sorted_idx<std::vector, t_real, decltype(fktSort)>
+		(vecLens, fktSort);
 
 	if(vecIdx.size() == 0) return vecN;
 
@@ -171,8 +187,10 @@ std::vector<ublas::vector<T>> get_neighbour_atoms(UCType crys, int iDist=0, T a=
 	}
 
 	if(!float_equal<T>(a, T(1)))
+	{
 		for(ublas::vector<T>& vec : vecAtoms)
 			vec *= a;
+	}
 
 	return vecAtoms;
 }

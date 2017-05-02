@@ -1503,6 +1503,11 @@ template<class t_mat = ublas::matrix<double>,
 	typename T = typename t_mat::value_type>
 	t_mat reflection_matrix(const t_vec& vecNorm)
 {
+	// projection of "pt" onto (normalised) vector "norm":
+	// proj = (norm^t * pt) * norm
+	// proj = (norm * norm^t) * pt
+	// "Lotfußpunkt" = pt - proj
+	// mirror_point = pt - 2*proj
 	t_mat mat = -T(2) * ublas::outer_prod(vecNorm, vecNorm);
 	mat /= ublas::inner_prod(vecNorm, vecNorm);
 

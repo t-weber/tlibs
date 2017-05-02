@@ -10,7 +10,7 @@
 #include "../math/linalg_ops.h"
 #include "../math/linalg2.h"
 #include "../math/linalg2_impl.h"
-#include "../math/spin.h"
+#include "../phys/spin.h"
 
 #include <iostream>
 

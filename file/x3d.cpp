@@ -91,6 +91,9 @@ void X3dTrafo::Write(std::ostream& ostr) const
 
 // -----------------------------------------------------------------------------
 
+/**
+ * sphere
+ */
 void X3dSphere::Write(std::ostream& ostr) const
 {
 	ostr << "<Shape>\n";
@@ -103,6 +106,10 @@ void X3dSphere::Write(std::ostream& ostr) const
 	//X3dElem::Write(ostr);
 }
 
+
+/**
+ * cube
+ */
 void X3dCube::Write(std::ostream& ostr) const
 {
 	ostr << "<Shape>\n";
@@ -118,6 +125,10 @@ void X3dCube::Write(std::ostream& ostr) const
 	//X3dElem::Write(ostr);
 }
 
+
+/**
+ * cylinder
+ */
 void X3dCylinder::Write(std::ostream& ostr) const
 {
 	ostr << "<Shape>\n";
@@ -131,6 +142,10 @@ void X3dCylinder::Write(std::ostream& ostr) const
 	//X3dElem::Write(ostr);
 }
 
+
+/**
+ * polygon
+ */
 void X3dPolygon::Write(std::ostream& ostr) const
 {
 	std::ostringstream ostrVertices;
@@ -158,6 +173,44 @@ void X3dPolygon::Write(std::ostream& ostr) const
 
 		ostr << ostrVertices.str();
 		ostr << "</IndexedFaceSet>\n";
+
+	X3dElem::WriteColor(ostr, m_vecColor);
+	ostr << "</Shape>\n";
+}
+
+
+/**
+ * line set
+ */
+void X3dLines::Write(std::ostream& ostr) const
+{
+	std::ostringstream ostrVertices;
+	ostrVertices << "<Coordinate point=\"";
+	for(std::size_t iVert=0; iVert<m_vertices.size(); ++iVert)
+	{
+		const t_vec& vec = m_vertices[iVert];
+
+		for(t_real d : vec)
+			ostrVertices << d << " ";
+
+		if(iVert+1 < m_vertices.size())
+			ostrVertices << ", ";
+	}
+	ostrVertices << "\" />\n";
+
+
+	ostr << "<Shape>\n";
+		ostr << "<IndexedLineSet ";
+		ostr << "coordIndex=\"";
+		for(std::size_t iVert=0; iVert<m_vertices.size(); ++iVert)
+			ostr << iVert << ", ";
+		if(m_bCloseLines)
+			ostr << 0 << ", ";
+		ostr << "-1\"";
+		ostr << ">\n";
+
+		ostr << ostrVertices.str();
+		ostr << "</IndexedLineSet>\n";
 
 	X3dElem::WriteColor(ostr, m_vecColor);
 	ostr << "</Shape>\n";

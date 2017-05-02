@@ -13,6 +13,7 @@
 #include "linalg.h"
 #include "linalg2.h"
 #include "quat.h"
+#include "stat.h"
 #include "../log/log.h"
 
 #include <iostream>
@@ -49,17 +50,65 @@ protected:
 	T m_d;
 
 public:
+	/**
+	 * plane from a point and a normal
+	 */
+	Plane(const t_vec& vec0, const t_vec& vecNorm)
+		: m_vecX0(vec0), m_vecNorm(vecNorm)
+	{
+		// normalise normal
+		T tLenNorm = ublas::norm_2(m_vecNorm);
+		if(float_equal<T>(tLenNorm, 0.) || tLenNorm!=tLenNorm)
+		{ m_bValid = 0; return; }
+		m_vecNorm /= tLenNorm;
+
+		// Hessian form: vecX0*vecNorm - d = 0
+		m_d = ublas::inner_prod(m_vecX0, m_vecNorm);
+
+
+		// find direction vectors
+		std::vector<t_vec> vecTry =
+			{ tl::make_vec({T(1), T(0), T(0)}),
+			tl::make_vec({T(0), T(1), T(0)}),
+			tl::make_vec({T(0), T(0), T(1)})};
+
+		std::size_t iIdxBest = 0;
+		T dDot = T(1);
+		for(std::size_t iIdx=0; iIdx<vecTry.size(); ++iIdx)
+		{
+			const t_vec& vec = vecTry[iIdx];
+
+			T dDotCur = std::abs(ublas::inner_prod(vec, m_vecNorm));
+			if(dDotCur < dDot)
+			{
+				iIdxBest = iIdx;
+				dDot = dDotCur;
+			}
+		}
+		m_vecDir0 = vecTry[iIdxBest];
+		m_vecDir1 = cross_3(m_vecNorm, m_vecDir0);
+		m_vecDir0 = cross_3(m_vecDir1, m_vecNorm);
+
+		//m_vecDir0 /= ublas::norm_2(m_vecDir0);
+		//m_vecDir1 /= ublas::norm_2(m_vecDir1);
+
+		m_bValid = 1;
+	}
+
+	/**
+	 * plane from a point and two directions on the plane
+	 */
 	Plane(const t_vec& vec0,
 		const t_vec& dir0, const t_vec& dir1)
 		: m_vecX0(vec0), m_vecDir0(dir0), m_vecDir1(dir1)
 	{
+		// calculate normal
 		m_vecNorm = cross_3(dir0, dir1);
+
+		// normalise normal
 		T tLenNorm = ublas::norm_2(m_vecNorm);
 		if(float_equal<T>(tLenNorm, 0.) || tLenNorm!=tLenNorm)
-		{
-			m_bValid = 0;
-			return;
-		}
+		{ m_bValid = 0; return; }
 		m_vecNorm /= tLenNorm;
 
 		// Hessian form: vecX0*vecNorm - d = 0
@@ -70,11 +119,13 @@ public:
 	Plane() = default;
 	virtual ~Plane() = default;
 
+
 	const t_vec& GetX0() const { return m_vecX0; }
 	const t_vec& GetDir0() const { return m_vecDir0; }
 	const t_vec& GetDir1() const { return m_vecDir1; }
 	const t_vec& GetNorm() const { return m_vecNorm; }
 	const T& GetD() const { return m_d; }
+
 
 	T GetDist(const t_vec& vecPt) const
 	{
@@ -83,10 +134,23 @@ public:
 
 	T GetAngle(const Plane<T>& plane) const
 	{
-		return std::acos(GetNorm(), plane.GetNorm());
+		T dot = ublas::inner_prod(GetNorm(), plane.GetNorm());
+		return std::acos(dot);
 	}
 
-	// "Lotfusspunkt"
+
+	void FlipNormal()
+	{
+		m_vecNorm = -m_vecNorm;
+		m_d = -m_d;
+
+		std::swap(m_vecDir0, m_vecDir1);
+	}
+
+
+	/**
+	 * "Lotfußpunkt"
+	 */
 	t_vec GetDroppedPerp(const t_vec& vecP, T *pdDist=0) const
 	{
 		T dist = GetDist(vecP);
@@ -101,15 +165,40 @@ public:
 		return vecdropped;
 	}
 
+
+	/**
+	 * determine on which side of the plane a point is located
+	 */
+	bool GetSide(const t_vec& vecP, T *pdDist=0) const
+	{
+		T dDist = GetDist(vecP);
+		if(pdDist) *pdDist = dDist;
+		return dDist < T(0);
+	}
+
+	/**
+	 * determine if a point is on the plane
+	 */
+	bool IsOnPlane(const t_vec& vecPt, T eps = tl::get_epsilon<T>()) const
+	{
+		T dDist = GetDist(vecPt);
+		return float_equal(dDist, T(0), eps);
+	}
+
 	bool IsParallel(const Plane<T>& plane, T eps = tl::get_epsilon<T>()) const
 	{
 		return vec_is_collinear<t_vec>(GetNorm(), plane.GetNorm(), eps);
 	}
 
-	// http://mathworld.wolfram.com/Plane-PlaneIntersection.html
-	bool intersect(const Plane<T>& plane2, Line<T>& lineRet) const
+
+	/**
+	 * plane-plane intersection
+	 * http://mathworld.wolfram.com/Plane-PlaneIntersection.html
+	 */
+	bool intersect(const Plane<T>& plane2, Line<T>& lineRet,
+		T eps = tl::get_epsilon<T>()) const
 	{
-		if(IsParallel(plane2))
+		if(IsParallel(plane2, eps))
 			return false;
 
 		const Plane<T>& plane1 = *this;
@@ -118,7 +207,7 @@ public:
 		t_vec vecDir = cross_3(plane1.GetNorm(), plane2.GetNorm());
 
 		// find common point in the two planes
-		t_mat M = row_matrix({plane1.GetNorm(), plane2.GetNorm()});
+		t_mat M = row_matrix( { plane1.GetNorm(), plane2.GetNorm() } );
 
 		t_vec vecD(2);
 		vecD[0] = plane1.GetD();
@@ -129,8 +218,40 @@ public:
 			return 0;
 
 		lineRet = Line<T>(vec0, vecDir);
-		return 1;
+		return true;
 	}
+
+
+	/**
+	 * intersection point of three planes
+	 * http://mathworld.wolfram.com/Plane-PlaneIntersection.html
+	 */
+	bool intersect(const Plane<T>& plane2, const Plane<T>& plane3, t_vec& ptRet,
+		T eps = tl::get_epsilon<T>()) const
+	{
+		const Plane<T>& plane1 = *this;
+
+		if(plane1.IsParallel(plane2, eps) || plane1.IsParallel(plane3, eps) || plane2.IsParallel(plane3, eps))
+			return false;
+
+		// direction vectors
+		const t_vec vecDir12 = cross_3(plane1.GetNorm(), plane2.GetNorm());
+		const t_vec vecDir23 = cross_3(plane2.GetNorm(), plane3.GetNorm());
+		const t_vec vecDir31 = cross_3(plane3.GetNorm(), plane1.GetNorm());
+
+		const T d1 = plane1.GetD();
+		const T d2 = plane2.GetD();
+		const T d3 = plane3.GetD();
+
+		const t_mat M = row_matrix( { plane1.GetNorm(), plane2.GetNorm(), plane3.GetNorm() } );
+		const T detM = determinant(M);
+
+		ptRet = (d1*vecDir23 + d2*vecDir31 + d3*vecDir12) / detM;
+		if(is_nan_or_inf(ptRet))
+			return false;
+		return true;
+	}
+
 
 	bool IsValid() const { return m_bValid; }
 };
@@ -191,7 +312,22 @@ public:
 	}
 
 
-	// "Lotfusspunkt"
+	T GetAngle(const Line<T>& line) const
+	{
+		t_vec dir1 = GetDir();
+		t_vec dir2 = line.GetDir();
+
+		dir1 /= ublas::norm_2(dir1);
+		dir2 /= ublas::norm_2(dir2);
+
+		T dot = ublas::inner_prod(dir1, dir2);
+		return std::acos(dot);
+	}
+
+
+	/**
+	 * "Lotfußpunkt"
+	 */
 	t_vec GetDroppedPerp(const t_vec& vecP, T *pdDist=0) const
 	{
 		T t = ublas::inner_prod(vecP-GetX0(), GetDir()) / ublas::inner_prod(GetDir(), GetDir());
@@ -207,6 +343,9 @@ public:
 	}
 
 
+	/**
+	 * determine on which side of the line a point is located
+	 */
 	bool GetSide(const t_vec& vecP, T *pdDist=0) const
 	{
 		const std::size_t N = m_vecDir.size();
@@ -224,14 +363,15 @@ public:
 		vecNorm[1] = -m_vecDir[0];
 
 		T tDot = ublas::inner_prod(vecP-vecDropped, vecNorm);
-
-		//std::cout << "dropped: " << vecDropped << ", dot: " << tDot << std::endl;
 		return tDot < T(0);
 	}
 
 
-	// http://mathworld.wolfram.com/Line-PlaneIntersection.html
-	bool intersect(const Plane<T>& plane, T& t) const
+	/**
+	 * line-plane intersection
+	 * http://mathworld.wolfram.com/Line-PlaneIntersection.html
+	 */
+	bool intersect(const Plane<T>& plane, T& t, T eps = tl::get_epsilon<T>()) const
 	{
 		const std::size_t N = m_vecDir.size();
 		if(N != 3)
@@ -254,7 +394,7 @@ public:
 		matDenom(3,0) = xp0[2];	matDenom(3,1) = xp1[2];	matDenom(3,2) = xp2[2];	matDenom(3,3) = dirl[2];
 
 		T denom = determinant(matDenom);
-		if(tl::float_equal(denom, 0.))
+		if(tl::float_equal(denom, 0., eps))
 			return false;
 
 		t_mat matNum(N+1,N+1);
@@ -269,42 +409,47 @@ public:
 		return true;
 	}
 
-	bool intersect(const Line<T>& line, T& t) const
+
+	/**
+	 * line-line intersection
+	 * see e.g.: https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
+	 *
+	 * pos0 + t0*dir0 = pos1 + t1*dir1
+	 * pos0 - pos1 = t1*dir1 - t0*dir0
+	 * exact: b = Mx  ->  M^(-1)*b = x
+	 * approx: M^t b = M^t M x  ->  (M^t M)^(-1) * M^t b = x
+	 */
+	bool intersect(const Line<T>& line, T& t, T eps = tl::get_epsilon<T>()) const
 	{
+		if(IsParallel(line, eps))
+			return false;
+
 		const t_vec& pos0 =  this->GetX0();
 		const t_vec& pos1 =  line.GetX0();
 
 		const t_vec& dir0 =  this->GetDir();
 		const t_vec& dir1 =  line.GetDir();
 
-		const std::size_t N = pos0.size();
-
-		// pos0 + t0*dir0 = pos1 + t1*dir1
-		// pos0 - pos1 = t1*dir1 - t0*dir0
-
 		const t_vec pos = pos0-pos1;
-		t_mat mat = ublas::identity_matrix<T>(N);
+		t_mat M = column_matrix({-dir0, dir1});
+		t_mat Mt = ublas::trans(M);
+		t_mat MtM = ublas::prod(Mt, M);
 
-		for(std::size_t i=0; i<N; ++i)
-		{
-			mat(i, 0) = -dir0[i];
-			mat(i, 1) = dir1[i];
-		}
-
-		t_mat inv;
-		if(!tl::inverse(mat, inv))
-		{
-			//log_warn("Could not invert matrix ", mat, ".");
+		t_mat MtMinv;
+		if(!tl::inverse(MtM, MtMinv))
 			return false;
-		}
 
-		t_vec params = ublas::prod(inv, pos);
+		t_vec Mtb = ublas::prod(Mt, pos);
+		t_vec params = ublas::prod(MtMinv, Mtb);
 		t = params[0];
 
-		//std::cout << "t=" << t << ", ";
 		return true;
 	}
 
+
+	/**
+	 * middle perpendicular line (in 2d)
+	 */
 	bool GetMiddlePerp(Line<T>& linePerp) const
 	{
 		const std::size_t N = m_vecDir.size();
@@ -323,7 +468,25 @@ public:
 		linePerp = Line<T>(vecPos, vecDir);
 		return true;
 	}
+
+	/**
+	 * middle perpendicular plane (in 3d)
+	 */
+	bool GetMiddlePerp(Plane<T>& planePerp) const
+	{
+		const std::size_t N = m_vecDir.size();
+		if(N != 3)
+		{
+			log_err("Perpendicular plane only implemented for 3d vectors.");
+			return false;
+		}
+
+		t_vec vecPos = this->operator()(0.5);
+		planePerp = Plane<T>(vecPos, m_vecDir);
+		return true;
+	}
 };
+
 
 template<typename T>
 std::ostream& operator<<(std::ostream& ostr, const Plane<T>& plane)
@@ -341,9 +504,161 @@ std::ostream& operator<<(std::ostream& ostr, const Line<T>& line)
 }
 
 
+
+/**
+ * intersection of "plane" and polygon (defined by "planePoly" and vertPoly")
+ */
+template<class t_vec = ublas::vector<double>,
+	template<class...> class t_cont = std::vector,
+	class T = typename t_vec::value_type>
+bool intersect_plane_poly(const Plane<T>& plane,
+	const Plane<T>& planePoly, const t_cont<t_vec>& vertPoly,
+	Line<T>& lineRes, T eps = tl::get_epsilon<T>())
+{
+	if(!vertPoly.size())
+		return false;
+
+	bool bFirstSide = plane.GetSide(vertPoly[0]);
+
+	// are all vertices on the same side?
+	if(std::all_of(vertPoly.begin(), vertPoly.end(),
+		[&plane, bFirstSide](const t_vec& vert) -> bool
+		{ return plane.GetSide(vert) == bFirstSide; }))
+		return false;
+
+
+	if(!plane.intersect(planePoly, lineRes, eps))
+		return false;
+
+	return true;
+}
+
+
+/**
+ * intersection of "line" and polygon (defined by "planePoly" and vertPoly")
+ */
+template<class t_vec = ublas::vector<double>,
+	template<class...> class t_cont = std::vector,
+	class T = typename t_vec::value_type>
+bool intersect_line_poly(const Line<T>& line,
+	const Plane<T>& planePoly, const t_cont<t_vec>& vertPoly,
+	t_vec& vecIntersect, T eps = tl::get_epsilon<T>())
+{
+	// point of intersection with plane
+	T t;
+	if(!line.intersect(planePoly, t, eps))
+		return false;
+	vecIntersect = line(t);
+
+	// is intersection point within polygon?
+	const t_vec vecFaceCentre = mean_value(vertPoly);
+	for(std::size_t iVert = 0; iVert < vertPoly.size(); ++iVert)
+	{
+		std::size_t iNextVert = iVert < vertPoly.size()-1 ? iVert+1 : 0;
+
+		const t_vec vecEdgeCentre = vertPoly[iVert] + T(0.5)*(vertPoly[iNextVert] - vertPoly[iVert]);
+		const t_vec vecNorm = vecFaceCentre-vecEdgeCentre;
+
+		const Plane<T> planeEdge(vecEdgeCentre, vecNorm);
+
+		if(planeEdge.GetDist(vecIntersect) < -eps)
+			return false;
+	}
+
+	return true;
+}
+
+
+
+/**
+ * sort vertices in a convex polygon
+ */
+template<class t_vec = ublas::vector<double>,
+	template<class...> class t_cont = std::vector,
+	class T = typename t_vec::value_type>
+void sort_poly_verts_norm(t_cont<t_vec>& vecPoly, const t_vec& _vecNorm)
+{
+	if(vecPoly.size() <= 1)
+		return;
+
+	// line from centre to vertex
+	const t_vec vecCentre = mean_value(vecPoly);
+	const t_vec vecNorm = _vecNorm / ublas::norm_2(_vecNorm);
+
+	t_vec vec0 = vecPoly[0] - vecCentre;
+
+	sort(vecPoly.begin(), vecPoly.end(), 
+		[&vecCentre, &vec0, &vecNorm](const t_vec& vertex1, const t_vec& vertex2) -> bool
+		{
+			t_vec vec1 = vertex1 - vecCentre;
+			t_vec vec2 = vertex2 - vecCentre;
+
+			return vec_angle(vec0, vec1, &vecNorm) < vec_angle(vec0, vec2, &vecNorm);
+		});
+}
+
+
+/**
+ * sort vertices in a convex polygon using an absolute centre for determining the normal
+ */
+template<class t_vec = ublas::vector<double>,
+	template<class...> class t_cont = std::vector,
+	class T = typename t_vec::value_type>
+void sort_poly_verts(t_cont<t_vec>& vecPoly, const t_vec& vecAbsCentre)
+{
+	if(vecPoly.size() <= 1)
+		return;
+
+	// line from centre to vertex
+	const t_vec vecCentre = mean_value(vecPoly);
+	// face normal
+	t_vec vecNorm = vecCentre - vecAbsCentre;
+
+	sort_poly_verts_norm<t_vec, t_cont, T>(vecPoly, vecNorm);
+}
+
+
+/**
+ * sort vertices in a convex polygon determining normal
+ */
+template<class t_vec = ublas::vector<double>,
+	template<class...> class t_cont = std::vector,
+	class T = typename t_vec::value_type>
+void sort_poly_verts(t_cont<t_vec>& vecPoly)
+{
+	if(vecPoly.size() <= 1)
+		return;
+
+	// line from centre to vertex
+	const t_vec vecCentre = mean_value(vecPoly);
+	// face normal
+	t_vec vecNormBest;
+	T tBestCross = T(0);
+
+	// find non-collinear vectors
+	for(std::size_t iVecPoly=1; iVecPoly<vecPoly.size(); ++iVecPoly)
+	{
+		t_vec vecNorm = cross_3<t_vec>(vecPoly[0]-vecCentre, vecPoly[1]-vecCentre);
+		T tCross = ublas::norm_2(vecNorm);
+		if(tCross > tBestCross)
+		{
+			tBestCross = tCross;
+			vecNormBest = vecNorm;
+		}
+	}
+
+	// nothing found
+	if(vecNormBest.size() < vecCentre.size())
+		return;
+
+	sort_poly_verts_norm<t_vec, t_cont, T>(vecPoly, vecNormBest);
+}
+
+
 //------------------------------------------------------------------------------
 
-template<class T=double>
+
+template<class T = double>
 class Quadric
 {
 public:
@@ -427,7 +742,9 @@ public:
 		return dQ + dR + m_s;
 	}
 
-	// remove column and row iIdx
+	/**
+	 * remove column and row iIdx
+	 */
 	void RemoveElems(std::size_t iIdx)
 	{
 		m_Q = remove_elems(m_Q, iIdx);
@@ -441,8 +758,11 @@ public:
 		CheckSymm();
 	}
 
-	// Q = O D O^T
-	// O: eigenvecs, D: eigenvals
+
+	/**
+	 * Q = O D O^T
+	 * O: eigenvecs, D: eigenvals
+	 */
 	bool GetPrincipalAxes(t_mat& matEvecs, std::vector<T>& vecEvals,
 		Quadric<T>* pquadPrincipal=nullptr) const
 	{
@@ -495,11 +815,14 @@ public:
 		return true;
 	}
 
-	// only valid in principal axis system:
-	// x^T Q x + rx = 0
-	// q11*x1^2 + r1*x1 + ... = 0
-	// q11*(x1^2 + r1/q11*x1) = 0
-	// completing the square: q11*(x1 + r1/(2*q11))^2 - r1^2/(4*q11)
+
+	/**
+	 * only valid in principal axis system:
+	 * x^T Q x + rx = 0
+	 * q11*x1^2 + r1*x1 + ... = 0
+	 * q11*(x1^2 + r1/q11*x1) = 0
+	 * completing the square: q11*(x1 + r1/(2*q11))^2 - r1^2/(4*q11)
+	 */
 	t_vec GetPrincipalOffset() const
 	{
 		t_vec vecOffs = GetR();
@@ -512,12 +835,15 @@ public:
 		return vecOffs;
 	}
 
-	// here: only for x^T Q x + s  =  0, i.e. for r=0
-	// quad: x^T Q x + s = 0; line: x = x0 + t d
-	// (x0 + t d)^T Q (x0 + t d) + s = 0
-	// (x0 + t d)^T Q x0 + (x0 + t d)^T Q t d + s = 0
-	// (x0^T + t d^T) Q x0 + (x0^T + t d^T) Q t d + s = 0
-	// x0^T Q x0 + s  +  (d^T Q x0 + x0^T Q d) t  +  d^T Q d t^2 = 0
+
+	/**
+	 * here: only for x^T Q x + s  =  0, i.e. for r=0
+	 * quad: x^T Q x + s = 0; line: x = x0 + t d
+	 * (x0 + t d)^T Q (x0 + t d) + s = 0
+	 * (x0 + t d)^T Q x0 + (x0 + t d)^T Q t d + s = 0
+	 * (x0^T + t d^T) Q x0 + (x0^T + t d^T) Q t d + s = 0
+	 * x0^T Q x0 + s  +  (d^T Q x0 + x0^T Q d) t  +  d^T Q d t^2 = 0
+	 */
 	std::vector<T> intersect(const Line<T>& line) const
 	{
 		const t_mat& Q = GetQ();
@@ -540,7 +866,8 @@ public:
 	}
 };
 
-template<class T=double>
+
+template<class T = double>
 std::ostream& operator<<(std::ostream& ostr, const Quadric<T>& quad)
 {
 	ostr << "Q = " << quad.GetQ() << ", ";
@@ -550,7 +877,7 @@ std::ostream& operator<<(std::ostream& ostr, const Quadric<T>& quad)
 }
 
 
-template<class T=double>
+template<class T = double>
 class QuadSphere : public Quadric<T>
 {
 protected:
@@ -583,7 +910,9 @@ public:
 		this->m_s = T(-1.);
 	}
 
-	// only valid in principal axis system
+	/**
+	 * only valid in principal axis system
+	 */
 	T GetRadius() const
 	{
 		return std::abs(this->m_s) /
@@ -600,7 +929,7 @@ public:
 };
 
 
-template<class T=double>
+template<class T = double>
 class QuadEllipsoid : public Quadric<T>
 {
 protected:
@@ -645,7 +974,9 @@ public:
 
 	virtual ~QuadEllipsoid() {}
 
-	// only valid in principal axis system
+	/**
+	 * only valid in principal axis system
+	 */
 	T GetRadius(std::size_t i) const
 	{
 		return std::abs(this->m_s) /
@@ -663,7 +994,7 @@ public:
 //------------------------------------------------------------------------------
 
 
-template<typename T=double>
+template<typename T = double>
 std::vector<std::size_t> find_zeroes(std::size_t N, const T* pIn)
 {
 	using t_vec = ublas::vector<T>;
@@ -685,11 +1016,7 @@ std::vector<std::size_t> find_zeroes(std::size_t N, const T* pIn)
 
 		T param;
 		if(!line.intersect(xaxis, param))
-		{
-			//std::cerr << "No intersection." << std::endl;
 			continue;
-		}
-		//std::cout << "Intersection param: " << param << std::endl;
 
 		t_vec posInters = line(param);
 		if(posInters[0]>=0. && posInters[0]<=1.)

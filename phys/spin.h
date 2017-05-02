@@ -9,6 +9,8 @@
 #define __TLIBS_SPIN_H__
 
 #include "../math/linalg.h"
+#include <boost/math/special_functions/factorials.hpp>
+
 
 namespace tl {
 
@@ -71,6 +73,58 @@ t_mat<std::complex<t_real>> rot_spin(int iComp, t_real dAngle)
 		std::complex<t_real>(std::cos(t_real(0.5)*dAngle)) * matI +
 		std::complex<t_real>(std::sin(t_real(0.5)*dAngle)) * I*vecS[iComp];
 	return mat;
+}
+
+
+/**
+ * CG coefficients
+ * formula: see (Arfken 2013), p. 790
+ * 
+ * e.g. two e- spins: s1 = s2 = 0.5, ms[1,2] = 0.5 (up) or -0.5 (down), S = 0 (sing.) or 1 (trip.)
+ */
+template<class T = double>
+T CG_coeff(T S, T s1, T s2, T ms1, T ms2)
+{
+	T (*fak)(T) = [](T t) -> T { return boost::math::factorial<T>(t); };
+
+	T tCG = fak(S + s1 - s2)*fak(S - s1 + s2)*fak(-S + s1 + s2);
+	tCG *= (T(2)*S + T(1));
+	tCG *= fak(S + ms1 + ms2) * fak(S - (ms1 + ms2));
+	tCG *= fak(s1 + ms1) * fak(s1 - ms1);
+	tCG *= fak(s2 + ms2) * fak(s2 - ms2);
+	tCG /= fak(S + s1 + s2 + T(1));
+	tCG = std::sqrt(tCG);
+
+	auto k_fkt = [&](T k) -> T
+	{
+		T t = std::pow(T(-1), k);
+		t /= fak(k);
+		t /= fak(-S + s1 + s2 - k)*fak(S - s1 - ms2 + k)*fak(S - s2 + ms1 + k);
+		t /= fak(s2 + ms2 - k)*fak(s1 - ms1 - k);
+		return t;
+	};
+
+	auto k_minmax = [&]() -> std::pair<T,T>
+	{
+		T kmax = s1 - ms1;
+		kmax = std::min(kmax, s2 + ms2);
+		kmax = std::min(kmax, -S + s1 + s2);
+
+		T kmin = -(S - s1 - ms2);
+		kmin = std::max(kmin, -(S - s2 + ms1));
+		kmin = std::max(kmin, T(0));
+
+		return std::make_pair(kmin, kmax);
+	};
+
+	T kmin, kmax;
+	std::tie(kmin, kmax) = k_minmax();
+	T kfact = T(0);
+	for(T k=kmin; k<=kmax; k+=T(1))
+		kfact += k_fkt(k);
+	tCG *= kfact;
+
+	return tCG;
 }
 
 }

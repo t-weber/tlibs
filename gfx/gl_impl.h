@@ -1,5 +1,5 @@
 /**
- * gfx stuff
+ * GL drawing
  * @author Tobias Weber <tobias.weber@tum.de>
  * @date 22-dec-2014
  * @license GPLv2 or GPLv3
@@ -26,7 +26,6 @@ namespace tl {
  * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
  * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_02
  */
-
 void FontMap::draw_tile(unsigned char* pcBuf,
 	unsigned int iW, unsigned int iH,
 	unsigned int iTileW, unsigned int iTileH,
@@ -79,7 +78,7 @@ const std::string FontMap::m_strCharset =
 
 FontMap::FontMap() : m_bOk(0)
 {
-	m_iCharsPerLine = int(std::ceil(std::sqrt(t_real_gl(m_strCharset.length()))));
+	m_iCharsPerLine = int(std::ceil(std::sqrt(double(m_strCharset.length()))));
 	m_iLines = m_iCharsPerLine;
 
 	if(FT_Init_FreeType(&m_ftLib) != 0)
@@ -133,15 +132,15 @@ bool FontMap::LoadFont(FT_Face ftFace, int iSize)
 		m_iTileH = std::max(int(iGlyphH), m_iTileH);
 	}
 
-	m_iPadH = int(nextpow<t_real_gl>(2, m_iTileH))-m_iTileH;
-	m_iPadW = int(nextpow<t_real_gl>(2, m_iTileW))-m_iTileW;
+	m_iPadH = int(nextpow<double>(2, m_iTileH))-m_iTileH;
+	m_iPadW = int(nextpow<double>(2, m_iTileW))-m_iTileW;
 
 	m_iLargeW = (m_iTileW+m_iPadW) * m_iCharsPerLine;
 	m_iLargeH = (m_iTileH+m_iPadH) * m_iLines;
 
 	// find next larger power of 2 (later used for glTexImage2D)
-	m_iLargeW = int(nextpow<t_real_gl>(2, m_iLargeW));
-	m_iLargeH = int(nextpow<t_real_gl>(2, m_iLargeH));
+	m_iLargeW = int(nextpow<double>(2, m_iLargeW));
+	m_iLargeH = int(nextpow<double>(2, m_iLargeH));
 
 	m_pcLarge = new unsigned char[m_iLargeW*m_iLargeH];
 	memset(m_pcLarge, 0, m_iLargeW*m_iLargeH);
@@ -249,6 +248,7 @@ void FontMap::UnloadFont()
 	if(m_ftFace) { FT_Done_Face(m_ftFace); m_ftFace=0; }
 }
 
+
 FontMap::~FontMap()
 {
 	UnloadFont();
@@ -256,9 +256,11 @@ FontMap::~FontMap()
 }
 
 
+// ----------------------------------------------------------------------------
 
 
-GlFontMap::GlFontMap(const char* pcFont, int iSize)
+template<class T>
+GlFontMap<T>::GlFontMap(const char* pcFont, int iSize)
 	: FontMap(pcFont, iSize), m_bOk(0)
 {
 	if(!FontMap::m_bOk)
@@ -276,7 +278,8 @@ GlFontMap::GlFontMap(const char* pcFont, int iSize)
 	m_bOk = 1;
 }
 
-GlFontMap::GlFontMap(FT_Face ftFace, int iSize)
+template<class T>
+GlFontMap<T>::GlFontMap(FT_Face ftFace, int iSize)
 	: FontMap(), m_bOk(0)
 {
 	if(!ftFace)
@@ -300,7 +303,8 @@ GlFontMap::GlFontMap(FT_Face ftFace, int iSize)
 	m_bOk = 1;
 }
 
-bool GlFontMap::CreateFontTexture()
+template<class T>
+bool GlFontMap<T>::CreateFontTexture()
 {
 	glGetError(); // clear previous errors
 
@@ -338,7 +342,8 @@ bool GlFontMap::CreateFontTexture()
 	return true;
 }
 
-void GlFontMap::BindTexture()
+template<class T>
+void GlFontMap<T>::BindTexture()
 {
 	if(!m_bOk) return;
 
@@ -356,7 +361,8 @@ void GlFontMap::BindTexture()
 	//if(glGetError() != GL_NO_ERROR) log_err("Cannot bind texture.");
 }
 
-void GlFontMap::DrawText(t_real_gl _dX, t_real_gl _dY, const std::string& str, bool bCenter)
+template<class T>
+void GlFontMap<T>::DrawText(T _dX, T _dY, const std::string& str, bool bCenter)
 {
 	if(!m_bOk) return;
 
@@ -378,13 +384,13 @@ void GlFontMap::DrawText(t_real_gl _dX, t_real_gl _dY, const std::string& str, b
 	glEnable(GL_BLEND);
 	*/
 
-	t_real_gl dX = _dX;
-	t_real_gl dY = _dY;
+	T dX = _dX;
+	T dY = _dY;
 
-	t_real_gl dScX = (m_iTileH / 12.) * m_dScale;
-	t_real_gl dScY = t_real_gl(m_iTileH)/t_real_gl(m_iTileW) * dScX;
+	T dScX = (m_iTileH / 12.) * m_dScale;
+	T dScY = T(m_iTileH)/T(m_iTileW) * dScX;
 
-	t_real_gl dXInc = 1.75*dScX;
+	T dXInc = 1.75*dScX;
 
 	if(bCenter)
 	{
@@ -412,21 +418,28 @@ void GlFontMap::DrawText(t_real_gl _dX, t_real_gl _dY, const std::string& str, b
 			return;
 		}
 
-		t_real_gl dSizeFullTileW = t_real_gl(m_iTileW+m_iPadW)/t_real_gl(m_iLargeW);
-		t_real_gl dSizeFullTileH = t_real_gl(m_iTileH+m_iPadH)/t_real_gl(m_iLargeH);
+		T dSizeFullTileW = T(m_iTileW+m_iPadW)/T(m_iLargeW);
+		T dSizeFullTileH = T(m_iTileH+m_iPadH)/T(m_iLargeH);
 
-		t_real_gl dSizeTileW = t_real_gl(m_iTileW)/t_real_gl(m_iLargeW);
-		t_real_gl dSizeTileH = t_real_gl(m_iTileH)/t_real_gl(m_iLargeH);
+		T dSizeTileW = T(m_iTileW)/T(m_iLargeW);
+		T dSizeTileH = T(m_iTileH)/T(m_iLargeH);
 
-		t_real_gl dPosTileX = t_real_gl(offs.first/(m_iTileW+m_iPadW))*dSizeFullTileW;
-		t_real_gl dPosTileY = t_real_gl(offs.second/(m_iTileH+m_iPadH))*dSizeFullTileH;
+		T dPosTileX = T(offs.first/(m_iTileW+m_iPadW))*dSizeFullTileW;
+		T dPosTileY = T(offs.second/(m_iTileH+m_iPadH))*dSizeFullTileH;
 
 		glBegin(GL_QUADS);
 			//glColor4d(1., 1., 1., 1.);
-			glTexCoord2d(dPosTileX,            dPosTileY+dSizeTileH); glVertex2d(-dScX+dX, -dScY+dY);
-			glTexCoord2d(dPosTileX+dSizeTileW, dPosTileY+dSizeTileH); glVertex2d( dScX+dX, -dScY+dY);
-			glTexCoord2d(dPosTileX+dSizeTileW, dPosTileY);            glVertex2d( dScX+dX,  dScY+dY);
-			glTexCoord2d(dPosTileX,            dPosTileY);            glVertex2d(-dScX+dX,  dScY+dY);
+			gl_traits<T>::SetTextureCoord(dPosTileX, dPosTileY+dSizeTileH);
+			gl_traits<T>::SetVertex(-dScX+dX, -dScY+dY);
+
+			gl_traits<T>::SetTextureCoord(dPosTileX+dSizeTileW, dPosTileY+dSizeTileH);
+			gl_traits<T>::SetVertex( dScX+dX, -dScY+dY);
+
+			gl_traits<T>::SetTextureCoord(dPosTileX+dSizeTileW, dPosTileY);
+			gl_traits<T>::SetVertex( dScX+dX,  dScY+dY);
+
+			gl_traits<T>::SetTextureCoord(dPosTileX, dPosTileY);
+			gl_traits<T>::SetVertex(-dScX+dX,  dScY+dY);
 		glEnd();
 
 		dX += dXInc;
@@ -441,61 +454,23 @@ void GlFontMap::DrawText(t_real_gl _dX, t_real_gl _dY, const std::string& str, b
 }
 
 
-void GlFontMap::DrawText(t_real_gl dX, t_real_gl dY, t_real_gl dZ, 
-	const std::string& str, bool bCenter)
+template<class T>
+void GlFontMap<T>::DrawText(T dX, T dY, T dZ, const std::string& str, bool bCenter)
 {
 	if(!m_bOk) return;
 
-	t_real_gl dXProj, dYProj;
-	gl_proj_pt(dX, dY, dZ, dXProj, dYProj);
+	T dXProj, dYProj;
+	gl_proj_pt<t_mat4_gen<T>, t_vec4_gen<T>, T>(dX, dY, dZ, dXProj, dYProj);
 	DrawText(dXProj, dYProj, str, bCenter);
 }
 
 
-GlFontMap::~GlFontMap()
+template<class T>
+GlFontMap<T>::~GlFontMap()
 {
 	glDeleteTextures(GL_TEXTURE_2D, &m_tex);
 	m_tex = 0;
 }
 
-
-
-// -----------------------------------------------------------------------------
-
-/*#include <fontconfig/fontconfig.h>
-
-std::string FontMap::get_font_file(const std::string& strFind)
-{
-	if(!FcInit())
-	{
-		log_err("Cannot init fontconfig.");
-		return "";
-	}
-
-	FcPattern *pPattern = FcPatternCreate();
-	FcObjectSet* pSet = FcObjectSetBuild(FC_FILE, (void*)0);
-	FcFontSet* pFSet = FcFontList(FcConfigGetCurrent(), pPattern, pSet);
-
-	std::string strFile;
-	for(int i=0; i<pFSet->nfont; ++i)
-	{
-		FcChar8 *pcFile;
-		FcPatternGetString(pFSet->fonts[i], FC_FILE, 0, &pcFile);
-
-		strFile = (char*)pcFile;
-		FcStrFree(pcFile);
-
-		if(str_contains<std::string>(strFile, strFind, 0))
-			break;
-	}
-
-	FcObjectSetDestroy(pSet);
-	FcPatternDestroy(pPattern);
-	//FcFini();
-
-	return strFile;
-}*/
-
 }
-
 #endif
