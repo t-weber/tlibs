@@ -231,7 +231,10 @@ public:
 	{
 		const Plane<T>& plane1 = *this;
 
-		if(plane1.IsParallel(plane2, eps) || plane1.IsParallel(plane3, eps) || plane2.IsParallel(plane3, eps))
+		// det
+		const t_mat matNorms = row_matrix( { plane1.GetNorm(), plane2.GetNorm(), plane3.GetNorm() } );
+		const T detM = determinant(matNorms);
+		if(float_equal(detM, T(0), eps))
 			return false;
 
 		// direction vectors
@@ -239,14 +242,7 @@ public:
 		const t_vec vecDir23 = cross_3(plane2.GetNorm(), plane3.GetNorm());
 		const t_vec vecDir31 = cross_3(plane3.GetNorm(), plane1.GetNorm());
 
-		const T d1 = plane1.GetD();
-		const T d2 = plane2.GetD();
-		const T d3 = plane3.GetD();
-
-		const t_mat M = row_matrix( { plane1.GetNorm(), plane2.GetNorm(), plane3.GetNorm() } );
-		const T detM = determinant(M);
-
-		ptRet = (d1*vecDir23 + d2*vecDir31 + d3*vecDir12) / detM;
+		ptRet = (plane1.GetD()*vecDir23 + plane2.GetD()*vecDir31 + plane3.GetD()*vecDir12) / detM;
 		if(is_nan_or_inf(ptRet))
 			return false;
 		return true;
@@ -587,7 +583,7 @@ void sort_poly_verts_norm(t_cont<t_vec>& vecPoly, const t_vec& _vecNorm)
 
 	t_vec vec0 = vecPoly[0] - vecCentre;
 
-	sort(vecPoly.begin(), vecPoly.end(), 
+	std::stable_sort(vecPoly.begin(), vecPoly.end(),
 		[&vecCentre, &vec0, &vecNorm](const t_vec& vertex1, const t_vec& vertex2) -> bool
 		{
 			t_vec vec1 = vertex1 - vecCentre;

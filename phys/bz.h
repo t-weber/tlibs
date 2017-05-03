@@ -23,7 +23,7 @@ namespace tl {
  */
 template<class t_vec, class T = typename t_vec::value_type>
 static bool reduce_neighbours(
-	std::vector<t_vec>& vecNeighbours, const std::vector<t_vec>& vecNeighboursHKL,
+	std::vector<t_vec>& vecNeighbours, std::vector<t_vec>& vecNeighboursHKL,
 	const t_vec& vecCentralReflexHKL, T eps)
 {
 	if(!vecNeighboursHKL.size())
@@ -34,11 +34,22 @@ static bool reduce_neighbours(
 	if(vecvecNN.size() < 2)
 		return false;
 
+
+	// 1/A
 	auto vecNN1 = get_atoms_by_idx<t_vec, std::vector>(vecNeighbours, vecvecNN[0]);
 	auto vecNN2 = get_atoms_by_idx<t_vec, std::vector>(vecNeighbours, vecvecNN[1]);
 
 	vecNeighbours = std::move(vecNN1);
 	vecNeighbours.insert(vecNeighbours.end(), vecNN2.begin(), vecNN2.end());
+
+
+	// rlu
+	auto vecNN1HKL = get_atoms_by_idx<t_vec, std::vector>(vecNeighboursHKL, vecvecNN[0]);
+	auto vecNN2HKL = get_atoms_by_idx<t_vec, std::vector>(vecNeighboursHKL, vecvecNN[1]);
+
+	vecNeighboursHKL = std::move(vecNN1HKL);
+	vecNeighboursHKL.insert(vecNeighboursHKL.end(), vecNN2HKL.begin(), vecNN2HKL.end());
+
 
 	return vecNeighbours.size()!=0;
 }
@@ -95,6 +106,7 @@ class Brillouin3D
 			m_vecPolys.clear();
 			m_vecPlanes.clear();
 			m_bValid = 0;
+			m_bHasCentralPeak = 0;
 		}
 
 		bool IsValid() const { return m_bValid; }
@@ -136,8 +148,6 @@ class Brillouin3D
 				return;
 
 
-			//const T dMaxPlaneDist = ublas::norm_2(m_vecNeighbours[0] - m_vecCentralReflex);
-
 			// get middle perpendicular planes
 			for(const t_vec<T>& vecN : m_vecNeighbours)
 			{
@@ -149,15 +159,10 @@ class Brillouin3D
 				if(!line.GetMiddlePerp(planeperp))
 					continue;
 
-				// only consider planes that are closer that the nearest neighbour
-				//if(ublas::norm_2(planeperp.GetX0() - m_vecCentralReflex) < dMaxPlaneDist)
-				{
-					// let normals point outside
-					if(!planeperp.GetSide(m_vecCentralReflex))
-						planeperp.FlipNormal();
-
-					vecMiddlePerps.emplace_back(std::move(planeperp));
-				}
+				// let normals point outside
+				if(!planeperp.GetSide(m_vecCentralReflex))
+					planeperp.FlipNormal();
+				vecMiddlePerps.emplace_back(std::move(planeperp));
 			}
 
 
@@ -180,10 +185,6 @@ class Brillouin3D
 								[this, &vecVertex](const t_vec<T>& vec) -> bool
 								{ return vec_equal(vecVertex, vec, m_eps); }) != m_vecVertices.end())
 								continue;
-
-							/*// ignore vertices that are too far away
-							if(ublas::norm_2(vecVertex-m_vecCentralReflex) > dMaxPlaneDist)
-								continue;*/
 
 							m_vecVertices.emplace_back(std::move(vecVertex));
 						}
@@ -414,6 +415,7 @@ class Brillouin2D
 			m_vecNeighboursHKL.clear();
 			m_vecVertices.clear();
 			m_bValid = 0;
+			m_bHasCentralPeak = 0;
 		}
 
 		bool IsValid() const { return m_bValid; }
