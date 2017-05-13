@@ -31,6 +31,9 @@ template<> struct gl_traits<GLdouble>
 	static void GetProjMatrix(value_type *pdMat) { glGetDoublev(GL_PROJECTION_MATRIX, pdMat); }
 	static void GetModelMatrix(value_type *pdMat) { glGetDoublev(GL_MODELVIEW_MATRIX, pdMat); }
 
+	static void LoadMatrix(value_type* pdMat) { glLoadMatrixd(pdMat); }
+	static void MultMatrix(value_type* pdMat) { glMultMatrixd(pdMat); }
+
 	static void SetScale(value_type x, value_type y, value_type z) { glScaled(x, y, z); }
 	static void SetTranslate(value_type x, value_type y, value_type z) { glTranslated(x, y, z); }
 
@@ -64,6 +67,9 @@ template<> struct gl_traits<GLfloat>
 
 	static void GetProjMatrix(value_type *pdMat) { glGetFloatv(GL_PROJECTION_MATRIX, pdMat); }
 	static void GetModelMatrix(value_type *pdMat) { glGetFloatv(GL_MODELVIEW_MATRIX, pdMat); }
+
+	static void LoadMatrix(value_type* pdMat) { glLoadMatrixf(pdMat); }
+	static void MultMatrix(value_type* pdMat) { glMultMatrixf(pdMat); }
 
 	static void SetScale(value_type x, value_type y, value_type z) { glScalef(x, y, z); }
 	static void SetTranslate(value_type x, value_type y, value_type z) { glTranslatef(x, y, z); }

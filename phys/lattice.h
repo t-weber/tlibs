@@ -11,6 +11,7 @@
 #include "../math/linalg.h"
 #include "../math/quat.h"
 #include "../math/math.h"
+#include "../math/tensor.h"
 #include "neutrons.h"
 #include <ostream>
 
@@ -50,9 +51,14 @@ class Lattice
 
 		bool IsInited() const { return m_vecs[0].size()!=0; }
 
-		// Euler ZXZ rotation
+		/**
+		 * Euler ZXZ rotation
+		 */
 		void RotateEuler(T dPhi, T dTheta, T dPsi);
-		// Euler vecRecipZ vecRecipX vecRecipZ rotation
+
+		/**
+		 * Euler vecRecipZ vecRecipX vecRecipZ rotation
+		 */
 		void RotateEulerRecip(const t_vec& vecRecipX,
 			const t_vec& vecRecipY, const t_vec& vecRecipZ,
 			T dPhi, T dTheta, T dPsi);
@@ -74,7 +80,18 @@ class Lattice
 		T GetVol() const;
 
 		const t_vec& GetVec(std::size_t i) const { return m_vecs[i]; }
-		t_mat GetMetric() const;
+
+		/**
+		 * covariant / contravariant base matrix
+		 */
+		t_mat GetBaseMatrixCov() const;
+		t_mat GetBaseMatrixCont() const;
+
+		/**
+		 * covariant / contravariant metric
+		 */
+		t_mat GetMetricCov() const;
+		t_mat GetMetricCont() const;
 
 		bool IsCubic() const;
 };
@@ -182,7 +199,7 @@ T Lattice<T>::GetVol() const
 	return get_volume(column_matrix({m_vecs[0], m_vecs[1], m_vecs[2]}));
 }
 
-/*
+/**
  (x)   (v0_x v1_x v2_x) (h)
  (y) = (v0_y v1_y v2_y) (k)
  (z)   (v0_z v1_z v2_z) (l)
@@ -193,7 +210,7 @@ typename Lattice<T>::t_vec Lattice<T>::GetPos(T h, T k, T l) const
 	return h*m_vecs[0] + k*m_vecs[1] + l*m_vecs[2];
 }
 
-/*
+/**
  (h)   (v0_x v1_x v2_x)^(-1) (x)
  (k) = (v0_y v1_y v2_y)      (y)
  (l)   (v0_z v1_z v2_z)      (z)
@@ -213,7 +230,7 @@ typename Lattice<T>::t_vec Lattice<T>::GetHKL(const t_vec& vec) const
 template<typename T>
 Lattice<T> Lattice<T>::GetRecip() const
 {
-	const std::size_t iDim=3;
+	const std::size_t iDim = 3;
 	t_mat matReal = column_matrix({m_vecs[0], m_vecs[1], m_vecs[2]});
 	if(matReal.size1()!=matReal.size2() || matReal.size1()!=iDim)
 		throw Err("Invalid real lattice matrix.");
@@ -238,10 +255,49 @@ Lattice<T> Lattice<T>::GetAligned() const
 
 
 template<typename T>
-ublas::matrix<T> Lattice<T>::GetMetric() const
+typename Lattice<T>::t_mat Lattice<T>::GetBaseMatrixCov() const
 {
-	return column_matrix({m_vecs[0], m_vecs[1], m_vecs[2]});
+	t_mat matBase = column_matrix({m_vecs[0], m_vecs[1], m_vecs[2]});
+	set_eps_0(matBase);
+	return matBase;
 }
+
+template<typename T>
+typename Lattice<T>::t_mat Lattice<T>::GetBaseMatrixCont() const
+{
+	t_mat matCov = GetBaseMatrixCov();
+	t_mat matGCont = GetMetricCont() /** T(2)*get_pi<T>()*/;
+
+	t_mat matBase = ublas::prod(matCov, matGCont);
+	//matBase = ublas::trans(matBase);
+
+	set_eps_0(matBase);
+	return matBase;
+}
+
+
+template<typename T>
+typename Lattice<T>::t_mat Lattice<T>::GetMetricCov() const
+{
+	t_mat matG = make_metric_cov({ m_vecs[0], m_vecs[1], m_vecs[2] });
+	set_eps_0(matG);
+	return matG;
+}
+
+template<typename T>
+typename Lattice<T>::t_mat Lattice<T>::GetMetricCont() const
+{
+	t_mat matGCov = GetMetricCov();
+
+	t_mat matGCont;
+	inverse(matGCov, matGCont);
+	//matGCont *= T(2)*get_pi<T>();
+
+	set_eps_0(matGCont);
+	return matGCont;
+}
+
+
 
 template<typename T>
 bool Lattice<T>::IsCubic() const
@@ -271,9 +327,9 @@ ublas::matrix<T> get_B(const Lattice<T>& lattice, bool bIsRealLattice=1)
 
 	t_mat matB;
 	if(bIsRealLattice)
-		matB = lattice.GetRecip()/*.GetAligned()*/.GetMetric();
+		matB = lattice.GetRecip()/*.GetAligned()*/.GetBaseMatrixCov();
 	else
-		matB = lattice/*.GetAligned()*/.GetMetric();
+		matB = lattice/*.GetAligned()*/.GetBaseMatrixCov();
 
 	return matB;
 }

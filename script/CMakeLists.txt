@@ -1,3 +1,10 @@
+#
+# Hermelin script
+# @author Tobias Weber <tobias.weber@tum.de>
+# @date 2013-2017
+# @license GPLv2 or GPLv3
+#
+
 project (hermelin)
 cmake_minimum_required(VERSION 3.0)
 

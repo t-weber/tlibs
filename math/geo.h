@@ -390,7 +390,7 @@ public:
 		matDenom(3,0) = xp0[2];	matDenom(3,1) = xp1[2];	matDenom(3,2) = xp2[2];	matDenom(3,3) = dirl[2];
 
 		T denom = determinant(matDenom);
-		if(tl::float_equal(denom, 0., eps))
+		if(tl::float_equal<T>(denom, 0., eps))
 			return false;
 
 		t_mat matNum(N+1,N+1);

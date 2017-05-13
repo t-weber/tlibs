@@ -349,6 +349,56 @@ typename t_vec::value_type chi2(const t_func& func,
 }
 
 
+/**
+ * chi^2 which doesn't use an x value, but an index instead: y[idx] - func(idx)
+ */
+template<class T, class t_func, class t_iter_dat=T*>
+T chi2_idx(const t_func& func, std::size_t N, const t_iter_dat y, const t_iter_dat dy)
+{
+	using t_dat = typename std::remove_pointer<t_iter_dat>::type;
+	T tchi2 = T(0);
+
+	for(std::size_t i=0; i<N; ++i)
+	{
+		T td = T(y[i]) - func(i);
+		T tdy = dy ? T(dy[i]) : T(0.1*td);	// 10% error if none given
+
+		if(std::abs(tdy) < std::numeric_limits<t_dat>::min())
+			tdy = std::numeric_limits<t_dat>::min();
+
+		T tchi = T(td) / T(tdy);
+		tchi2 += tchi*tchi;
+	}
+
+	return tchi2;
+}
+
+
+/**
+ * direct chi^2 calculation with a model array instead of a model function
+ */
+template<class T, class t_iter_dat=T*>
+T chi2_direct(std::size_t N, const t_iter_dat func_y, const t_iter_dat y, const t_iter_dat dy)
+{
+	using t_dat = typename std::remove_pointer<t_iter_dat>::type;
+	T tchi2 = T(0);
+
+	for(std::size_t i=0; i<N; ++i)
+	{
+		T td = T(y[i]) - T(func_y[i]);
+		T tdy = dy ? T(dy[i]) : T(0.1*td);	// 10% error if none given
+
+		if(std::abs(tdy) < std::numeric_limits<t_dat>::min())
+			tdy = std::numeric_limits<t_dat>::min();
+
+		T tchi = T(td) / T(tdy);
+		tchi2 += tchi*tchi;
+	}
+
+	return tchi2;
+}
+
+
 // -----------------------------------------------------------------------------
 
 

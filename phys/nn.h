@@ -114,6 +114,8 @@ std::vector<ublas::vector<T>> get_neighbour_atoms(UCType crys, int iDist=0, T a=
 {
 	std::vector<ublas::vector<T>> vecAtoms;
 
+	// generated with Takin: one atom at (000) and sc space group e.g. P-43m,
+	//                       "Real Space" -> "Information..." -> "Unit Cell"
 	if(crys == UCType::SIMPLE)
 	{
 		if(iDist == 0)
@@ -139,6 +141,8 @@ std::vector<ublas::vector<T>> get_neighbour_atoms(UCType crys, int iDist=0, T a=
 				make_vec({0., -1., 1.}),
 				make_vec({0., -1., -1.}) };
 	}
+	// generated with Takin: one atom at (000) and fcc space group e.g. F-43m
+	//                       "Real Space" -> "Information..." -> "Unit Cell"
 	else if(crys == UCType::FCC)
 	{
 		if(iDist == 0)
@@ -164,6 +168,8 @@ std::vector<ublas::vector<T>> get_neighbour_atoms(UCType crys, int iDist=0, T a=
 				make_vec({0., -1., 0.}),
 				make_vec({0., 0., -1.}) };
 	}
+	// generated with Takin: one atom at (000) and bcc space group e.g. I-43m
+	//                       "Real Space" -> "Information..." -> "Unit Cell"
 	else if(crys == UCType::BCC)
 	{
 		if(iDist == 0)

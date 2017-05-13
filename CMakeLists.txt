@@ -18,7 +18,6 @@ set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}")
 
 find_package(Boost REQUIRED COMPONENTS iostreams system filesystem regex REQUIRED)
 find_package(Threads REQUIRED)
-find_package(Qt4 REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(Minuit2 REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -44,10 +43,9 @@ add_definitions(${Boost_CXX_FLAGS})
 
 include_directories("${PROJECT_SOURCE_DIR}" ".")
 include_directories("${Boost_INCLUDE_DIRS}/..")
-include_directories("${QT_INCLUDE_DIR}")
 include_directories("${FREETYPE_INCLUDE_DIRS}")
 include_directories("${Minuit2_INCLUDE_DIRS}")
-include_directories("${OPENGL_INCLUDE_DIR}")
+include_directories("${OPENGL_INCLUDE_DIR}" "${OPENGL_INCLUDE_DIR}/GL" "${OPENGL_INCLUDE_DIR}/OpenGL")
 
 
 add_definitions(-std=c++11)
@@ -59,7 +57,7 @@ add_definitions(-std=c++11)
 # build
 # -----------------------------------------------------------------------------
 add_library(tlibs SHARED
-	file/tmp.cpp  file/loadinstr.cpp  file/recent.cpp  file/x3d.cpp
+	file/tmp.cpp  file/loadinstr.cpp  file/x3d.cpp
 	log/log.cpp log/debug.cpp
 	helper/flags.cpp
 	math/fourier.cpp  math/linalg2.cpp  math/rand.cpp
@@ -71,8 +69,7 @@ add_library(tlibs SHARED
 
 
 target_link_libraries(tlibs ${Boost_LIBRARIES} Threads::Threads
-	Qt4::QtCore Qt4::QtGui #Qt4::QtOpenGL ${OPENGL_LIBRARIES}
-	${FREETYPE_LIBRARY} ${Minuit2_LIBRARIES}
+	${OPENGL_LIBRARIES} ${FREETYPE_LIBRARY} ${Minuit2_LIBRARIES}
 )
 
 
@@ -104,6 +101,7 @@ file(GLOB tlibs_time  ${PROJECT_SOURCE_DIR}/time/*.h)
 file(GLOB tlibs_cl  ${PROJECT_SOURCE_DIR}/cl/*.h)
 file(GLOB tlibs_log  ${PROJECT_SOURCE_DIR}/log/*.h)
 file(GLOB tlibs_fit  ${PROJECT_SOURCE_DIR}/fit/*.h)
+file(GLOB tlibs_ext  ${PROJECT_SOURCE_DIR}/ext/*.h)
 
 install(FILES ${tlibs_rt}  DESTINATION include/tlibs)
 install(FILES ${tlibs_file}  DESTINATION include/tlibs/file)
@@ -117,6 +115,7 @@ install(FILES ${tlibs_time}  DESTINATION include/tlibs/time)
 install(FILES ${tlibs_cl}  DESTINATION include/tlibs/cl)
 install(FILES ${tlibs_log}  DESTINATION include/tlibs/log)
 install(FILES ${tlibs_fit}  DESTINATION include/tlibs/fit)
+install(FILES ${tlibs_ext}  DESTINATION include/tlibs/ext)
 
 install(FILES ${PROJECT_SOURCE_DIR}/FindMinuit2.cmake DESTINATION share/tlibs)
 

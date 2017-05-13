@@ -56,6 +56,25 @@ t_vec make_vec(t_lst<typename t_vec::value_type>&& lst)
 }
 
 /**
+ * creates a vector
+ */
+template<class t_vec = ublas::vector<double>,
+	template<class...> class t_lst = std::initializer_list>
+t_vec make_vec(const t_lst<typename t_vec::value_type>& lst)
+{
+	using T = typename t_vec::value_type;
+	using t_iter = typename t_lst<T>::const_iterator;
+
+	t_vec vec(lst.size());
+
+	std::size_t i=0;
+	for(t_iter iter=lst.begin(); iter!=lst.end(); ++i, ++iter)
+		vec[i] = *iter;
+
+	return vec;
+}
+
+/**
  * creates a matrix
  */
 template<class t_mat = ublas::matrix<double>,
@@ -667,11 +686,7 @@ t_mat perspective_matrix(T yfov, T asp, T n, T f)
 
 // -----------------------------------------------------------------------------
 template<typename T, class FKT, const int iDim=get_type_dim<T>::value>
-struct is_nan_or_inf_impl
-{
-	is_nan_or_inf_impl(const FKT&) {}
-	bool operator()(T) const { throw Err("No implementation of is_nan_or_inf!"); }
-};
+struct is_nan_or_inf_impl {};
 
 template<typename real_type, class FKT>
 struct is_nan_or_inf_impl<real_type, FKT, 0>	// scalar impl.
@@ -917,7 +932,7 @@ bool solve_linear(const ublas::matrix<T>& M,
 			//std::cout << "det: " << determinant(Rsub) << std::endl;
 
 			T det = determinant<ublas::matrix<T>>(Rsub);
-			if(!float_equal(det, 0.))
+			if(!float_equal<T>(det, 0.))
 			{
 				bFoundNonSingular = 1;
 				vecDelCols.push_back(iCol);
@@ -1269,16 +1284,18 @@ typename vec_type::value_type vec_angle(const vec_type& vec)
 
 
 // -----------------------------------------------------------------------------
+/**
+ * set values lower than epsilon to zero
+ */
 template<typename T> void set_eps_0(T& d, underlying_value_type_t<T> eps=-1.);
+template<typename T, LinalgType ty=get_linalg_type<T>::value> struct set_eps_0_impl {};
 
-template<typename T, bool bScalar=std::is_scalar<T>::value>
-struct set_eps_0_impl
-{
-	void operator()(T&) const { throw Err("No implementation of set_eps_0!"); }
-};
-
+/**
+ * set values lower than epsilon to zero
+ * scalar version
+ */
 template<typename real_type>
-struct set_eps_0_impl<real_type, 1>
+struct set_eps_0_impl<real_type, LinalgType::REAL>
 {
 	real_type eps = get_epsilon<real_type>();
 
@@ -1289,8 +1306,12 @@ struct set_eps_0_impl<real_type, 1>
 	}
 };
 
+/**
+ * set values lower than epsilon to zero
+ * vector version
+ */
 template<typename vec_type>
-struct set_eps_0_impl<vec_type, 0>
+struct set_eps_0_impl<vec_type, LinalgType::VECTOR>
 {
 	using real_type = typename vec_type::value_type;
 	real_type eps = get_epsilon<real_type>();
@@ -1302,15 +1323,34 @@ struct set_eps_0_impl<vec_type, 0>
 	}
 };
 
+/**
+ * set values lower than epsilon to zero
+ * matrix version
+ */
+template<typename mat_type>
+struct set_eps_0_impl<mat_type, LinalgType::MATRIX>
+{
+	using real_type = typename mat_type::value_type;
+	real_type eps = get_epsilon<real_type>();
+
+	void operator()(mat_type& mat) const
+	{
+		for(std::size_t i=0; i<mat.size1(); ++i)
+			for(std::size_t j=0; j<mat.size2(); ++j)
+				set_eps_0<real_type>(mat(i,j), eps);
+	}
+};
+
 template<typename T>
 void set_eps_0(T& d, underlying_value_type_t<T> eps)
 {
-	set_eps_0_impl<T, std::is_scalar<T>::value> op;
+	set_eps_0_impl<T, get_linalg_type<T>::value> op;
 	if(eps >= underlying_value_type_t<T>(0))
 		op.eps = eps;
 	op(d);
 }
 // -----------------------------------------------------------------------------
+
 
 template<typename t_vec, typename T = typename t_vec::value_type>
 bool vec_is_collinear(const t_vec& _vec1, const t_vec& _vec2, T eps = get_epsilon<T>())
@@ -1361,10 +1401,7 @@ typename vec_type::value_type vec_angle(const vec_type& vec0,
 
 
 template<class T, LinalgType ty=get_linalg_type<T>::value>
-struct vec_angle_unsigned_impl
-{
-	void operator()(const T&, const T&) const { throw Err("No implementation of vec_angle_unsigned!"); }
-};
+struct vec_angle_unsigned_impl {};
 
 /**
  * unsigned angle between two vectors
@@ -1432,31 +1469,6 @@ T slerp(const T& q1, const T& q2, typename T::value_type t)
 // --------------------------------------------------------------------------------
 
 
-
-/**
- * tensor product
- * see e.g.: (Arfken 2013), p. 109
- */
-template<class t_mat = ublas::matrix<double>>
-t_mat tensor_prod(const t_mat& mat1, const t_mat& mat2)
-{
-	t_mat mat(mat1.size1()*mat2.size1(), mat1.size2()*mat2.size2());
-
-	for(std::size_t i=0; i<mat1.size1(); ++i)
-	{
-		for(std::size_t j=0; j<mat1.size2(); ++j)
-		{
-			t_mat matElem = mat1(i,j)*mat2;
-			submatrix_copy(mat, matElem,
-				i*mat2.size1(), j*mat2.size2());
-		}
-	}
-	return mat;
-}
-
-
-
-// --------------------------------------------------------------------------------
 }
 
 #include <boost/math/common_factor_rt.hpp>
@@ -1673,16 +1685,7 @@ bool is_symmetric(const t_mat& mat, t_real eps = get_epsilon<t_real>())
 
 
 // -----------------------------------------------------------------------------
-template<class T, LinalgType ty=get_linalg_type<T>::value>
-struct apply_fkt_impl
-{
-	using value_type = underlying_value_type_t<T>;
-
-	T operator()(T, const std::function<value_type(value_type)>& fkt) const
-	{
-		throw Err("No implementation of apply_fkt!");
-	}
-};
+template<class T, LinalgType ty=get_linalg_type<T>::value> struct apply_fkt_impl {};
 
 template<class T>
 struct apply_fkt_impl<T, LinalgType::REAL>
@@ -1745,16 +1748,7 @@ inline T apply_fkt(const T& t, t_val(*pfkt)(t_val))
 
 
 template<class T, LinalgType ty=get_linalg_type<T>::value>
-struct get_minmax_impl
-{
-	using value_type = underlying_value_type_t<T>;
-
-	std::pair<value_type, value_type>
-	operator()(T) const
-	{
-		throw Err("No implementation of get_minmax!");
-	}
-};
+struct get_minmax_impl {};
 
 template<class T>
 struct get_minmax_impl<T, LinalgType::REAL>

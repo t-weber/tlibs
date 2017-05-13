@@ -208,7 +208,7 @@ std::vector<T> quadratic_solve(T a, T b, T c)
 {
 	std::vector<T> vec;
 
-	if(float_equal(a, 0.))
+	if(float_equal<T>(a, T(0)))
 	{
 		// b*x + c = 0
 		T t = -c/b;
@@ -218,17 +218,17 @@ std::vector<T> quadratic_solve(T a, T b, T c)
 	else
 	{
 		T D = b*b - 4.*a*c;
-		if(float_equal(D, 0.))
+		if(float_equal<T>(D, T(0)))
 		{
-			T t = -b/(2.*a);
+			T t = -b/(T(2)*a);
 			if(!std::isnan(t) && !std::isinf(t))
 				vec.push_back(t);
 		}
-		else if(D > 0.)
+		else if(D > T(0))
 		{
 			T r = std::sqrt(D);
-			T t0 = (-b + r) / (2.*a);
-			T t1 = (-b - r) / (2.*a);
+			T t0 = (-b + r) / (T(2)*a);
+			T t1 = (-b - r) / (T(2)*a);
 			if(!std::isnan(t0) && !std::isinf(t0)) vec.push_back(t0);
 			if(!std::isnan(t1) && !std::isinf(t1)) vec.push_back(t1);
 		}
