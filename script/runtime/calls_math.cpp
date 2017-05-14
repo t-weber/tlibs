@@ -12,6 +12,7 @@
 #include "math/fourier.h"
 #include "math/linalg.h"
 #include "math/linalg2.h"
+#include "math/tensor.h"
 #include "math/rand.h"
 #include "math/stat.h"
 #include "math/distr.h"
