@@ -118,7 +118,7 @@ static Symbol* task_proc(NodeFunction* pFunc, ParseInfo* pinfo, std::vector<Symb
 	if(pTable) delete pTable;
 	if(pvecSyms) delete_symbols(pvecSyms);
 	//if(pThreadFunc) delete pThreadFunc;
-	if(pruninfo2) delete pruninfo2;
+	delete pruninfo2;
 
 	return pRet;
 }

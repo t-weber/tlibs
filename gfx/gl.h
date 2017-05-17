@@ -5,8 +5,8 @@
  * @license GPLv2 or GPLv3
  */
 
-#ifndef __GFX_STUFF_H__
-#define __GFX_STUFF_H__
+#ifndef __TLIBS_GL_STUFF_H__
+#define __TLIBS_GL_STUFF_H__
 
 #include <string>
 #include <ostream>
@@ -39,6 +39,7 @@ template<> struct gl_traits<GLdouble>
 
 	static void SetVertex(value_type x, value_type y) { glVertex2d(x, y); }
 	static void SetVertex(value_type x, value_type y, value_type z) { glVertex3d(x, y, z); }
+	static void SetVertex(const value_type *px) { glVertex3dv(px); }
 	static void SetNorm(value_type x, value_type y, value_type z) { glNormal3d(x, y, z); }
 	static void SetNorm(const value_type* px) { glNormal3dv(px); }
 	static void SetTextureCoord(value_type u, value_type v) { glTexCoord2d(u, v); }
@@ -76,6 +77,7 @@ template<> struct gl_traits<GLfloat>
 
 	static void SetVertex(value_type x, value_type y) { glVertex2f(x, y); }
 	static void SetVertex(value_type x, value_type y, value_type z) { glVertex3f(x, y, z); }
+	static void SetVertex(const value_type *px) { glVertex3fv(px); }
 	static void SetNorm(value_type x, value_type y, value_type z) { glNormal3f(x, y, z); }
 	static void SetNorm(const value_type* px) { glNormal3fv(px); }
 	static void SetTextureCoord(value_type u, value_type v) { glTexCoord2f(u, v); }
@@ -141,6 +143,9 @@ t_mat from_gl_array(const typename t_mat::value_type* glmat)
 }
 
 
+/**
+ * project a point using given projection and modelview matrices
+ */
 template<typename t_mat = t_mat4_gen<GLdouble>, typename t_vec = t_vec4_gen<GLdouble>,
 	typename T = typename t_mat::value_type>
 void proj_pt(T dX, T dY, T dZ, const t_mat& matProj, const t_mat& matMV,
@@ -154,6 +159,10 @@ void proj_pt(T dX, T dY, T dZ, const t_mat& matProj, const t_mat& matMV,
 	dYProj = vec[1];
 }
 
+
+/**
+ * project a point using current projection and modelview matrices
+ */
 template<typename t_mat = t_mat4_gen<GLdouble>, typename t_vec = t_vec4_gen<GLdouble>,
 	typename T = typename t_mat::value_type>
 void gl_proj_pt(T dX, T dY, T dZ, T& dXProj, T& dYProj)
@@ -169,6 +178,9 @@ void gl_proj_pt(T dX, T dY, T dZ, T& dXProj, T& dYProj)
 }
 
 
+/**
+ * multiply a point with the inverse modelview matrix
+ */
 template<typename t_mat = t_mat4_gen<GLdouble>, typename t_vec = t_vec4_gen<GLdouble>,
 	typename T = typename t_mat::value_type>
 void gl_mv_pt(const t_vec& vec, t_vec& vecOut)
@@ -198,6 +210,7 @@ T gl_dist_mv()
 	return dDist;
 }
 
+
 /**
  * size of projected sphere using fov angle
  */
@@ -205,7 +218,7 @@ template<typename t_mat = t_mat4_gen<GLdouble>, typename t_vec = t_vec4_gen<GLdo
 	typename T = typename t_mat::value_type>
 T gl_proj_sphere_size(T dFOV, T dRadius)
 {
-	return 2.*dRadius / (2.*gl_dist_mv<t_mat, t_vec, T>() * std::tan(0.5*dFOV));
+	return T(2)*dRadius / (T(2)*gl_dist_mv<t_mat, t_vec, T>() * std::tan(T(0.5)*dFOV));
 }
 
 /**
@@ -244,8 +257,8 @@ Line<T> screen_ray(T dX, T dY, const t_mat& matProj, const t_mat& matMV)
 	t_mat matInv;
 	inverse(mat, matInv);
 
-	t_vec vecNear = make_vec<t_vec>({dX, dY, -1., 1.});
-	t_vec vecFar = make_vec<t_vec>({dX, dY, 1., 1.});
+	t_vec vecNear = make_vec<t_vec>({dX, dY, T(-1.), T(1.)});
+	t_vec vecFar = make_vec<t_vec>({dX, dY, T(1.), T(1.)});
 
 	vecNear = ublas::prod(matInv, vecNear);
 	vecFar = ublas::prod(matInv, vecFar);
@@ -259,6 +272,11 @@ Line<T> screen_ray(T dX, T dY, const t_mat& matProj, const t_mat& matMV)
 	return line;
 }
 
+
+/**
+ * ray through screen coordinates (dX, dY) using current proj & MV matrices
+ * similar to: https://www.opengl.org/sdk/docs/man2/xhtml/gluUnProject.xml
+ */
 template<typename t_mat = t_mat4_gen<GLdouble>, typename t_vec = t_vec4_gen<GLdouble>,
 	typename T = typename t_mat::value_type>
 Line<T> gl_screen_ray(T dX, T dY)
@@ -276,6 +294,9 @@ Line<T> gl_screen_ray(T dX, T dY)
 // --------------------------------------------------------------------------------
 
 
+/**
+ * simple camera class
+ */
 template<typename t_mat = ublas::matrix<GLdouble>, typename t_vec = ublas::vector<GLdouble>,
 	typename T = typename t_mat::value_type>
 class Cam
@@ -353,98 +374,6 @@ public:
 };
 
 // --------------------------------------------------------------------------------
-}
-
-
-/*
- * Freetype rendering under OpenGL, inspired by:
- * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
- * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_02
- */
-#define DEF_FONT "/usr/share/fonts/dejavu/DejaVuSansMono.ttf"
-#define DEF_FONT_SIZE 12
-
-#include <ft2build.h>
-#include FT_FREETYPE_H
-
-namespace tl {
-class FontMap
-{
-	protected:
-		bool m_bOk = 0;
-		FT_Library m_ftLib = 0;
-		FT_Face m_ftFace = 0;
-
-		int m_iCharsPerLine=0, m_iLines=0;
-		int m_iTileH=0, m_iTileW=0;
-		int m_iPadH=DEF_FONT_SIZE/4, m_iPadW=DEF_FONT_SIZE/4;
-		int m_iLargeW=0, m_iLargeH=0;
-		unsigned char *m_pcLarge = nullptr;
-
-		static const std::string m_strCharset;
-		using t_offsmap = std::unordered_map<
-			typename std::string::value_type,
-			std::pair<int, int>>;
-		t_offsmap m_mapOffs;
-
-	protected:
-		void UnloadFont();
-
-	static void draw_tile(unsigned char* pcBuf,
-		unsigned int iW, unsigned int iH,
-		unsigned int iTileW, unsigned int iTileH,
-		unsigned int iPosX, unsigned int iPosY,
-		const unsigned char* pcGlyph,
-		unsigned int iGlyphXOffs, unsigned int iGlyphYOffs,
-		unsigned int iGlyphW, unsigned int iGlyphH);
-
-	public:
-		FontMap(const char* pcFont/*=DEF_FONT*/, int iSize/*=DEF_FONT_SIZE*/);
-		FontMap();
-		virtual ~FontMap();
-
-		bool LoadFont(const char* pcFont, int iSize);
-		bool LoadFont(FT_Face ftFace, int iSize);
-
-		void dump(std::ostream& ostr) const;
-		void dump(std::ostream& ostr, const std::pair<int,int>& pair) const;
-		virtual bool IsOk() const { return m_bOk; }
-
-		const unsigned char* GetBuffer() const { return m_pcLarge; }
-		std::pair<int, int> GetOffset(char ch) const;
-
-		//static std::string get_font_file(const std::string& strFind);
-};
-
-
-template<class T = GLdouble>
-class GlFontMap : public FontMap
-{
-	protected:
-		bool m_bOk = 0;
-		GLuint m_tex = 0;
-		T m_dScale = 0.01;
-
-	protected:
-		bool CreateFontTexture();
-
-	public:
-		GlFontMap() = delete;
-		GlFontMap(const char* pcFont=DEF_FONT, int iSize=DEF_FONT_SIZE);
-		GlFontMap(FT_Face ftFace, int iSize=DEF_FONT_SIZE);
-		virtual ~GlFontMap();
-
-		virtual bool IsOk() const override { return m_bOk && FontMap::IsOk(); }
-
-		void BindTexture();
-		void DrawText(T dX, T dY, const std::string& str, bool bCenter=1);
-		void DrawText(T dX, T dY, T dZ, const std::string& str, bool bCenter=1);
-
-		void SetScale(T dScale) { m_dScale = dScale; }
-};
-
-// --------------------------------------------------------------------------------
-
 }
 
 //

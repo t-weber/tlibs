@@ -489,6 +489,10 @@ matrix_type rotation_matrix_3d_z(typename matrix_type::value_type angle)
 		{0,  0, 1}});
 }
 
+
+/**
+ * cross-product in matrix form
+ */
 template<class matrix_type = ublas::matrix<double>,
 	class vector_type = ublas::vector<typename matrix_type::value_type>>
 matrix_type skew(const vector_type& vec)
@@ -496,9 +500,9 @@ matrix_type skew(const vector_type& vec)
 	if(vec.size() == 3)
 	{
 		return make_mat<matrix_type>
-		({	{       0, -vec[2],  vec[1]},
-			{  vec[2],       0, -vec[0]},
-			{ -vec[1],  vec[0],       0}});
+		({	{       0, -vec[2],  vec[1] },
+			{  vec[2],       0, -vec[0] },
+			{ -vec[1],  vec[0],       0 }});
 	}
 	else
 		throw Err("Skew only defined for three dimensions.");
@@ -584,6 +588,7 @@ bool is_translation_matrix(const t_mat& mat)
 
 /**
  * Euler-Rodrigues formula
+ * see e.g.: https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
  */
 template<class mat_type=ublas::matrix<double>,
 	class vec_type=ublas::vector<typename mat_type::value_type>,
@@ -593,7 +598,7 @@ mat_type rotation_matrix(const vec_type& _vec, T angle)
 	const vec_type vec = _vec/ublas::norm_2(_vec);
 
 	T s, c;
-	if(angle==0.)
+	if(angle == T(0))
 	{
 		s = T(0);
 		c = T(1);
@@ -608,6 +613,7 @@ mat_type rotation_matrix(const vec_type& _vec, T angle)
 		c * unit_matrix(vec.size()) +
 		s * skew(vec);
 }
+
 
 template<class matrix_type=ublas::matrix<double>>
 typename matrix_type::value_type trace(const matrix_type& mat)
@@ -627,6 +633,7 @@ typename matrix_type::value_type trace(const matrix_type& mat)
 /**
  * parallel or perspectivic projection matrix
  * see: https://www.opengl.org/sdk/docs/man2/xhtml/glOrtho.xml
+ * see: https://www.opengl.org/sdk/docs/man2/xhtml/gluPerspective.xml
  */
 template<class t_mat = ublas::matrix<double, ublas::row_major, ublas::bounded_array<double,4*4>>,
 	class T = typename t_mat::value_type>
@@ -643,13 +650,13 @@ t_mat proj_matrix(T l, T r, T b, T t, T n, T f, bool bParallel)
 
 	if(bParallel)	// parallel
 	{
-		matProj(2,2) = T(2)*f*n/(n-f);
-		matProj(2,3) = (n+f)/(n-f);
+		matProj(2,2) = T(2)*f*n / (n-f);
+		matProj(2,3) = (n+f) / (n-f);
 	}
 	else			// perspectivic
 	{
-		matProj(2,2) = (n+f)/(n-f);
-		matProj(2,3) = T(2)*f*n/(n-f);
+		matProj(2,2) = (n+f) / (n-f);
+		matProj(2,3) = T(2)*f*n / (n-f);
 		matProj(3,2) = T(-1);
 		matProj(3,3) = T(0);
 	}
@@ -1458,7 +1465,7 @@ T slerp(const T& q1, const T& q2, typename T::value_type t)
 
 	REAL angle = vec_angle_unsigned<T>(q1, q2);
 
-	T q = std::sin((1.-t)*angle)/std::sin(angle) * q1 +
+	T q = std::sin((REAL(1)-t)*angle)/std::sin(angle) * q1 +
 		std::sin(t*angle)/std::sin(angle) * q2;
 
 	return q;
@@ -1518,7 +1525,7 @@ template<class t_mat = ublas::matrix<double>,
 	// projection of "pt" onto (normalised) vector "norm":
 	// proj = (norm^t * pt) * norm
 	// proj = (norm * norm^t) * pt
-	// "Lotfußpunkt" = pt - proj
+	// "Lotfusspunkt" = pt - proj
 	// mirror_point = pt - 2*proj
 	t_mat mat = -T(2) * ublas::outer_prod(vecNorm, vecNorm);
 	mat /= ublas::inner_prod(vecNorm, vecNorm);
@@ -2022,7 +2029,28 @@ void sort_eigenvecs(std::vector<ublas::vector<T>>& evecs,
 
 // --------------------------------------------------------------------------------
 
+/**
+ * project vec1 onto vec2
+ * proj_op = |vec2><vec2¦/ len(vec2)^2,  len(vec2) = sqrt(<vec2|vec2>)
+ * proj = proj_op * vec1 = |vec2> * <vec2|vec1> / <vec2|vec2>
+ */
+template<typename t_vec = ublas::vector<double>>
+t_vec proj_vec(t_vec vec1, t_vec vec2)
+{
+	using T = typename t_vec::value_type;
 
+	T tnum = ublas::inner_prod(vec1, vec2);
+	T tden = ublas::inner_prod(vec2, vec2);
+
+	t_vec vecProj = tnum/tden * vec2;
+	return vecProj;
+}
+
+
+/**
+ * Gram-Schmidt orthogonalisation of basis vectors
+ * see e.g.: https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
+ */
 template<typename t_vec /*= ublas::vector<double>*/,
 	typename T /*= typename t_vec::value_type*/ >
 std::vector<t_vec> gram_schmidt(const std::vector<t_vec>& vecs, bool bNorm/*=1*/)
@@ -2032,24 +2060,26 @@ std::vector<t_vec> gram_schmidt(const std::vector<t_vec>& vecs, bool bNorm/*=1*/
 		return vecsOut;
 
 	vecsOut.resize(vecs.size());
+
+	// iterate through all basis vectors i
 	for(std::size_t i=0; i<vecs.size(); ++i)
 	{
 		vecsOut[i] = vecs[i];
-		for(std::size_t j=0; j<i; ++j)
-		{
-			T tnum = ublas::inner_prod(vecs[i], vecsOut[j]);
-			T tden = ublas::inner_prod(vecsOut[j], vecsOut[j]);
 
-			vecsOut[i] -= tnum/tden * vecsOut[j];
-		}
+		// iterate through all previous basis vectors j<i
+		// and remove projected contributions from i vectors
+		for(std::size_t j=0; j<i; ++j)
+			vecsOut[i] -= proj_vec<t_vec>(vecs[i], vecsOut[j]);
 	}
 
+	// normalise basis?
 	if(bNorm)
 		for(t_vec& vec : vecsOut)
 			vec /= ublas::norm_2(vec);
 
 	return vecsOut;
 }
+
 
 template<typename t_vec = ublas::vector<double>,
 	typename T = typename t_vec::value_type>

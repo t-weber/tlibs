@@ -58,7 +58,7 @@ struct Token
 
 	unsigned int iLine;
 
-	Token() : type(LEX_TOKEN_INVALID), cOp(0), dVal(0), iLine(0)
+	Token() : type(LEX_TOKEN_INVALID), cOp(0), iVal(0), dVal(0), iLine(0)
 	{}
 };
 

@@ -90,9 +90,9 @@ quat_type rot3_to_quat(const mat_type& rot)
 	}
 	else
 	{
-		for(std::size_t iComp=0; iComp<3; ++iComp)			// find largest vector component
+		for(std::size_t iComp=0; iComp<3; ++iComp)	// find largest vector component
 		{
-			const std::size_t iM = iComp;		// major comp.
+			const std::size_t iM = iComp;			// major comp.
 			const std::size_t im1 = (iComp+1)%3;	// minor comp. 1
 			const std::size_t im2 = (iComp+2)%3;	// minor comp. 2
 
@@ -241,6 +241,7 @@ std::vector<T> rotation_angle(const ublas::matrix<T, Args...>& rot)
 
 
 /**
+ * rotation angle
  * @desc see: https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Quaternion-derived_rotation_matrix
  */
 template<typename T=double>

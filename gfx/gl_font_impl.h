@@ -5,23 +5,23 @@
  * @license GPLv2 or GPLv3
  */
 
-#ifndef __GL_HELPER_IMPL_H__
-#define __GL_HELPER_IMPL_H__
+#ifndef __GL_FONT_HELPER_IMPL_H__
+#define __GL_FONT_HELPER_IMPL_H__
 
-#include "gl.h"
+#include "gl_font.h"
 #include "../log/log.h"
 #include "../helper/misc.h"
 #include "../string/string.h"
 
 #include <iomanip>
-#include <glu.h>
+//#include <glu.h>
 
 
 // --------------------------------------------------------------------------------
 
 namespace tl {
 
-/*
+/**
  * Freetype rendering under OpenGL, inspired by:
  * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
  * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_02

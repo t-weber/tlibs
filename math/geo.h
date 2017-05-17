@@ -19,11 +19,6 @@
 #include <iostream>
 #include <cmath>
 #include <utility>
-#include <boost/algorithm/minmax_element.hpp>
-#include <boost/numeric/ublas/vector.hpp>
-#include <boost/numeric/ublas/matrix.hpp>
-#include <boost/numeric/ublas/io.hpp>
-#include <boost/numeric/ublas/exception.hpp>
 
 
 namespace tl {

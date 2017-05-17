@@ -325,11 +325,11 @@ public:
 	using t_arr = std::vector<Symbol*>;
 
 protected:
-	bool m_bDontDel;
+	bool m_bDontDel = 0;
 	t_arr m_arr;
 
 public:
-	SymbolArray() : Symbol(), m_bDontDel(0) { /*std::cout << "symarr -> new" << std::endl;*/ }
+	SymbolArray() : Symbol() { }
 	SymbolArray(const std::initializer_list<Symbol*>& lst);
 	virtual ~SymbolArray();
 
