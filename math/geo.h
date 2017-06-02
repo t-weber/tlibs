@@ -646,6 +646,104 @@ void sort_poly_verts(t_cont<t_vec>& vecPoly)
 }
 
 
+/**
+ * creates polyhedron faces out of vertices
+ */
+template<class t_vec = ublas::vector<double>,
+	template<class...> class t_cont = std::vector,
+	class T = typename t_vec::value_type>
+t_cont<t_cont<t_vec>> verts_to_polyhedron(
+	const t_cont<t_vec>& vecVerts, T eps = tl::get_epsilon<T>())
+{
+	t_cont<t_cont<t_vec>> vecPolys;
+	t_cont<Plane<T>> vecPlanes;
+
+	// too few vertices
+	if(vecVerts.size() < 3)
+		return vecPolys;
+
+
+	auto fkt_try_add_new_pt = [eps](t_cont<t_vec>& vecPoly, const t_vec& vecPt) -> void
+	{
+		for(const t_vec& vecOld : vecPoly)
+		{
+			// vecPt already in set?
+			if(vec_equal(vecOld, vecPt, eps))
+				return;
+		}
+
+		// add new point
+		vecPoly.push_back(vecPt);
+	};
+
+
+	const t_vec vecCentre = mean_value(vecVerts);
+
+
+	for(std::size_t i=0; i<vecVerts.size(); ++i)
+	{
+		for(std::size_t j=i+1; j<vecVerts.size(); ++j)
+		{
+			for(std::size_t k=j+1; k<vecVerts.size(); ++k)
+			{
+				const t_vec& vert0 = vecVerts[i];
+				const t_vec& vert1 = vecVerts[j];
+				const t_vec& vert2 = vecVerts[k];
+
+				bool bPointsUsed = 0;
+				for(std::size_t iPlane=0; iPlane<vecPlanes.size(); ++iPlane)
+				{
+					const Plane<T>& plane = vecPlanes[iPlane];
+					t_cont<t_vec>& vecPoly = vecPolys[iPlane];
+
+					// plane already in set?
+					if(plane.IsOnPlane(vert0, eps) && 
+						plane.IsOnPlane(vert1, eps) &&
+						plane.IsOnPlane(vert2, eps))
+					{
+						// add new points to poly if not already present
+						fkt_try_add_new_pt(vecPoly, vert0);
+						fkt_try_add_new_pt(vecPoly, vert1);
+						fkt_try_add_new_pt(vecPoly, vert2);
+
+						bPointsUsed = 1;
+						break;
+					}
+				}
+
+
+				// new plane / poly
+				if(!bPointsUsed)
+				{
+					t_cont<t_vec> vecPoly = { vert0, vert1, vert2 };
+					sort_poly_verts<t_vec, t_cont, T>(vecPoly, vecCentre);
+					Plane<T> plane(vecPoly[0], vecPoly[1]-vecPoly[0], vecPoly[2]-vecPoly[0]);
+
+					// check if all other vertices are on the negative side of the polygon
+					bool bIsHull = 1;
+					for(const t_vec& vecOtherVert : vecVerts)
+					{
+						if(plane.GetDist(vecOtherVert) > T(2)*eps)
+						{
+							bIsHull = 0;
+							break;
+						}
+					}
+
+					if(bIsHull)
+					{
+						vecPolys.emplace_back(std::move(vecPoly));
+						vecPlanes.emplace_back(std::move(plane));
+					}
+				}
+			}
+		}
+	}
+
+	return vecPolys;
+}
+
+
 //------------------------------------------------------------------------------
 
 

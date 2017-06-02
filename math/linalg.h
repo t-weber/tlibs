@@ -543,7 +543,7 @@ t_vec diag_vec(const t_mat& mat)
 
 
 template<class matrix_type = ublas::matrix<double>,
-		class cont_type = std::initializer_list<typename matrix_type::value_type>>
+	class cont_type = std::initializer_list<typename matrix_type::value_type>>
 matrix_type scale_matrix(const cont_type& lst)
 {
 	return diag_matrix<matrix_type, cont_type>(lst);
@@ -553,7 +553,7 @@ matrix_type scale_matrix(const cont_type& lst)
  * translation matrix in homogeneous coords
  */
 template<class t_mat = ublas::matrix<double>,
-		class t_cont = std::initializer_list<typename t_mat::value_type>>
+	class t_cont = std::initializer_list<typename t_mat::value_type>>
 t_mat translation_matrix(const t_cont& lst)
 {
 	t_mat mat = unit_matrix<t_mat>(lst.size()+1);

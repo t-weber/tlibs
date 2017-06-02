@@ -450,7 +450,7 @@ protected:
 		make_vec<t_vec>({  1,  1, -1 }),	// 13
 		make_vec<t_vec>({  1, -1, -1 }),	// 14
 		make_vec<t_vec>({  1, -1,  1 }),	// 15
-	
+
 		make_vec<t_vec>({ -1,  1,  1 }),	// 16
 		make_vec<t_vec>({ -1,  1, -1 }),	// 17
 		make_vec<t_vec>({ -1, -1, -1 }),	// 18
