@@ -646,6 +646,52 @@ void sort_poly_verts(t_cont<t_vec>& vecPoly)
 }
 
 
+
+/**
+ * get the polygon's face normal vector
+ */
+template<class t_vec = ublas::vector<double>,
+	template<class...> class t_cont = std::vector,
+	class T = typename t_vec::value_type>
+t_vec get_face_normal(const t_cont<t_vec>& vecVerts, t_vec vecCentre,
+	T eps = tl::get_epsilon<T>())
+{
+	t_vec vecNorm;
+
+	if(vecVerts.size() < 3)
+		return vecNorm;
+
+	const t_vec& vec1 = vecVerts[1] - vecVerts[0];
+	for(std::size_t iVec2 = 2; iVec2 < vecVerts.size(); ++iVec2)
+	{
+		const t_vec& vec2 = vecVerts[iVec2] - vecVerts[0];
+		t_vec vecCross = tl::cross_3(vec1, vec2);
+		if(ublas::norm_2(vecCross) > eps)
+		{
+			vecNorm = vecCross;
+			break;
+		}
+	}
+
+	// nothing found
+	if(vecNorm.size() == 0)
+		return vecNorm;
+
+
+	// vector pointing "outwards"
+	const t_vec vecPolyCentre = mean_value(vecVerts);
+	t_vec vecCentreToFace = vecPolyCentre - vecCentre;
+	vecCentreToFace /= ublas::norm_2(vecCentreToFace);
+
+	vecNorm /= ublas::norm_2(vecNorm);
+	if(ublas::inner_prod(vecNorm, vecCentreToFace) < T(0))
+		vecNorm = -vecNorm;
+
+	//tl::log_debug("vec = ", vecCentreToFace, ",\tnorm = ", vecNorm);
+	return vecNorm;
+}
+
+
 /**
  * creates polyhedron faces out of vertices
  */
