@@ -5,12 +5,13 @@
  * @license GPLv2 or GPLv3
  */
 
-#ifndef __COMPILER_FLAGS_H__
-#define __COMPILER_FLAGS_H__
+#ifndef __TLIBS_COMPILER_FLAGS_H__
+#define __TLIBS_COMPILER_FLAGS_H__
 
 #ifdef __CYGWIN__
         #undef __STRICT_ANSI__
 #endif
+
 
 namespace tl {
 

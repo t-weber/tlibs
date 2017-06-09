@@ -8,6 +8,7 @@
 #ifndef __MY_TRAITS_H__
 #define __MY_TRAITS_H__
 
+#include "boost_hacks.h"
 #include <type_traits>
 
 

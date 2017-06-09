@@ -27,6 +27,8 @@
 #include <type_traits>
 #include <limits>
 #include <cmath>
+
+#include "../helper/boost_hacks.h"
 #include <boost/numeric/ublas/vector.hpp>
 
 #include "funcmod.h"

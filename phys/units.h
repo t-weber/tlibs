@@ -8,6 +8,7 @@
 #ifndef __TLIBS_UNITS__
 #define __TLIBS_UNITS__
 
+#include "../helper/boost_hacks.h"
 
 #include <boost/units/unit.hpp>
 #include <boost/units/quantity.hpp>

@@ -714,7 +714,7 @@ t_cont<t_cont<t_vec>> verts_to_polyhedron(
 		for(const t_vec& vecOld : vecPoly)
 		{
 			// vecPt already in set?
-			if(vec_equal(vecOld, vecPt, eps))
+			if(vec_equal(vecOld, vecPt, T(1)*eps))
 				return;
 		}
 
@@ -730,8 +730,11 @@ t_cont<t_cont<t_vec>> verts_to_polyhedron(
 	{
 		for(std::size_t j=i+1; j<vecVerts.size(); ++j)
 		{
+			//if(i==j) continue;
 			for(std::size_t k=j+1; k<vecVerts.size(); ++k)
 			{
+				//if(i==k || j==k) continue;
+
 				const t_vec& vert0 = vecVerts[i];
 				const t_vec& vert1 = vecVerts[j];
 				const t_vec& vert2 = vecVerts[k];
@@ -743,9 +746,9 @@ t_cont<t_cont<t_vec>> verts_to_polyhedron(
 					t_cont<t_vec>& vecPoly = vecPolys[iPlane];
 
 					// plane already in set?
-					if(plane.IsOnPlane(vert0, eps) && 
-						plane.IsOnPlane(vert1, eps) &&
-						plane.IsOnPlane(vert2, eps))
+					if(plane.IsOnPlane(vert0, T(10)*eps) && 
+						plane.IsOnPlane(vert1, T(10)*eps) &&
+						plane.IsOnPlane(vert2, T(10)*eps))
 					{
 						// add new points to poly if not already present
 						fkt_try_add_new_pt(vecPoly, vert0);
@@ -769,7 +772,7 @@ t_cont<t_cont<t_vec>> verts_to_polyhedron(
 					bool bIsHull = 1;
 					for(const t_vec& vecOtherVert : vecVerts)
 					{
-						if(plane.GetDist(vecOtherVert) > T(2)*eps)
+						if(plane.GetDist(vecOtherVert) > T(10)*eps)
 						{
 							bIsHull = 0;
 							break;
@@ -785,6 +788,14 @@ t_cont<t_cont<t_vec>> verts_to_polyhedron(
 			}
 		}
 	}
+
+	// too few polygons => remove polyhedron
+	if(vecPolys.size() < 3)
+		vecPolys = decltype(vecPolys)();
+
+	// sort vertices
+	for(auto& vecPoly : vecPolys)
+		sort_poly_verts<t_vec, t_cont, T>(vecPoly, vecCentre);
 
 	return vecPolys;
 }

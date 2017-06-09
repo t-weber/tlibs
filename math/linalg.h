@@ -8,7 +8,7 @@
 #ifndef __TLIBS_LINALG_H__
 #define __TLIBS_LINALG_H__
 
-#include "../helper/flags.h"
+#include "../helper/boost_hacks.h"
 #include "../helper/exception.h"
 #include "math.h"
 #include "../log/log.h"
