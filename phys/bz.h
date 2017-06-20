@@ -26,30 +26,36 @@ static bool reduce_neighbours(
 	std::vector<t_vec>& vecNeighbours, std::vector<t_vec>& vecNeighboursHKL,
 	const t_vec& vecCentralReflexHKL, T eps)
 {
+	// maximum order of neighbours to consider
+	constexpr std::size_t iMaxNN = 4;
+
 	if(!vecNeighboursHKL.size())
 		return true;
 
-	// consider only neighbours and next-neighbours
 	auto vecvecNN = get_neighbours<t_vec, std::vector, T>(vecNeighboursHKL, vecCentralReflexHKL, eps);
-	if(vecvecNN.size() < 2)
-		return false;
 
+	// no neighbours found?
+	if(vecvecNN.size() == 0)
+		return false;
 
 	// 1/A
 	auto vecNN1 = get_atoms_by_idx<t_vec, std::vector>(vecNeighbours, vecvecNN[0]);
-	auto vecNN2 = get_atoms_by_idx<t_vec, std::vector>(vecNeighbours, vecvecNN[1]);
-
-	vecNeighbours = std::move(vecNN1);
-	vecNeighbours.insert(vecNeighbours.end(), vecNN2.begin(), vecNN2.end());
-
-
 	// rlu
 	auto vecNN1HKL = get_atoms_by_idx<t_vec, std::vector>(vecNeighboursHKL, vecvecNN[0]);
-	auto vecNN2HKL = get_atoms_by_idx<t_vec, std::vector>(vecNeighboursHKL, vecvecNN[1]);
 
+	for(std::size_t iCurNN=1; iCurNN<std::min(iMaxNN, vecvecNN.size()); ++iCurNN)
+	{
+		// 1/A
+		auto vecNN2 = get_atoms_by_idx<t_vec, std::vector>(vecNeighbours, vecvecNN[iCurNN]);
+		vecNN1.insert(vecNN1.end(), vecNN2.begin(), vecNN2.end());
+
+		// rlu
+		auto vecNN2HKL = get_atoms_by_idx<t_vec, std::vector>(vecNeighboursHKL, vecvecNN[iCurNN]);
+		vecNN1HKL.insert(vecNN1HKL.end(), vecNN2HKL.begin(), vecNN2HKL.end());
+	}
+
+	vecNeighbours = std::move(vecNN1);
 	vecNeighboursHKL = std::move(vecNN1HKL);
-	vecNeighboursHKL.insert(vecNeighboursHKL.end(), vecNN2HKL.begin(), vecNN2HKL.end());
-
 
 	return vecNeighbours.size()!=0;
 }

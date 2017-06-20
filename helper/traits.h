@@ -151,6 +151,27 @@ namespace tl{
 
 	// TODO: make recursive
 	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==16>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==15>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==14>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==13>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==12>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==11>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10>; };
+	template<class T, T NUM>
+	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==10>::type>
+	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9>; };
+	template<class T, T NUM>
 	struct _make_integer_sequence<T, NUM, typename std::enable_if<NUM==9>::type>
 	{ using value_type = integer_sequence<T, 0, 1, 2, 3, 4, 5, 6, 7, 8>; };
 	template<class T, T NUM>
@@ -238,6 +259,30 @@ t_arg call(t_func func, const std::array<t_arg, iNumArgs>& args)
 	using t_seq = /*std::*/make_integer_sequence<std::size_t, iNumArgs>;
 	return _call_impl<t_func, t_arg>(func, args, t_seq());
 }
+
+
+// -----------------------------------------------------------------------------
+
+
+template<typename t_arg, std::size_t ...idx>
+using _t_fkt_vararg_impl = t_arg(*)(
+	typename std::remove_reference<
+		decltype(((t_arg*)(nullptr))[idx])
+	>::type...);
+
+template<typename t_arg, std::size_t ...idx>
+static _t_fkt_vararg_impl<t_arg, idx...>
+_tstfkt_vararg(const tl::integer_sequence<std::size_t, idx...>&)
+{ return nullptr; /* not interested in return value, only its type */ }
+
+/**
+ * constructs a function type with 'iNumArgs' arguments: t_arg (*) (t_arg, t_arg, ...)
+ */
+template<typename t_arg, std::size_t iNumArgs>
+using t_fkt_vararg = decltype(
+	_tstfkt_vararg<t_arg>(
+		make_integer_sequence<std::size_t, iNumArgs>()));
+
 
 // -----------------------------------------------------------------------------
 

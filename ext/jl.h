@@ -112,6 +112,19 @@ template<> struct jl_traits<double>
 	static value_type unbox(jl_value_t *pVal) { return jl_unbox_float64(pVal); }
 	static jl_value_t* box(value_type val) { return jl_box_float64(val); }
 };
+
+template<> struct jl_traits<std::string>
+{
+	using value_type = std::string;
+
+	static jl_datatype_t* get_type() { return jl_string_type; }
+	static value_type unbox(jl_value_t *pVal)
+	{
+		const char* pc = jl_string_ptr(pVal);
+		return std::string(pc);
+	}
+	static jl_value_t* box(value_type val) { return jl_cstr_to_string(val.c_str()); }
+};
 // ----------------------------------------------------------------------------
 
 
@@ -150,6 +163,7 @@ jl_array_t* make_jl_2darr(const t_cont<t_cont<T>>& vecvec)
 	return pArr;
 }
 
+
 /**
  * converts an stl container of strings into a julia array of strings
  */
@@ -168,6 +182,30 @@ jl_array_t* make_jl_str_arr(const t_cont<t_str>& vecStr)
 
 	return pArr;
 }
+
+
+/**
+ * converts a julia array into an stl container
+ */
+template<template<class...> class t_cont/*=std::vector*/, class t_val>
+t_cont<t_val> from_jl_arr(jl_array_t *pArr, std::size_t iSkipFront = 0)
+{
+	const std::size_t iSize = jl_array_len(pArr);
+
+	t_cont<t_val> vecRet;
+	vecRet.reserve(iSize);
+
+	for(std::size_t iElem=iSkipFront; iElem<iSize; ++iElem)
+	{
+		jl_value_t* pVal = jl_arrayref(pArr, iElem);
+		t_val val = jl_traits<t_val>::unbox(pVal);
+
+		vecRet.push_back(val);
+	}
+
+	return vecRet;
+}
+
 
 /**
  * converts a map of strings into two julia arrays of strings (key & value)
