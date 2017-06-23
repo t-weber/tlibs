@@ -142,7 +142,7 @@ protected:
 public:
 	virtual ~FunctionModel_nd() = default;
 
-	virtual T operator()(const T* px) const = 0;
+	virtual T operator()(const std::vector<T>& vecx) const = 0;
 	virtual const char* GetModelName() const = 0;
 };
 
@@ -159,7 +159,7 @@ public:
 	virtual std::size_t GetDim() const = 0;
 
 	virtual bool SetParams(const std::vector<t_real>& vecParams) = 0;
-	virtual t_real operator()(const t_real* px) const = 0;
+	virtual t_real operator()(const std::vector<t_real>& dx) const = 0;
 
 	virtual FitterFuncModel_nd* copy() const = 0;
 	virtual std::string print(bool bFillInSyms=true) const = 0;
@@ -188,11 +188,13 @@ class FitterLamFuncModel : public FitterFuncModel<t_real>
 protected:
 	t_func m_func;
 	std::vector<t_real> m_vecVals;
+	bool m_bSeparateFreeParam = 1;	// separate "x" from parameters (for fitter)
 
 public:
-	FitterLamFuncModel(t_func func) : m_func(func)
+	FitterLamFuncModel(t_func func, bool bSeparateX=1)
+		: m_func(func), m_bSeparateFreeParam(bSeparateX)
 	{
-		m_vecVals.resize(iNumArgs-1);
+		m_vecVals.resize(m_bSeparateFreeParam ? iNumArgs-1 : iNumArgs);
 	}
 
 	virtual bool SetParams(const std::vector<t_real>& vecParams) override
@@ -202,13 +204,17 @@ public:
 		return true;
 	}
 
-	virtual t_real operator()(t_real x) const override
+	virtual t_real operator()(t_real x = t_real(0)) const override
 	{
-		std::vector<t_real> vecValsWithX = {x};
-		for(t_real d : m_vecVals) vecValsWithX.push_back(d);
+		std::vector<t_real> vecValsWithX;
+		if(m_bSeparateFreeParam)
+		{
+			vecValsWithX.push_back(x);
+			for(t_real d : m_vecVals) vecValsWithX.push_back(d);
+		}
 
-		return tl::call<iNumArgs, t_func, t_real, std::vector>
-			(m_func, vecValsWithX);
+		const std::vector<t_real> *pvecVals = m_bSeparateFreeParam ? &vecValsWithX : &m_vecVals;
+		return tl::call<iNumArgs, t_func, t_real, std::vector>(m_func, *pvecVals);
 	}
 
 	virtual FitterLamFuncModel* copy() const override
@@ -217,6 +223,8 @@ public:
 			new FitterLamFuncModel<t_real, iNumArgs, t_func>(m_func);
 
 		pMod->m_vecVals = this->m_vecVals;
+		pMod->m_bSeparateFreeParam = this->m_bSeparateFreeParam;
+
 		return pMod;
 	}
 

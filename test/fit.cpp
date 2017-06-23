@@ -12,6 +12,10 @@
 
 using T = tl::t_real_min;
 
+// test instantiation
+template class tl::Chi2Function_nd<T, std::vector>;
+
+
 template<class t_func, class... t_args>
 void tst(t_func&& func)
 {

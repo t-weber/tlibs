@@ -24,11 +24,8 @@ namespace tl {
 template<class t_vec, class T = typename t_vec::value_type>
 static bool reduce_neighbours(
 	std::vector<t_vec>& vecNeighbours, std::vector<t_vec>& vecNeighboursHKL,
-	const t_vec& vecCentralReflexHKL, T eps)
+	const t_vec& vecCentralReflexHKL, T eps, const std::size_t iMaxNN=4)
 {
-	// maximum order of neighbours to consider
-	constexpr std::size_t iMaxNN = 4;
-
 	if(!vecNeighboursHKL.size())
 		return true;
 
@@ -86,6 +83,8 @@ class Brillouin3D
 		bool m_bHasCentralPeak = 0;
 
 		T m_eps = 0.001;
+		std::size_t m_iMaxNN = 4;
+
 
 	public:
 		Brillouin3D() {}
@@ -101,6 +100,7 @@ class Brillouin3D
 		const std::vector<Plane<T>> GetPlanes() const { return m_vecPlanes; }
 
 		void SetEpsilon(T eps) { m_eps = eps; }
+		void SetMaxNN(std::size_t iMaxNN) { m_iMaxNN = iMaxNN; }
 
 		void Clear()
 		{
@@ -150,7 +150,8 @@ class Brillouin3D
 			std::vector<Plane<T>> vecMiddlePerps;
 			vecMiddlePerps.reserve(m_vecNeighbours.size());
 
-			if(!reduce_neighbours<t_vec<T>, T>(m_vecNeighbours, m_vecNeighboursHKL, m_vecCentralReflexHKL, m_eps))
+			if(!reduce_neighbours<t_vec<T>, T>(m_vecNeighbours, m_vecNeighboursHKL,
+				m_vecCentralReflexHKL, m_eps, m_iMaxNN))
 				return;
 
 
@@ -379,6 +380,7 @@ class Brillouin2D
 		bool m_bHasCentralPeak = 0;
 
 		T m_eps = 0.001;
+		std::size_t m_iMaxNN = 4;
 
 	protected:
 		const t_vecpair<T>* GetNextVertexPair(const t_vertices<T>& vecPts, std::size_t *pIdx=0)
@@ -412,6 +414,7 @@ class Brillouin2D
 		const std::vector<t_vec<T>>& GetNeighbours() const { return m_vecNeighbours; }
 
 		void SetEpsilon(T eps) { m_eps = eps; }
+		void SetMaxNN(std::size_t iMaxNN) { m_iMaxNN = iMaxNN; }
 
 		void Clear()
 		{
@@ -456,7 +459,8 @@ class Brillouin2D
 		{
 			if(!m_bHasCentralPeak) return;
 
-			if(!reduce_neighbours<t_vec<T>, T>(m_vecNeighbours, m_vecNeighboursHKL, m_vecCentralReflexHKL, m_eps))
+			if(!reduce_neighbours<t_vec<T>, T>(m_vecNeighbours, m_vecNeighboursHKL,
+				m_vecCentralReflexHKL, m_eps, m_iMaxNN))
 				return;
 
 			// calculate perpendicular lines

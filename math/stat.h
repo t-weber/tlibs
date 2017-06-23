@@ -399,6 +399,32 @@ T chi2_direct(std::size_t N, const t_iter_dat func_y, const t_iter_dat y, const 
 }
 
 
+
+/**
+ * multi-dimensional chi^2 function
+ */
+template<class T, class T_dat, class t_func, template<class...> class t_vec=std::vector>
+T chi2_nd(const t_func& func,
+	const t_vec<t_vec<T_dat>>& vecvecX, const t_vec<T_dat>& vecY, const t_vec<T_dat>& vecDY)
+{
+	T tchi2 = T(0);
+
+	for(std::size_t i=0; i<vecvecX.size(); ++i)
+	{
+		T td = T(vecY[i]) - func(vecvecX[i]);
+		T tdy = vecDY[i];
+
+		if(std::abs(tdy) < std::numeric_limits<T_dat>::min())
+			tdy = std::numeric_limits<T_dat>::min();
+
+		T tchi = T(td) / T(tdy);
+		tchi2 += tchi*tchi;
+	}
+
+	return tchi2;
+}
+
+
 // -----------------------------------------------------------------------------
 
 

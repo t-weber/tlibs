@@ -267,13 +267,14 @@ t_arg call(t_func func, const std::array<t_arg, iNumArgs>& args)
 template<typename t_arg, std::size_t ...idx>
 using _t_fkt_vararg_impl = t_arg(*)(
 	typename std::remove_reference<
-		decltype(((t_arg*)(nullptr))[idx])
+		decltype(std::declval<t_arg*>()[idx])
 	>::type...);
 
 template<typename t_arg, std::size_t ...idx>
 static _t_fkt_vararg_impl<t_arg, idx...>
 _tstfkt_vararg(const tl::integer_sequence<std::size_t, idx...>&)
 { return nullptr; /* not interested in return value, only its type */ }
+
 
 /**
  * constructs a function type with 'iNumArgs' arguments: t_arg (*) (t_arg, t_arg, ...)

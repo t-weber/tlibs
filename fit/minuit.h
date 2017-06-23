@@ -53,17 +53,19 @@ template<std::size_t iNumArgs, typename t_func>
 using MinuitLamFuncModel = FitterLamFuncModel<t_real_min, iNumArgs, t_func>;
 
 
-// generic chi^2 calculation
+/**
+ * generic chi^2 calculation for fitting
+ */
 template<class t_real = t_real_min>
 class Chi2Function : public ROOT::Minuit2::FCNBase
 {
 protected:
-	const MinuitFuncModel *m_pfkt;
+	const MinuitFuncModel *m_pfkt = nullptr;
 
 	std::size_t m_uiLen;
-	const t_real* m_px;
-	const t_real* m_py;
-	const t_real* m_pdy;
+	const t_real* m_px = nullptr;
+	const t_real* m_py = nullptr;
+	const t_real* m_pdy = nullptr;
 
 	t_real_min m_dSigma = 1.;
 	bool m_bDebug = 0;
@@ -75,7 +77,7 @@ public:
 		: m_pfkt(fkt), m_uiLen(uiLen), m_px(px), m_py(py), m_pdy(pdy)
 	{}
 
-	virtual ~Chi2Function() {}
+	virtual ~Chi2Function() = default;
 
 	/*
 	 * chi^2 calculation
@@ -112,10 +114,42 @@ public:
 };
 
 
+/**
+ * function adaptor for minimisation
+ */
+template<class t_real = t_real_min>
+class MiniFunction : public ROOT::Minuit2::FCNBase
+{
+protected:
+	const MinuitFuncModel *m_pfkt = nullptr;
+	t_real_min m_dSigma = 1.;
+
+public:
+	MiniFunction(const MinuitFuncModel* fkt=0) : m_pfkt(fkt) {}
+	virtual ~MiniFunction() = default;
+
+	virtual t_real_min Up() const override { return m_dSigma*m_dSigma; }
+
+	virtual t_real_min operator()(const std::vector<t_real_min>& vecParams) const override
+	{
+		// cannot operate on m_pfkt directly, because Minuit
+		// uses more than one thread!
+		std::unique_ptr<MinuitFuncModel> uptrFkt(m_pfkt->copy());
+		MinuitFuncModel* pfkt = uptrFkt.get();
+
+		pfkt->SetParams(vecParams);
+		return (*pfkt)(t_real_min(0));	// "0" is an ignored dummy value here
+	}
+
+	void SetSigma(t_real_min dSig) { m_dSigma = dSig; }
+	t_real_min GetSigma() const { return m_dSigma; }
+};
+
+
 // ----------------------------------------------------------------------------
 
 
-/*
+/**
  * chi^2 calculation using multiple simultaneous functions where each
  * function can additionally have multiple parameter sets
  */
@@ -222,59 +256,37 @@ using Chi2FunctionMult = Chi2Function_mult<t_real_min, std::vector>;
 
 
 // in n dimensions
+template<class t_real = t_real_min, template<class...> class t_cont = std::vector>
 class Chi2Function_nd : public ROOT::Minuit2::FCNBase
 {
 protected:
-	const MinuitFuncModel_nd *m_pfkt;
-	std::size_t m_uiDim;
+	const MinuitFuncModel_nd *m_pfkt = nullptr;
 
-	std::size_t m_uiLen;
-	std::vector<const t_real_min*> m_vecpx;
-
-	const t_real_min* m_py;
-	const t_real_min* m_pdy;
+	const t_cont<t_cont<t_real>> *m_pvecvecX = nullptr;
+	const t_cont<t_real> *m_pvecY = nullptr;
+	const t_cont<t_real> *m_pvecDY = nullptr;
 
 	bool m_bDebug = 0;
 
 public:
-	Chi2Function_nd(const MinuitFuncModel_nd* fkt=0,
-		std::size_t uiLen=0, const t_real_min **ppx=0,
-		const t_real_min *py=0, const t_real_min *pdy=0)
-		: m_pfkt(fkt), m_uiDim(fkt->GetDim()), m_uiLen(uiLen), m_py(py), m_pdy(pdy)
-	{
-		m_vecpx.resize(m_uiDim);
+	Chi2Function_nd(const MinuitFuncModel_nd* fkt,
+		const t_cont<t_cont<t_real>> &vecvecX,
+		const t_cont<t_real> &vecY, const t_cont<t_real> &vecDY)
+		: m_pfkt(fkt), m_pvecvecX(&vecvecX), m_pvecY(&vecY), m_pvecDY(&vecDY)
+	{}
 
-		for(std::size_t i=0; i<m_uiDim; ++i)
-			m_vecpx[i] = ppx[i];
-	}
+	virtual ~Chi2Function_nd() = default;
 
-	virtual ~Chi2Function_nd() {}
+
 	t_real_min chi2(const std::vector<t_real_min>& vecParams) const
 	{
 		std::unique_ptr<MinuitFuncModel_nd> uptrFkt(m_pfkt->copy());
 		MinuitFuncModel_nd* pfkt = uptrFkt.get();
+		pfkt->SetParams(vecParams);
 
-		/*bool bParamsOk = */pfkt->SetParams(vecParams);
-
-		std::unique_ptr<t_real_min[]> uptrX(new t_real_min[m_uiDim]);
-
-		t_real_min dChi2 = 0.;
-		for(std::size_t i=0; i<m_uiLen; ++i)
-		{
-			for(std::size_t iX=0; iX<m_uiDim; ++iX)
-				uptrX[iX] = m_vecpx[iX][i];
-
-			t_real_min d = (*pfkt)(uptrX.get()) - m_py[i];
-			t_real_min dy = m_pdy ? m_pdy[i] : 0.1*d;	// assume 10% error if none given
-			if(fabs(dy) < std::numeric_limits<t_real_min>::min())
-				dy = std::numeric_limits<t_real_min>::min();
-
-			d /= dy;
-			dChi2 += d*d;
-		}
-		return dChi2;
+		return tl::chi2_nd<t_real_min, t_real, decltype(*pfkt), t_cont>
+			(*pfkt, *m_pvecvecX, *m_pvecY, *m_pvecDY);
 	}
-
 
 	virtual t_real_min Up() const override
 	{
@@ -296,6 +308,9 @@ public:
 // ----------------------------------------------------------------------------
 
 
+/**
+ * fit function to x,y,dy data points
+ */
 template<std::size_t iNumArgs, typename t_func>
 bool fit(t_func&& func,
 
@@ -351,6 +366,59 @@ bool fit(t_func&& func,
 			tl::log_debug(mini);
 
 		return bValidFit;
+	}
+	catch(const std::exception& ex)
+	{
+		tl::log_err(ex.what());
+	}
+
+	return false;
+}
+
+
+/**
+ * find function minimum
+ */
+template<std::size_t iNumArgs, typename t_func>
+bool minimise(t_func&& func, const std::vector<std::string>& vecParamNames,
+	std::vector<t_real_min>& vecVals, std::vector<t_real_min>& vecErrs,
+	const std::vector<bool>* pVecFixed = nullptr, bool bDebug=1) noexcept
+{
+	try
+	{
+		// check if all params are fixed
+		if(pVecFixed && std::all_of(pVecFixed->begin(), pVecFixed->end(),
+			[](bool b)->bool { return b; }))
+			{
+				tl::log_err("All parameters are fixed.");
+				return false;
+			}
+
+		MinuitLamFuncModel<iNumArgs, t_func> mod(func, false);
+		MiniFunction<t_real_min> chi2(&mod);
+
+		ROOT::Minuit2::MnUserParameters params;
+		for(std::size_t iParam=0; iParam<vecParamNames.size(); ++iParam)
+		{
+			params.Add(vecParamNames[iParam], vecVals[iParam], vecErrs[iParam]);
+			if(pVecFixed && (*pVecFixed)[iParam])
+				params.Fix(vecParamNames[iParam]);
+		}
+
+		ROOT::Minuit2::MnMigrad migrad(chi2, params, 2);
+		ROOT::Minuit2::FunctionMinimum mini = migrad();
+		bool bMinimumValid = mini.IsValid() && mini.HasValidParameters() && mini.UserState().IsValid();
+
+		for(std::size_t iParam=0; iParam<vecParamNames.size(); ++iParam)
+		{
+			vecVals[iParam] = mini.UserState().Value(vecParamNames[iParam]);
+			vecErrs[iParam] = std::fabs(mini.UserState().Error(vecParamNames[iParam]));
+		}
+
+		if(bDebug)
+			tl::log_debug(mini);
+
+		return bMinimumValid;
 	}
 	catch(const std::exception& ex)
 	{
