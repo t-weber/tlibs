@@ -2,7 +2,7 @@
  * CL helpers
  * @author Tobias Weber <tobias.weber@tum.de>
  * @date 20-jan-2015
- * @copyright GPLv2 or GPLv3
+ * @license GPLv2 or GPLv3
  */
 
 #ifndef __CL_WRAP_H__

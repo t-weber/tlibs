@@ -510,5 +510,50 @@ std::tuple<T,T> stereographic_proj(T twophi_crys, T twotheta_crys, T rad)
 	return std::make_tuple(x, y);
 }
 
+
+// -----------------------------------------------------------------------------
+
+
+/**
+ * point contained in linear range?
+ */
+template<class T = double>
+bool is_in_linear_range(T dStart, T dStop, T dPoint)
+{
+	if(dStop < dStart)
+		std::swap(dStart, dStop);
+
+	return (dPoint >= dStart) && (dPoint <= dStop);
+}
+
+/**
+ * angle contained in angular range?
+ */
+template<class T = double>
+bool is_in_angular_range(T dStart, T dRange, T dAngle)
+{
+	if(dStart < T(0)) dStart += T(2)*get_pi<T>();
+	if(dAngle < T(0)) dAngle += T(2)*get_pi<T>();
+
+	dStart = std::fmod(dStart, T(2)*get_pi<T>());
+	dAngle = std::fmod(dAngle, T(2)*get_pi<T>());
+
+	T dStop = dStart + dRange;
+
+
+	// if the end point is contained in the circular range
+	if(dStop < T(2)*get_pi<T>())
+	{
+		return is_in_linear_range<T>(dStart, dStop, dAngle);
+	}
+	else // else end point wraps around
+	{
+		return is_in_linear_range<T>(dStart, T(2)*get_pi<T>(), dAngle) || 
+			is_in_linear_range<T>(T(0), dRange-(T(2)*get_pi<T>()-dStart), dAngle);
+	}
+}
+
+// -----------------------------------------------------------------------------
+
 }
 #endif
