@@ -137,10 +137,10 @@ void GnuPlot<t_real>::SimplePlot(const std::vector<t_real>& vecX, const std::vec
 	switch(style)
 	{
 		case STYLE_LINES_SOLID:
-			m_pProc->GetOstr() << "with lines linetype 1 linewidth 1 ";
+			m_pProc->GetOstr() << "using ($1):($2) with lines linetype 1 linewidth 1 ";
 			break;
 		case STYLE_LINES_DASHED:
-			m_pProc->GetOstr() << "with lines linetype 2 linewidth 1 ";
+			m_pProc->GetOstr() << "using ($1):($2) with lines linetype 2 linewidth 1 ";
 			break;
 		default:
 		case STYLE_POINTS:
@@ -304,13 +304,13 @@ std::string GnuPlot<t_real>::BuildCmd()
 		std::string strPointStyle;
 
 		if(bHasXErr && bHasYErr)
-			ostrTmp << "with xyerrorbars";
+			ostrTmp << "using ($1):($2):($3):($4) with xyerrorbars";
 		else if(bHasXErr && !bHasYErr)
-			ostrTmp << "with xerrorbars";
+			ostrTmp << "using ($1):($2):($3) with xerrorbars";
 		else if(!bHasXErr && bHasYErr)
-			ostrTmp << "with yerrorbars";
+			ostrTmp << "using ($1):($2):($3) with yerrorbars";
 		else if(!bHasXErr && !bHasYErr)
-			ostrTmp << "with points";
+			ostrTmp << "using ($1):($2) with points";
 
 		ostrTmp << " pointtype 7 pointsize " << dSize;
 		strPointStyle = ostrTmp.str();
@@ -320,10 +320,10 @@ std::string GnuPlot<t_real>::BuildCmd()
 		switch(obj.linestyle)
 		{
 			case STYLE_LINES_SOLID:
-				ostr << "with lines linetype 1 linewidth " << dSize << " ";
+				ostr << "using ($1):($2) with lines linetype 1 linewidth " << dSize << " ";
 				break;
 			case STYLE_LINES_DASHED:
-				ostr << "with lines linetype 2 linewidth " << dSize << " ";
+				ostr << "using ($1):($2) with lines linetype 2 linewidth " << dSize << " ";
 				break;
 			default:
 				log_warn("Unknown line style.");
