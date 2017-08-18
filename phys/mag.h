@@ -65,17 +65,18 @@ T j0_avg(T Q, const t_vec<T>& A, const t_vec<T>& a)
 {
 	assert(A.size() == a.size()+1);
 
-	T tJ = T(0);
-	for(std::size_t i=0; i<a.size(); ++i)
-		tJ += A[i] * std::exp(-a[i] * Q/(T(4)*get_pi<T>())*Q/(T(4)*get_pi<T>()));
-	tJ += *A.rbegin();
-	return tJ;
+	std::vector<T> vecA = A, vecB = a;
+	T c = *vecA.rbegin();
+	vecA.pop_back();
+
+	return tl::formfact<T, std::vector>(Q, vecA, vecB, c);
 }
 
 template<class T=double, template<class...> class t_vec=std::initializer_list>
 T j2_avg(T Q, const t_vec<T>& A, const t_vec<T>& a)
 {
-	return j0_avg<T, t_vec>(Q, A, a) * Q/(T(4)*get_pi<T>()) * Q/(T(4)*get_pi<T>());
+	T s = Q/(T(4)*get_pi<T>());
+	return j0_avg<T, t_vec>(Q, A, a) * s * s;
 }
 
 template<class T=double, template<class...> class t_vec=std::initializer_list>

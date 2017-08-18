@@ -182,6 +182,7 @@ class DatFile
 		}
 
 		bool IsOk() const { return m_bOk; }
+		operator bool() const { return IsOk(); }
 
 		void SetCommentChar(t_char ch) { m_chComm = ch; }
 		void SetSeparatorChars(const t_str& str) { m_strSeps = str; }

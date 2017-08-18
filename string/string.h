@@ -23,6 +23,7 @@
 #ifndef NO_BOOST
 	#include <boost/tokenizer.hpp>
 	#include <boost/algorithm/string.hpp>
+	namespace algo = boost::algorithm;
 #endif
 
 #include "../helper/exception.h"
@@ -80,69 +81,42 @@ static inline const std::string& wstr_to_str(const std::string& str) { return st
 
 // -----------------------------------------------------------------------------
 
-template<class t_str=std::string>
-t_str get_file_noext(const t_str& str)
-{
-	std::size_t iPos = str.find_last_of('.');
 
-	if(iPos == t_str::npos)
-		return str;
-	return str.substr(0, iPos);
+template<class t_str=std::string>
+t_str str_to_upper(const t_str& str)
+{
+	t_str strOut;
+	std::locale loc;
+
+#ifndef NO_BOOST
+	strOut = boost::to_upper_copy(str, loc);
+#else
+	typedef typename std::string::value_type t_char;
+	strOut.reserve(str.length());
+
+	for(t_char ch : str)
+		strOut.push_back(std::toupper(ch, loc));
+#endif
+
+	return strOut;
 }
 
 template<class t_str=std::string>
-t_str get_fileext(const t_str& str)
+t_str str_to_lower(const t_str& str)
 {
-	std::size_t iPos = str.find_last_of('.');
+	t_str strLower;
+	std::locale loc;
 
-	if(iPos == t_str::npos)
-		return t_str();
-	return str.substr(iPos+1);
-}
+#ifndef NO_BOOST
+	strLower = boost::to_lower_copy(str, loc);
+#else
+	strLower.reserve(str.length());
 
-// e.g. returns "tof" for "123.tof.bz2"
-template<class t_str=std::string>
-t_str get_fileext2(const t_str& str)
-{
-	std::size_t iPos = str.find_last_of('.');
-	if(iPos == t_str::npos || iPos == 0)
-		return t_str();
+	for(typename t_str::value_type ch : str)
+		strLower.push_back(std::tolower(ch, loc));
+#endif
 
-	t_str strFile = str.substr(0, iPos);
-	return get_fileext(strFile);
-}
-
-// e.g. returns "tof" for "123.tof.bz2" and for "123.tof"
-template<class t_str=std::string>
-t_str get_fileext_nocomp(const t_str& str)
-{
-	std::size_t iCnt = std::count(str.begin(), str.end(), '.');
-	if(iCnt==0)
-		return t_str();
-	else if(iCnt==1)
-		return get_fileext(str);
-	else
-		return get_fileext2(str);
-}
-
-template<class t_str=std::string>
-t_str get_dir(const t_str& str)
-{
-	std::size_t iPos = str.find_last_of(get_dir_seps<t_str>());
-
-	if(iPos == t_str::npos)
-		return t_str();
-	return str.substr(0, iPos);
-}
-
-template<class t_str=std::string>
-t_str get_file(const t_str& str)
-{
-	std::size_t iPos = str.find_last_of(get_dir_seps<t_str>());
-
-	if(iPos == t_str::npos)
-		return t_str();
-	return str.substr(iPos+1);
+	return strLower;
 }
 
 
@@ -150,50 +124,125 @@ t_str get_file(const t_str& str)
 
 
 template<class t_str=std::string>
-t_str insert_before(const t_str& str, const t_str& strChar, const t_str& strInsert)
+t_str get_file_noext(const t_str& str, bool bToLower=0)
 {
-	std::size_t pos = str.find(strChar);
-	if(pos==t_str::npos)
+	std::size_t iPos = str.find_last_of('.');
+
+	if(iPos == t_str::npos)
 		return str;
 
-	t_str strRet = str;
-	strRet.insert(pos, strInsert);
+	t_str strRet = str.substr(0, iPos);
+	if(bToLower)
+		strRet = str_to_lower(strRet);
 
 	return strRet;
 }
 
 template<class t_str=std::string>
-t_str str_to_upper(const t_str& str)
+t_str get_fileext(const t_str& str, bool bToLower=0)
 {
-	t_str strOut;
+	std::size_t iPos = str.find_last_of('.');
 
-#ifndef NO_BOOST
-	strOut = boost::to_upper_copy(str);
-#else
-	typedef typename std::string::value_type t_char;
-	strOut.reserve(str.length());
+	if(iPos == t_str::npos)
+		return t_str();
 
-	for(t_char ch : str)
-		strOut.push_back(std::toupper(ch));
-#endif
+	t_str strRet = str.substr(iPos+1);
+	if(bToLower)
+		strRet = str_to_lower(strRet);
 
-	return strOut;
+	return strRet;
 }
+
+/**
+ *  e.g. returns "tof" for "123.tof.bz2"
+ */
+template<class t_str=std::string>
+t_str get_fileext2(const t_str& str, bool bToLower=0)
+{
+	std::size_t iPos = str.find_last_of('.');
+	if(iPos == t_str::npos || iPos == 0)
+		return t_str();
+
+	t_str strFile = str.substr(0, iPos);
+	return get_fileext(strFile, bToLower);
+}
+
+/**
+ * e.g. returns "tof" for "123.tof.bz2" and for "123.tof"
+ */
+template<class t_str=std::string>
+t_str get_fileext_nocomp(const t_str& str, bool bToLower=0)
+{
+	std::size_t iCnt = std::count(str.begin(), str.end(), '.');
+	if(iCnt==0)
+		return t_str();
+	else if(iCnt==1)
+		return get_fileext(str, bToLower);
+	else
+		return get_fileext2(str, bToLower);
+}
+
+template<class t_str=std::string>
+t_str get_dir(const t_str& str, bool bToLower=0)
+{
+	std::size_t iPos = str.find_last_of(get_dir_seps<t_str>());
+
+	if(iPos == t_str::npos)
+		return t_str();
+
+	t_str strRet = str.substr(0, iPos);
+	if(bToLower)
+		strRet = str_to_lower(strRet);
+
+	return strRet;
+}
+
+template<class t_str=std::string>
+t_str get_file_nodir(const t_str& str, bool bToLower=0)
+{
+	std::size_t iPos = str.find_last_of(get_dir_seps<t_str>());
+
+	if(iPos == t_str::npos)
+		return t_str();
+
+	t_str strRet = str.substr(iPos+1);
+	if(bToLower)
+		strRet = str_to_lower(strRet);
+
+	return strRet;
+}
+
+
+// -----------------------------------------------------------------------------
+
+
 
 template<class t_str=std::string>
 bool str_is_equal(const t_str& str0, const t_str& str1, bool bCase=0)
 {
+#ifndef NO_BOOST
+
+	if(bCase)
+		return algo::equals(str0, str1, algo::is_equal());
+	else
+		return algo::equals(str0, str1, algo::is_iequal(std::locale()));
+
+#else
+
 	if(str0.size() != str1.size())
 		return false;
 
 	if(bCase) return str0==str1;
 
+	std::locale loc;
 	for(std::size_t i=0; i<str0.size(); ++i)
 	{
-		if(std::tolower(str0[i]) != std::tolower(str1[i]))
+		if(std::tolower(str0[i], loc) != std::tolower(str1[i], loc))
 			return false;
 	}
 	return true;
+
+#endif
 }
 
 template<class t_str=std::string>
@@ -206,34 +255,33 @@ bool str_is_equal_to_either(const t_str& str0,
 	return false;
 }
 
-template<class t_str=std::string>
-t_str str_to_lower(const t_str& str)
-{
-	t_str strLower;
-
-#ifndef NO_BOOST
-	strLower = boost::to_lower_copy(str);
-#else
-	strLower.reserve(str.length());
-
-	for(typename t_str::value_type ch : str)
-		strLower.push_back(std::tolower(ch));
-#endif
-
-	return strLower;
-}
 
 template<class t_str=std::string>
 bool str_contains(const t_str& str, const t_str& strSub, bool bCase=0)
 {
+#ifndef NO_BOOST
+
+	if(bCase)
+		return algo::contains(str, strSub, algo::is_equal());
+	else
+		return algo::contains(str, strSub, algo::is_iequal(std::locale()));
+
+#else
+
 	if(bCase)
 		return str.find(strSub) != t_str::npos;
 
+	std::locale loc;
 	t_str strLower = str_to_lower(str);
 	t_str strSubLower = str_to_lower(strSub);
 
 	return strLower.find(strSubLower) != t_str::npos;
+
+#endif
 }
+
+
+// -----------------------------------------------------------------------------
 
 
 template<class t_str=std::string>
@@ -242,11 +290,14 @@ void trim(t_str& str)
 	using t_char = typename t_str::value_type;
 
 #ifndef NO_BOOST
+
 	boost::trim_if(str, [](t_char c) -> bool
 	{
 		return get_trim_chars<t_str>().find(c) != t_str::npos;
 	});
+
 #else
+
 	std::size_t posLast = str.find_last_not_of(get_trim_chars<t_str>());
 	if(posLast == std::string::npos)
 		posLast = str.length();
@@ -261,6 +312,7 @@ void trim(t_str& str)
 		posFirst = str.length();
 
 	str.erase(str.begin(), str.begin()+posFirst);
+
 #endif
 }
 
@@ -271,6 +323,52 @@ t_str trimmed(const t_str& str)
 	trim(strret);
 	return strret;
 }
+
+
+// -----------------------------------------------------------------------------
+
+
+template<class t_str=std::string>
+bool find_and_replace(t_str& str1, const t_str& str_old,
+	const t_str& str_new)
+{
+	std::size_t pos = str1.find(str_old);
+	if(pos == t_str::npos)
+		return false;
+
+	str1.replace(pos, str_old.length(), str_new);
+	return true;
+}
+
+template<class t_str=std::string>
+void find_all_and_replace(t_str& str1, const t_str& str_old,
+	const t_str& str_new)
+{
+#ifndef NO_BOOST
+
+	boost::replace_all<t_str, t_str, t_str>(str1, str_old, str_new);
+
+#else
+
+	const std::size_t iOldLen = str_old.length();
+	const std::size_t iNewLen = str_new.length();
+
+	std::size_t pos = 0;
+	while(pos < str1.length())
+	{
+		pos = str1.find(str_old, pos);
+		if(pos == t_str::npos)
+			break;
+
+		str1.replace(pos, iOldLen, str_new);
+		pos += iNewLen;
+	}
+
+#endif
+}
+
+
+// -----------------------------------------------------------------------------
 
 
 /**
@@ -315,14 +413,15 @@ t_str remove_chars(const t_str& str, const t_str& chs)
 	return strRet;
 }
 
+
 /**
  * Removes substring between strStart and strEnd
  * @return Number of removed substrings
  */
 template<class t_str = std::string>
-unsigned int string_rm(t_str& str, const t_str& strStart, const t_str& strEnd)
+std::size_t string_rm(t_str& str, const t_str& strStart, const t_str& strEnd)
 {
-	unsigned int iNumFound = 0;
+	std::size_t iNumFound = 0;
 
 	while(1)
 	{
@@ -341,52 +440,94 @@ unsigned int string_rm(t_str& str, const t_str& strStart, const t_str& strEnd)
 	return iNumFound;
 }
 
+
+// -----------------------------------------------------------------------------
+
+
 template<class t_str=std::string>
-bool find_and_replace(t_str& str1, const t_str& str_old,
-	const t_str& str_new)
+t_str insert_before(const t_str& str, const t_str& strChar, const t_str& strInsert)
 {
-	std::size_t pos = str1.find(str_old);
+	std::size_t pos = str.find(strChar);
 	if(pos==t_str::npos)
-		return false;
+		return str;
 
-	str1.replace(pos, str_old.length(), str_new);
-	return true;
-}
+	t_str strRet = str;
+	strRet.insert(pos, strInsert);
 
-template<class t_str=std::string>
-void find_all_and_replace(t_str& str1, const t_str& str_old,
-	const t_str& str_new)
-{
-	std::size_t pos=0;
-	while(pos < str1.length())
-	{
-		pos = str1.find(str_old, pos);
-		if(pos==t_str::npos)
-			break;
-		str1.replace(pos, str_old.length(), str_new);
-		pos += str_new.length();
-	}
+	return strRet;
 }
 
 
 template<class t_str=std::string>
 bool begins_with(const t_str& str, const t_str& strBeg, bool bCase=1)
 {
-	if(str.length() < strBeg.length())
+#ifndef NO_BOOST
+
+	if(bCase)
+		return algo::starts_with(str, strBeg, algo::is_equal());
+	else
+		return algo::starts_with(str, strBeg, algo::is_iequal(std::locale()));
+
+#else
+
+	const std::size_t iLenBeg = strBeg.length();
+
+	if(str.length() < iLenBeg)
 		return false;
 
-	for(std::size_t i=0; i<strBeg.length(); ++i)
+	std::locale loc;
+	for(std::size_t i=0; i<iLenBeg; ++i)
 	{
 		typename t_str::value_type c1, c2;
-		c1 = bCase ? str[i] : std::tolower(str[i]);
-		c2 = bCase ? strBeg[i] : std::tolower(strBeg[i]);
+		c1 = bCase ? str[i] : std::tolower(str[i], loc);
+		c2 = bCase ? strBeg[i] : std::tolower(strBeg[i], loc);
 
 		if(c1 != c2)
 			return false;
 	}
 
 	return true;
+
+#endif
 }
+
+
+template<class t_str=std::string>
+bool ends_with(const t_str& str, const t_str& strEnd, bool bCase=1)
+{
+#ifndef NO_BOOST
+
+	if(bCase)
+		return algo::ends_with(str, strEnd, algo::is_equal());
+	else
+		return algo::ends_with(str, strEnd, algo::is_iequal(std::locale()));
+
+#else
+
+	const std::size_t iLen = str.length();
+	const std::size_t iLenEnd = strEnd.length();
+
+	if(iLen < iLenEnd)
+		return false;
+
+	std::locale loc;
+	for(std::size_t i=iLen-iLenEnd, j=0; i<iLen; ++i, ++j)
+	{
+		typename t_str::value_type c1, c2;
+		c1 = bCase ? str[i] : std::tolower(str[i], loc);
+		c2 = bCase ? strEnd[j] : std::tolower(strEnd[j], loc);
+
+		if(c1 != c2)
+			return false;
+	}
+
+	return true;
+
+#endif
+}
+
+
+// -----------------------------------------------------------------------------
 
 
 template<class t_str=std::string>
@@ -437,10 +578,7 @@ t_str str_between(const t_str& str, const t_str& strSep1, const t_str& strSep2,
 
 
 template<typename T, class t_str=std::string, bool bTIsStr=0>
-struct _str_to_var_impl
-{
-	inline T operator()(const t_str&) const { throw Err("No implementation for str_to_var"); }
-};
+struct _str_to_var_impl;
 
 template<typename T, class t_str>
 struct _str_to_var_impl<T, t_str, 1>
@@ -487,6 +625,36 @@ void get_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
 		vecRet.push_back(
 			_str_to_var_impl<T, t_str,
 			std::is_convertible<T, t_str>::value>()(*iter));
+	}
+}
+
+/**
+ * Tokenises string on strDelim
+ */
+template<class T, class t_str=std::string, template<class...> class t_cont=std::vector>
+void get_tokens_seq(const t_str& str, const t_str& strDelim, t_cont<T>& vecRet, bool bCase=1)
+{
+	using t_char = typename t_str::value_type;
+
+	std::locale loc;
+	t_cont<t_str> vecStr;
+	algo::iter_split(vecStr, str, algo::first_finder(strDelim,
+		[bCase, &loc](t_char c1, t_char c2) -> bool
+		{
+			if(!bCase)
+			{
+				c1 = std::tolower(c1, loc);
+				c2 = std::tolower(c2, loc);
+			}
+
+			return c1 == c2;
+		}));
+
+	for(const t_str& strTok : vecStr)
+	{
+		vecRet.push_back(
+			_str_to_var_impl<T, t_str,
+			std::is_convertible<T, t_str>::value>()(strTok));
 	}
 }
 
@@ -541,38 +709,6 @@ T str_to_var_parse(const t_str& str)
 }
 
 #endif
-
-
-/**
- * Tokenises string on strDelim
- */
-template<class T, class t_str=std::string, template<class...> class t_cont=std::vector>
-void get_tokens_seq(const t_str& str, const t_str& strDelim, t_cont<T>& vecRet,
-	bool bCase=1)
-{
-	namespace algo = boost::algorithm;
-	using t_char = typename t_str::value_type;
-
-	t_cont<t_str> vecStr;
-	algo::iter_split(vecStr, str, algo::first_finder(strDelim,
-		[bCase](t_char c1, t_char c2) -> bool
-		{
-			if(!bCase)
-			{
-				c1 = std::tolower(c1);
-				c2 = std::tolower(c2);
-			}
-
-			return c1==c2;
-		}));
-
-	for(const t_str& strTok : vecStr)
-	{
-		vecRet.push_back(
-			_str_to_var_impl<T, t_str,
-			std::is_convertible<T, t_str>::value>()(strTok));
-	}
-}
 #endif
 
 
@@ -730,14 +866,15 @@ bool skip_after_line(std::basic_istream<t_char>& istr,
 template<typename t_char=char>
 void skip_after_char(std::basic_istream<t_char>& istr, t_char ch, bool bCase=0)
 {
-	if(!bCase) ch = std::tolower(ch);
+	std::locale loc;
+	if(!bCase) ch = std::tolower(ch, loc);
 
 	while(!istr.eof())
 	{
 		t_char c;
 		istr.get(c);
 
-		if(!bCase) c = std::tolower(c);
+		if(!bCase) c = std::tolower(c, loc);
 
 		if(c == ch)
 			break;

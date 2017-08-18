@@ -1,4 +1,4 @@
-/*
+/**
  * Special chars
  * @author Tobias Weber <tobias.weber@tum.de>
  * @date 09-mar-14

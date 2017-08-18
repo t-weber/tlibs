@@ -17,6 +17,11 @@ int main()
 	std::cout << tl::str_is_digits(std::string("123456")) << std::endl;
 	std::cout << tl::str_is_digits(std::wstring(L"123456")) << std::endl;
 	std::cout << tl::str_is_digits(std::string("123a456")) << std::endl;
+	std::cout << std::endl;
+
+	std::cout << tl::ends_with<std::string>("Test123", "123") << std::endl;;
+	std::cout << tl::ends_with<std::string>("Test1234", "123") << std::endl;;
+	std::cout << tl::ends_with<std::string>("Test123", "21") << std::endl;;
 
 	return 0;
 }

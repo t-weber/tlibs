@@ -198,10 +198,16 @@ generate_supercell(const Lattice<t_real>& latt,
  * @desc see: Waasmaier and Kirfel, Acta Cryst. A51, 416-431 (1995)
  */
 template<class T=double, template<class...> class t_cont>
-T formfact(T G, const t_cont<T>& vecA, const t_cont<T>& vecB, T c)
+T formfact(T G, const t_cont<T>& vecA, const t_cont<T>& vecB, T c=0)
 {
+	assert(vecA.size() == vecB.size() /*|| vecA.size() == vecB.size()+1*/);
+
 	T ff = T(0);
-	T s = G / T(4.*get_pi<T>());
+	T s = G / (T(4)*get_pi<T>());
+
+	// 'c' coefficient directly stored in 'vecA'
+	//if(vecA.size() == vecB.size()+1)
+	//	c = vecA.rbegin();
 
 	typename t_cont<T>::const_iterator iterA = vecA.begin();
 	typename t_cont<T>::const_iterator iterB = vecB.begin();

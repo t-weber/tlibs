@@ -22,13 +22,7 @@ namespace ublas = boost::numeric::ublas;
 template<class T1, class T2,
 	LinalgType ty1=get_linalg_type<T1>::value,
 	LinalgType ty2=get_linalg_type<T2>::value>
-struct linalg_mult_op_impl
-{
-	void operator()(const T1&, const T2&) const
-	{
-		throw Err("No implementation for linalg_mult_op found.");
-	}
-};
+struct linalg_mult_op_impl;
 
 // vec * vec
 template<class T1, class T2>
@@ -87,13 +81,7 @@ typename tl::linalg_mult_op_impl<T1, T2>::ret_type mult(
 template<class T1, class T2, class EPS,
 	LinalgType ty1 = get_linalg_type<T1>::value,
 	LinalgType ty2 = get_linalg_type<T2>::value>
-struct linalg_equ_op_impl
-{
-	bool operator()(const T1&, const T2&, EPS eps) const
-	{
-		throw Err("No implementation for linalg_mult_op found.");
-	}
-};
+struct linalg_equ_op_impl;
 
 template<class T1, class T2, class EPS>
 struct linalg_equ_op_impl<T1, T2, EPS,
