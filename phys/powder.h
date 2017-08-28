@@ -3,8 +3,6 @@
  * @author Tobias Weber <tobias.weber@tum.de>
  * @date apr-2015
  * @license GPLv2 or GPLv3
- *
- * gcc -o powder powder.cpp ../log/log.cpp -lstdc++ -lm -lMinuit2 -lgomp
  */
 
 #ifndef __POWDER_H__
