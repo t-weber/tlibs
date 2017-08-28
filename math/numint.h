@@ -1,5 +1,5 @@
 /**
- * simple numerical integration
+ * simple numerical integration / differentiation
  * @author Tobias Weber <tobias.weber@tum.de>
  * @date june-2015
  * @license GPLv2 or GPLv3
@@ -10,6 +10,9 @@
 
 #include <functional>
 #include <vector>
+#include <limits>
+#include <cmath>
+
 
 namespace tl {
 
@@ -134,6 +137,31 @@ cont_type convolute_discrete(const cont_type& f, const cont_type& g)
 
 	return conv;
 }
+
+
+// --------------------------------------------------------------------------------
+
+/**
+ * Newton iteration
+ */
+template<class T = double>
+T newton(const std::function<T(T)>& fkt, const std::function<T(T)>& diff,
+	T x, std::size_t imax = 128, T eps = std::numeric_limits<T>::epsilon())
+{
+	T xnew = x;
+	for(std::size_t i=0; i<imax; ++i)
+	{
+		xnew = x - fkt(x)/diff(x);
+
+		if(std::abs(xnew - x) < eps)
+			break;
+
+		x = xnew;
+	}
+
+	return xnew;
+}
+
 
 
 }

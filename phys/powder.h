@@ -3,6 +3,8 @@
  * @author Tobias Weber <tobias.weber@tum.de>
  * @date apr-2015
  * @license GPLv2 or GPLv3
+ *
+ * gcc -o powder powder.cpp ../log/log.cpp -lstdc++ -lm -lMinuit2 -lgomp
  */
 
 #ifndef __POWDER_H__
@@ -16,6 +18,10 @@
 #include "lattice.h"
 #include "../string/string.h"
 #include "../helper/hash.h"
+#include "../helper/array.h"
+#include "../fit/minuit.h"
+#include "../phys/neutrons.h"
+
 
 namespace tl {
 
@@ -202,6 +208,67 @@ class Powder
 			m_pLatticeRecip = nullptr;
 		}
 };
+
+
+/**
+ * corrects mono & sample axes using known powder lines
+ * @desc see (Shirane 2002), p. 87
+ */
+template<class t_real = double>
+bool powder_align(t_real _d_mono, const std::vector<t_real>& vecGs,
+	const std::vector<t_real>& vecTTs, const std::vector<t_real>& vecTTErrs,
+	std::vector<t_real>& vecRes, std::vector<t_real>& vecResErrs)
+{
+	auto fktBragg = [](t_real _G, t_real _k, t_real _dtt) -> t_real
+	{
+		t_wavenumber_si<t_real> G = _G / get_one_angstrom<t_real>();
+		t_wavenumber_si<t_real> k = _k / get_one_angstrom<t_real>();
+		t_angle_si<t_real> twotheta;
+
+		try
+		{
+			twotheta = bragg_recip_twotheta(G, k, t_real(1));
+		}
+		catch(const std::exception& ex)
+		{
+			tl::log_err(ex.what());
+			return t_real(0.);
+		}
+
+		return t_real(twotheta/get_one_radian<t_real>()) + _dtt;
+	};
+
+	// conversion
+	std::vector<t_real_min> _vecRes =
+		container_cast<t_real_min, t_real, std::vector>()(vecRes);
+	std::vector<t_real_min> _vecResErrs =
+		container_cast<t_real_min, t_real, std::vector>()(vecResErrs);
+
+	std::vector<std::string> vecParams = { "k", "dtt" };
+	bool bFitOk = fit<3>(fktBragg,
+		container_cast<t_real_min, t_real, std::vector>()(vecGs), 
+		container_cast<t_real_min, t_real, std::vector>()(vecTTs),
+		container_cast<t_real_min, t_real, std::vector>()(vecTTErrs),
+		vecParams, _vecRes, _vecResErrs);
+
+	// back-conversion
+	vecRes = container_cast<t_real, t_real_min, std::vector>()(_vecRes);
+	vecResErrs = container_cast<t_real, t_real_min, std::vector>()(_vecResErrs);
+
+
+	// calc. mono angle
+	if(vecRes.size() >= 3)
+	{
+		t_wavenumber_si<t_real> ki = vecRes[0] / get_one_angstrom<t_real>();
+		t_length_si<t_real> d_mono = _d_mono * get_one_angstrom<t_real>();
+		t_angle_si<t_real> twotheta_m = bragg_recip_twotheta(d2G(d_mono), ki, t_real(1));
+		vecRes[2] = t_real(twotheta_m / get_one_radian<t_real>());
+		vecResErrs[2] = t_real(-1);	// TODO: propagate error
+	}
+
+	return bFitOk;
+}
+
 
 }
 
