@@ -991,5 +991,21 @@ t_length<Sys,Y> colli_div_w(const t_length<Sys,Y>& L, const t_angle<Sys,Y>& ang,
 // --------------------------------------------------------------------------------
 
 
+
+/**
+ * @brief velocity selector
+ * @return selector angular frequency
+ */
+template<class Sys, class Y=double>
+t_freq<Sys, Y> vsel_freq(const t_length<Sys,Y>& lam,
+	const t_length<Sys,Y>& len, const t_angle<Sys,Y>& twist)
+{
+	t_velocity<Sys,Y> v_n = k2v<Sys,Y>(lam2k<Sys,Y>(lam));
+	return v_n*twist / (len * get_one_radian<Y>());
+}
+
+// --------------------------------------------------------------------------------
+
+
 }
 #endif
