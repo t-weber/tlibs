@@ -172,7 +172,7 @@ template<class t_vec = ublas::vector<double>,
 	class t_quat = math::quaternion<typename t_vec::value_type>>
 t_vec quat_vec_prod(const t_quat& q, const t_vec& v)
 {
-	t_quat qv = vec3_to_quat(v);
+	t_quat qv = vec3_to_quat<t_vec, t_quat>(v);
 	t_quat qvq =  q * qv * math::conj(q);
 
 	t_vec vec(3);
