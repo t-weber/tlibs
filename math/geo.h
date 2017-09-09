@@ -133,6 +133,13 @@ public:
 		return std::acos(dot);
 	}
 
+	T GetAngle(const t_vec& _vec) const
+	{
+		t_vec vec = _vec / ublas::norm_2(_vec);
+		T dot = ublas::inner_prod(GetNorm(), vec);
+		return std::asin(dot);
+	}
+
 
 	void FlipNormal()
 	{

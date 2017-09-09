@@ -12,6 +12,7 @@
 #include "../math/quat.h"
 #include "../math/math.h"
 #include "../math/tensor.h"
+#include "../math/geo.h"
 #include "neutrons.h"
 #include <ostream>
 
@@ -496,6 +497,64 @@ void get_hkl_from_tas_angles(const Lattice<T>& lattice_real,
 // -----------------------------------------------------------------------------
 
 
+
+/**
+ * hklE -> quaternion of crystal orientation
+ * also rotate towards up vector if given
+ */
+template<typename T = double>
+math::quaternion<T> get_hkl_orient(const Lattice<T>& lattice_real,
+	T dh, T dk, T dl,
+	T up_h = 0, T up_k = 0, T up_l = 1,
+	ublas::vector<T>* pvecG = nullptr)
+{
+	using t_vec = ublas::vector<T>;
+	using t_mat = ublas::matrix<T>;
+	using t_quat = math::quaternion<T>;
+
+	t_mat matB = get_B(lattice_real, 1);
+
+	// Q = [100] to rotate G into
+	t_vec vecQx_rlu = make_vec<t_vec>({T(1), T(0), T(0)});	// front
+	t_vec vecQy_rlu = make_vec<t_vec>({T(0), T(1), T(0)});	// side
+	t_vec vecQz_rlu = make_vec<t_vec>({T(0), T(0), T(1)});	// up
+
+	t_vec vecG_rlu = make_vec({dh, dk, dl});
+	t_vec vecG = ublas::prod(matB, vecG_rlu);
+
+	t_vec vecQx = ublas::prod(matB, vecQx_rlu);
+	t_vec vecQy = ublas::prod(matB, vecQy_rlu);
+	t_vec vecQz = ublas::prod(matB, vecQz_rlu);
+
+
+	if(pvecG) *pvecG = vecG;
+
+	// quaternion to rotate G into Q
+	t_quat quatRot = rotation_quat(vecG, vecQx);
+
+
+	// ------------------------------------------------------------------------
+	t_vec vechklUp = make_vec({up_h, up_k, up_l});
+	t_vec vecUp = ublas::prod(matB, vechklUp);
+
+	// get angle between vecUp and vecQz
+	t_vec vec0 = make_vec<t_vec>({T(0), T(0), T(0)});
+	Plane<T> plane(vec0, vecQx, vecQz);
+	T angle = plane.GetAngle(vecUp);
+	//tl::log_debug("angle = ", angle/M_PI*180.);
+
+	// rotate around G towards up vector
+	t_quat quatRotAroundG = rotation_quat<t_quat, t_vec, T>(vecG, angle);
+	quatRot *= quatRotAroundG;
+	// ------------------------------------------------------------------------
+
+
+	//tl::log_debug("Rotation axis = ", rotation_axis(quatRot));
+	return quatRot;
+}
+
+
+
 /**
  * hklE -> euler angles
  * TODO (unfinished)
@@ -503,7 +562,8 @@ void get_hkl_from_tas_angles(const Lattice<T>& lattice_real,
 template<typename T = double>
 void get_euler_angles(const Lattice<T>& lattice_real,
 	T dKi, T dh, T dk, T dl,
-	T *pTheta, T *pTwoTheta, T *pChi, T *pPsi)
+	T *pTheta, T *pTwoTheta, T *pChi, T *pPsi,
+	T up_h = 0, T up_k = 0, T up_l = 1)
 {
 	static const auto angs = get_one_angstrom<T>();
 	static const auto rad = get_one_radian<T>();
@@ -511,16 +571,16 @@ void get_euler_angles(const Lattice<T>& lattice_real,
 	using t_mat = ublas::matrix<T>;
 	using t_quat = math::quaternion<T>;
 
-	t_mat matB = get_B(lattice_real, 1);
-
-	t_vec vecQ = make_vec<t_vec>({T(1), T(0), T(0)});
-	t_vec vechkl = make_vec({dh, dk, dl});
-	t_vec vecG = ublas::prod(matB, vechkl);
-	tl::log_debug("G = ", vecG);
-
+	t_vec vecG;
 	// matrix to rotate G into Q
-	t_quat quatRot = rotation_quat(vecG, vecQ);
+	t_quat quatRot = get_hkl_orient<T>(lattice_real,
+		dh, dk, dl, 
+		up_h, up_k, up_l, 
+		&vecG);
 	t_mat matRot = quat_to_rot3<t_mat>(quatRot);
+
+	tl::log_debug("R = ", matRot);
+	tl::log_debug("G = ", vecG);
 	tl::log_debug("R*G = ", ublas::prod(matRot, vecG));
 
 	T dG = ublas::norm_2(vecG);
@@ -531,6 +591,7 @@ void get_euler_angles(const Lattice<T>& lattice_real,
 	*pChi = vecEuler[1];
 	*pPsi = vecEuler[0];
 }
+
 
 
 // -----------------------------------------------------------------------------
