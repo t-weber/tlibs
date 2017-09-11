@@ -504,17 +504,19 @@ void get_hkl_from_tas_angles(const Lattice<T>& lattice_real,
  */
 template<typename T = double>
 math::quaternion<T> get_hkl_orient(const Lattice<T>& lattice_real,
-	T dh, T dk, T dl,
+	T dh, T dk, T dl,				// original Bragg peak
+	T dh_new, T dk_new, T dl_new,	// Bragg peak to rotate into
 	T up_h = 0, T up_k = 0, T up_l = 1,
 	ublas::vector<T>* pvecG = nullptr,
 	const ublas::vector<T>& vecQx_rlu = make_vec<ublas::vector<T>>({T(1), T(0), T(0)}),	// front
-	const ublas::vector<T>& vecQy_rlu = make_vec<ublas::vector<T>>({T(0), T(1), T(0)}),	// side
-	const ublas::vector<T>& vecQz_rlu = make_vec<ublas::vector<T>>({T(0), T(0), T(1)})	// up
-	)
+	const ublas::vector<T>& vecQy_rlu = make_vec<ublas::vector<T>>({T(0), T(1), T(0)}))	// side
 {
 	using t_vec = ublas::vector<T>;
 	using t_mat = ublas::matrix<T>;
 	using t_quat = math::quaternion<T>;
+
+	// scattering plane normal
+	ublas::vector<T> vecQz_rlu = cross_3(vecQx_rlu, vecQy_rlu);
 
 	//t_mat matB = get_B(lattice_real, 1);
 	t_mat matUB = get_UB(lattice_real, vecQx_rlu, vecQy_rlu);
@@ -522,16 +524,19 @@ math::quaternion<T> get_hkl_orient(const Lattice<T>& lattice_real,
 	t_vec vecG_rlu = make_vec({dh, dk, dl});
 	t_vec vecG = ublas::prod(matUB, vecG_rlu);
 
-	// Q = [100] to rotate G into
+	t_vec vecGnew_rlu = make_vec({dh_new, dk_new, dl_new});
+	t_vec vecGnew = ublas::prod(matUB, vecGnew_rlu);
+
+	// scattering plane
 	t_vec vecQx = ublas::prod(matUB, vecQx_rlu);
-	t_vec vecQy = ublas::prod(matUB, vecQy_rlu);
+	//t_vec vecQy = ublas::prod(matUB, vecQy_rlu);
 	t_vec vecQz = ublas::prod(matUB, vecQz_rlu);
 
 
 	if(pvecG) *pvecG = vecG;
 
-	// quaternion to rotate G into Q
-	t_quat quatRot = rotation_quat(vecG, vecQx);
+	// quaternion to rotate G into Gnew
+	t_quat quatRot = rotation_quat(vecG, vecGnew);
 
 
 	// ------------------------------------------------------------------------
@@ -558,17 +563,15 @@ math::quaternion<T> get_hkl_orient(const Lattice<T>& lattice_real,
 
 /**
  * hklE -> euler angles
- * TODO (unfinished)
  */
 template<typename T = double>
 math::quaternion<T> get_euler_angles(const Lattice<T>& lattice_real,
-	T dKi, T dh, T dk, T dl,
+	T dKi, T dh, T dk, T dl,		// original Bragg peak
+	T dh_new, T dk_new, T dl_new,	// Bragg peak to rotate into
 	T *pRelTheta, T *pThetaX, T *pTwoTheta, T *pChi, T *pPsi,
 	T up_h = 0, T up_k = 0, T up_l = 1,
 	const ublas::vector<T>& vecQx_rlu = make_vec<ublas::vector<T>>({T(1), T(0), T(0)}),	// front
-	const ublas::vector<T>& vecQy_rlu = make_vec<ublas::vector<T>>({T(0), T(1), T(0)}),	// side
-	const ublas::vector<T>& vecQz_rlu = make_vec<ublas::vector<T>>({T(0), T(0), T(1)})	// up
-	)
+	const ublas::vector<T>& vecQy_rlu = make_vec<ublas::vector<T>>({T(0), T(1), T(0)}))	// side
 {
 	static const auto angs = get_one_angstrom<T>();
 	static const auto rad = get_one_radian<T>();
@@ -580,9 +583,10 @@ math::quaternion<T> get_euler_angles(const Lattice<T>& lattice_real,
 	// matrix to rotate G into Q
 	t_quat quatRot = get_hkl_orient<T>(lattice_real,
 		dh, dk, dl, 
+		dh_new, dk_new, dl_new,
 		up_h, up_k, up_l, 
 		&vecG,
-		vecQx_rlu, vecQy_rlu, vecQz_rlu);
+		vecQx_rlu, vecQy_rlu);
 
 	/*t_mat matRot = quat_to_rot3<t_mat>(quatRot);
 	tl::log_debug("R = ", matRot);
