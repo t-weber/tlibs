@@ -284,24 +284,45 @@ public:
 	const t_vec& GetX0() const { return m_vecX0; }
 	const t_vec& GetDir() const { return m_vecDir; }
 
+	/**
+	 * distance to line l1
+	 */
 	T GetDist(const Line<T>& l1) const
 	{
 		const Line<T>& l0 = *this;
 
+		// vector normal to both directions defining the distance line
 		t_vec vecNorm = cross_3(l0.GetDir(), l1.GetDir());
+		T tlenNorm = ublas::norm_2(vecNorm);
 
-		T tnum = std::fabs(ublas::inner_prod(l1.GetX0()-l0.GetX0(), vecNorm));
-		T tdenom = ublas::norm_2(vecNorm);
+		t_vec vec01 = l1.GetX0() - l0.GetX0();
 
-		return tnum/tdenom;
+		// if the lines are parallel, any point (e.g. the X0s) can be used
+		if(float_equal(tlenNorm, T(0)))
+			return ublas::norm_2(vec01);
+
+		// project x0_1 - x0_0 onto vecNorm
+		T tdot = std::abs(ublas::inner_prod(vec01, vecNorm));
+		return tdot / tlenNorm;
 	}
 
+	/**
+	 * distance to a point
+	 */
 	T GetDist(const t_vec& vecPt) const
 	{
-		T tnum = ublas::norm_2(cross_3(m_vecDir, vecPt-m_vecX0));
-		T tdenom = ublas::norm_2(m_vecDir);
+		const t_vec& vecX0 = GetX0();
+		const t_vec& vecDir = GetDir();
 
-		return tnum / tdenom;
+		T tlenDir = ublas::norm_2(vecDir);
+
+		// area of parallelogram spanned by vecDir and vecPt-vecX0
+		// 	== ||vecDir||*||vecPt-vecX0||*sin(th)
+		T tArea = ublas::norm_2(cross_3(vecDir, vecPt-vecX0));
+
+		// length of perpendicular line from vecPt, also by sine theorem
+		// 	== ||vecPt-vecX0||*sin(th)
+		return tArea / tlenDir;
 	}
 
 	bool IsParallel(const Line<T>& line, T eps = tl::get_epsilon<T>()) const
@@ -328,7 +349,12 @@ public:
 	 */
 	t_vec GetDroppedPerp(const t_vec& vecP, T *pdDist=0) const
 	{
-		T t = ublas::inner_prod(vecP-GetX0(), GetDir()) / ublas::inner_prod(GetDir(), GetDir());
+		const t_vec& vecDir = GetDir();
+
+		// projection of vecP-x0 onto vecDir
+		T t = ublas::inner_prod(vecP-GetX0(), vecDir)
+			/ ublas::inner_prod(vecDir, vecDir);
+
 		t_vec vecdropped = operator()(t);
 
 		if(pdDist)
@@ -490,7 +516,7 @@ template<typename T>
 std::ostream& operator<<(std::ostream& ostr, const Plane<T>& plane)
 {
 	ostr << plane.GetX0() << " + s*" << plane.GetDir0()
-				<< " + t*" << plane.GetDir1();
+		<< " + t*" << plane.GetDir1();
 	return ostr;
 }
 
