@@ -992,6 +992,7 @@ t_length<Sys,Y> colli_div_w(const t_length<Sys,Y>& L, const t_angle<Sys,Y>& ang,
 
 
 
+// --------------------------------------------------------------------------------
 /**
  * @brief velocity selector
  * @return selector angular frequency
@@ -1002,6 +1003,30 @@ t_freq<Sys, Y> vsel_freq(const t_length<Sys,Y>& lam,
 {
 	t_velocity<Sys,Y> v_n = k2v<Sys,Y>(lam2k<Sys,Y>(lam));
 	return v_n*twist / (len * get_one_radian<Y>());
+}
+
+template<class Sys, class Y=double>
+t_length<Sys,Y> vsel_len(const t_length<Sys,Y>& lam,
+	const t_freq<Sys, Y>& om, const t_angle<Sys,Y>& twist)
+{
+	t_velocity<Sys,Y> v_n = k2v<Sys,Y>(lam2k<Sys,Y>(lam));
+	return v_n*twist / (om * get_one_radian<Y>());
+}
+
+template<class Sys, class Y=double>
+t_angle<Sys,Y> vsel_twist(const t_length<Sys,Y>& lam,
+	const t_freq<Sys, Y>& om, const t_length<Sys,Y>& len)
+{
+	t_velocity<Sys,Y> v_n = k2v<Sys,Y>(lam2k<Sys,Y>(lam));
+	return  (len * om * get_one_radian<Y>()) / v_n;
+}
+
+template<class Sys, class Y=double>
+t_length<Sys,Y> vsel_lam(const t_angle<Sys,Y>& twist,
+	const t_freq<Sys, Y>& om, const t_length<Sys,Y>& len)
+{
+	t_velocity<Sys,Y> v_n = (len * om * get_one_radian<Y>()) / twist;
+	return k2lam<Sys,Y>(v2k<Sys,Y>(v_n));
 }
 
 // --------------------------------------------------------------------------------

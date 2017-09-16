@@ -594,6 +594,9 @@ struct _str_to_var_impl<T, t_str, 0>
 {
 	inline T operator()(const t_str& str) const
 	{
+		if(!trimmed(str).length())
+			return T();
+
 		typedef typename t_str::value_type t_char;
 		std::basic_istringstream<t_char> istr(str);
 

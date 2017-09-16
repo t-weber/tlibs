@@ -176,6 +176,8 @@ generate_supercell(const Lattice<t_real>& latt,
 				cFact = vecFactsUC[iAtom];
 			else if(vecFactsUC.size() == 1)		// use the same for all atoms
 				cFact = vecFactsUC[0];
+			else if(vecFactsUC.size() == 0)		// use 0 for all atoms
+				cFact = t_real(0);
 
 			vecAllAtoms.push_back(vecPos + vecAtom);
 			if(vecFactsUC.size() != 0)
