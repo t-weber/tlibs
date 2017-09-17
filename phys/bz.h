@@ -247,7 +247,7 @@ class Brillouin3D
 
 			// sort vertices in the polygons
 			for(std::vector<t_vec<T>>& vecPoly : m_vecPolys)
-				sort_poly_verts(vecPoly, m_vecCentralReflex);
+				sort_poly_verts<t_vec<T>, std::vector, T>(vecPoly, m_vecCentralReflex);
 
 			m_bValid = 1;
 		}
@@ -307,7 +307,7 @@ class Brillouin3D
 			}
 
 			// sort vertices
-			sort_poly_verts(vecVertices);
+			sort_poly_verts<t_vec<T>, std::vector, T>(vecVertices);
 
 			return std::make_tuple(vecLines, vecVertices);
 		}

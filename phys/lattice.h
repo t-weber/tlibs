@@ -536,7 +536,7 @@ math::quaternion<T> get_hkl_orient(const Lattice<T>& lattice_real,
 	if(pvecG) *pvecG = vecG;
 
 	// quaternion to rotate G into Gnew
-	t_quat quatRot = rotation_quat(vecG, vecGnew);
+	t_quat quatRot = rotation_quat<t_quat, t_vec, T>(vecG, vecGnew);
 
 
 	// ------------------------------------------------------------------------
