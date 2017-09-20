@@ -9,9 +9,11 @@
 #define __BZ_H__
 
 #include "../helper/exception.h"
+#include "../helper/thread.h"
 #include "../math/math.h"
-#include "../phys/nn.h"
+#include "../math/rt.h"
 #include "../math/geo.h"
+#include "../phys/nn.h"
 #include "../log/log.h"
 #include <vector>
 
@@ -142,8 +144,9 @@ class Brillouin3D
 		/**
 		 * calculates the brillouin zone
 		 */
-		void CalcBZ()
+		void CalcBZ(unsigned int iThreads = 4)
 		{
+			//tl::log_debug("Calculating BZ with ", iThreads, " threads.");
 			if(!m_bHasCentralPeak) return;
 
 			// calculate perpendicular planes
@@ -155,94 +158,175 @@ class Brillouin3D
 				return;
 
 
+			// -----------------------------------------------------------------
 			// get middle perpendicular planes
+			ThreadPool<std::pair<bool, Plane<T>>()> poolMiddlePerps(iThreads);
+
 			for(const t_vec<T>& vecN : m_vecNeighbours)
 			{
-				// line from central reflex to vertex
-				Line<T> line(m_vecCentralReflex, vecN-m_vecCentralReflex);
+				poolMiddlePerps.AddTask([&]() -> std::pair<bool, Plane<T>>
+				{
+					// line from central reflex to vertex
+					Line<T> line(m_vecCentralReflex, vecN-m_vecCentralReflex);
 
-				// middle perpendicular
-				Plane<T> planeperp;
-				if(!line.GetMiddlePerp(planeperp))
-					continue;
+					// middle perpendicular
+					Plane<T> planeperp;
+					if(!line.GetMiddlePerp(planeperp))
+						return std::make_pair(false, Plane<T>());
 
-				// let normals point outside
-				if(!planeperp.GetSide(m_vecCentralReflex))
-					planeperp.FlipNormal();
-				vecMiddlePerps.emplace_back(std::move(planeperp));
+					// let normals point outside
+					if(!planeperp.GetSide(m_vecCentralReflex))
+						planeperp.FlipNormal();
+
+					return std::make_pair(true, planeperp);
+				});
 			}
+			poolMiddlePerps.StartTasks();
+
+			for(auto& fut : poolMiddlePerps.GetFutures())
+			{
+				auto pair = fut.get();
+				if(pair.first)
+					vecMiddlePerps.emplace_back(std::move(pair.second));
+			}
+			// -----------------------------------------------------------------
 
 
+
+			// -----------------------------------------------------------------
 			// get vertices from 3-plane intersections
+			ThreadPool<std::pair<bool, t_vec<T>>()> poolIntersections(iThreads);
+
 			for(std::size_t iPlane1=0; iPlane1<vecMiddlePerps.size(); ++iPlane1)
 			{
 				for(std::size_t iPlane2=iPlane1+1; iPlane2<vecMiddlePerps.size(); ++iPlane2)
 				{
 					for(std::size_t iPlane3=iPlane2+1; iPlane3<vecMiddlePerps.size(); ++iPlane3)
 					{
-						const Plane<T>& plane1 = vecMiddlePerps[iPlane1];
-						const Plane<T>& plane2 = vecMiddlePerps[iPlane2];
-						const Plane<T>& plane3 = vecMiddlePerps[iPlane3];
-
-						t_vec<T> vecVertex;
-						if(plane1.intersect(plane2, plane3, vecVertex, m_eps))
+						poolIntersections.AddTask([iPlane1, iPlane2, iPlane3, this, &vecMiddlePerps]
+						() -> std::pair<bool, t_vec<T>>
 						{
-							// if duplicate, ignore vertex
-							if(std::find_if(m_vecVertices.begin(), m_vecVertices.end(),
-								[this, &vecVertex](const t_vec<T>& vec) -> bool
-								{ return vec_equal(vecVertex, vec, m_eps); }) != m_vecVertices.end())
-								continue;
+							const Plane<T>& plane1 = vecMiddlePerps[iPlane1];
+							const Plane<T>& plane2 = vecMiddlePerps[iPlane2];
+							const Plane<T>& plane3 = vecMiddlePerps[iPlane3];
 
-							m_vecVertices.emplace_back(std::move(vecVertex));
+							t_vec<T> vecVertex;
+							if(plane1.intersect(plane2, plane3, vecVertex, m_eps))
+								return std::make_pair(true, vecVertex);
+							else
+								return std::make_pair(false, vecVertex);
+						});
+					}
+				}
+			}
+			poolIntersections.StartTasks();
+
+			std::size_t iVertsRemoved = 0;
+			Rt<T, 3, 8, 0> rt;
+			for(auto& fut : poolIntersections.GetFutures())
+			{
+				auto pair = fut.get();
+				if(pair.first)
+				{
+					t_vec<T>& vecVertex = pair.second;
+
+					if(!rt.IsPointInTree(
+						std::vector<T>{{vecVertex[0], vecVertex[1], vecVertex[2]}},
+						m_eps))
+					{
+						rt.InsertPoint(
+							std::vector<T>{{vecVertex[0], vecVertex[1], vecVertex[2]}},
+							false);
+						m_vecVertices.emplace_back(std::move(vecVertex));
+					}
+					else
+					{
+						++iVertsRemoved;
+					}
+				}
+			}
+
+			//tl::log_debug(iVertsRemoved, " vertices removed.");
+			// -----------------------------------------------------------------
+
+
+
+
+			// -----------------------------------------------------------------
+			// get minimum vertex set that is contained within all plane boundaries
+			ThreadPool<std::pair<bool, std::size_t>()> poolVerts(iThreads);
+
+			for(std::size_t iVert=0; iVert<m_vecVertices.size(); ++iVert)
+			{
+				poolVerts.AddTask([iVert, this, &vecMiddlePerps]() -> std::pair<bool, std::size_t>
+				{
+					bool bRemoveVertex = 0;
+
+					for(const Plane<T>& plane : vecMiddlePerps)
+					{
+						if(plane.GetDist(m_vecVertices[iVert]) > m_eps)
+						{
+							bRemoveVertex = 1;
+							break;
 						}
 					}
-				}
+
+					return std::make_pair(!bRemoveVertex, iVert);
+				});
 			}
+			poolVerts.StartTasks();
 
+			std::vector<t_vec<T>> vecNewVertices;
+			vecNewVertices.reserve(m_vecVertices.size());
 
-			// get minimum vertex set that is contained within all plane boundaries
-			for(auto iterVert = m_vecVertices.begin(); iterVert != m_vecVertices.end();)
+			for(auto& fut : poolVerts.GetFutures())
 			{
-				bool bRemoveVertex = 0;
-
-				for(const Plane<T>& plane : vecMiddlePerps)
+				auto pair = fut.get();
+				if(pair.first)
 				{
-					if(plane.GetDist(*iterVert) > m_eps)
-					{
-						bRemoveVertex = 1;
-						break;
-					}
-				}
-
-				if(bRemoveVertex)
-				{
-					iterVert = m_vecVertices.erase(iterVert);
-				}
-				else
-				{
-					set_eps_0(*iterVert);
-					++iterVert;
+					t_vec<T>& vert = m_vecVertices[pair.second];
+					set_eps_0(vert);
+					vecNewVertices.emplace_back(std::move(vert));
 				}
 			}
 
+			m_vecVertices = std::move(vecNewVertices);
+			// -----------------------------------------------------------------
 
+
+
+			// -----------------------------------------------------------------
 			// calculate polygons by determining which vertex is on which plane
+			ThreadPool<std::tuple<bool, std::vector<t_vec<T>>, Plane<T>>()> poolPolys(iThreads);
+
 			for(const Plane<T>& plane : vecMiddlePerps)
 			{
-				std::vector<t_vec<T>> vecPoly;
-
-				for(const t_vec<T>& vecVertex : m_vecVertices)
+				poolPolys.AddTask([&]() -> std::tuple<bool, std::vector<t_vec<T>>, Plane<T>>
 				{
-					if(plane.IsOnPlane(vecVertex, m_eps))
-						vecPoly.push_back(vecVertex);
-				}
+					std::vector<t_vec<T>> vecPoly;
 
-				if(vecPoly.size() >= 3)
+					for(const t_vec<T>& vecVertex : m_vecVertices)
+					{
+						if(plane.IsOnPlane(vecVertex, m_eps))
+							vecPoly.push_back(vecVertex);
+					}
+
+					bool bOk = (vecPoly.size() >= 3);
+					return std::make_tuple(bOk, vecPoly, plane);
+				});
+			}
+			poolPolys.StartTasks();
+
+			for(auto& fut : poolPolys.GetFutures())
+			{
+				auto tup = fut.get();
+				if(std::get<0>(tup))
 				{
-					m_vecPolys.emplace_back(std::move(vecPoly));
-					m_vecPlanes.push_back(plane);
+					m_vecPolys.emplace_back(std::move(std::get<1>(tup)));
+					m_vecPlanes.emplace_back(std::move(std::get<2>(tup)));
 				}
 			}
+			// -----------------------------------------------------------------
 
 
 			// sort vertices in the polygons

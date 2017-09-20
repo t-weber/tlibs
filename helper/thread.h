@@ -53,10 +53,10 @@ template<class t_func> class ThreadPool
 			void (*pThStartFunc)() = nullptr)
 		{
 			// start 'iNumThreads' threads
-			for(unsigned int i=0; i<iNumThreads; ++i)
+			for(unsigned int iThread=0; iThread<iNumThreads; ++iThread)
 			{
 				m_lstThreads.emplace_back(
-				std::unique_ptr<std::thread>(new std::thread([this, pThStartFunc]()
+				std::unique_ptr<std::thread>(new std::thread([this, pThStartFunc, iThread]()
 				{
 					// callback to invoke before starting job thread
 					if(pThStartFunc) (*pThStartFunc)();
@@ -77,6 +77,7 @@ template<class t_func> class ThreadPool
 							lock0.unlock();
 
 							// run task
+							//tl::log_debug("Thread ", iThread, ": running task.");
 							task();
 						}
 						else
