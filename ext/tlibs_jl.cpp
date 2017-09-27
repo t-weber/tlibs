@@ -38,13 +38,20 @@ extern "C" void load_tlibs(int bDebug)
  */
 extern "C" jl_array_t* load_instr(const char* pcFile)
 {
-	// [ column names, data, keys, values ]
-	jl_array_t *pArr = jl_alloc_array_1d(jl_apply_array_type(jl_any_type, 1), 4);
-	jl_array_t** pArrDat = reinterpret_cast<jl_array_t**>(jl_array_data(pArr));
-
 	tl::FileInstrBase<t_real>* pInstr = tl::FileInstrBase<t_real>::LoadInstr(pcFile);
 	if(!pInstr)
+	{
+		jl_array_t *pArrNull = jl_alloc_array_1d(
+			jl_apply_array_type(reinterpret_cast<jl_value_t*>(jl_any_type), 1), 0);
+
 		tl::log_err("In ", __func__, ": Cannot load ", pcFile, ".");
+		return pArrNull;
+	}
+
+	// [ column names, data, keys, values ]
+	jl_array_t *pArr = jl_alloc_array_1d(
+		jl_apply_array_type(reinterpret_cast<jl_value_t*>(jl_any_type), 1), 4);
+	jl_array_t** pArrDat = reinterpret_cast<jl_array_t**>(jl_array_data(pArr));
 
 	// data column names
 	pArrDat[0] = tl::make_jl_str_arr(pInstr->GetColNames());

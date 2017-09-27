@@ -27,6 +27,7 @@ end
 #
 function loadinstr(strFile::String) :: Array{Any, 1}
 	scandata = ccall((:load_instr, :tlibs_jl), Array{Any, 1}, (Cstring,), strFile)
+	if length(scandata) == 0 return scandata end
 
 	thedict = Dict{String,String}()
 	for (key, val) in zip(scandata[3], scandata[4])
@@ -200,7 +201,7 @@ end
 # Gauss model
 #
 function gauss_model_amp(x, x0, sigma, amp, offs)
-	return amp * exp(-0.5 * ((x-x0)/sigma).*((x-x0)/sigma)) + offs
+	return amp * exp.(-0.5 * ((x-x0)/sigma).*((x-x0)/sigma)) + offs
 end
 
 
@@ -211,6 +212,14 @@ function lorentz_model_amp(x, x0, hwhm, amp, offs)
 	return amp*hwhm*hwhm / ((x-x0)*(x-x0) + hwhm*hwhm) + offs
 end
 
+
+#
+# Conversions
+#
+SIGMA2HWHM = sqrt(2.*log(2.))
+SIGMA2FWHM = 2.*SIGMA2HWHM
+HWHM2SIGMA = 1./SIGMA2HWHM
+FWHM2SIGMA = 1./SIGMA2FWHM
 
 
 end		# module tl

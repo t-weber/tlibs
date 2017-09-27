@@ -144,7 +144,9 @@ jl_array_t* make_jl_2darr(const t_cont<t_cont<T>>& vecvec)
 		iRows = std::min(iRows, vec.size());
 	if(!iCols) iRows = 0;
 
-	jl_array_t *pArr = jl_alloc_array_2d(jl_apply_array_type(jl_traits<T>::get_type(), 2), iRows, iCols);
+	jl_array_t *pArr = jl_alloc_array_2d(
+		jl_apply_array_type(reinterpret_cast<jl_value_t*>(jl_traits<T>::get_type()), 2), 
+		iRows, iCols);
 	T* pDat = reinterpret_cast<T*>(jl_array_data(pArr));
 
 	std::size_t iCurCol = 0;
@@ -170,7 +172,8 @@ jl_array_t* make_jl_2darr(const t_cont<t_cont<T>>& vecvec)
 template<template<class...> class t_cont/*=std::vector*/, class t_str/*=std::string*/>
 jl_array_t* make_jl_str_arr(const t_cont<t_str>& vecStr)
 {
-	jl_array_t *pArr = jl_alloc_array_1d(jl_apply_array_type(jl_string_type, 1), vecStr.size());
+	jl_array_t *pArr = jl_alloc_array_1d(jl_apply_array_type(
+		reinterpret_cast<jl_value_t*>(jl_string_type), 1), vecStr.size());
 	jl_value_t** pDat = reinterpret_cast<jl_value_t**>(jl_array_data(pArr));
 
 	std::size_t iIdx = 0;
@@ -213,8 +216,10 @@ t_cont<t_val> from_jl_arr(jl_array_t *pArr, std::size_t iSkipFront = 0)
 template<template<class...> class t_cont/*=std::map*/, class t_str/*=std::string*/>
 std::tuple<jl_array_t*, jl_array_t*> make_jl_strmap_arr(const t_cont<t_str, t_str>& map)
 {
-	jl_array_t *pArrKey = jl_alloc_array_1d(jl_apply_array_type(jl_string_type, 1), map.size());
-	jl_array_t *pArrVal = jl_alloc_array_1d(jl_apply_array_type(jl_string_type, 1), map.size());
+	jl_array_t *pArrKey = jl_alloc_array_1d(
+		jl_apply_array_type(reinterpret_cast<jl_value_t*>(jl_string_type), 1), map.size());
+	jl_array_t *pArrVal = jl_alloc_array_1d(
+		jl_apply_array_type(reinterpret_cast<jl_value_t*>(jl_string_type), 1), map.size());
 
 	jl_value_t** pDatKey = reinterpret_cast<jl_value_t**>(jl_array_data(pArrKey));
 	jl_value_t** pDatVal = reinterpret_cast<jl_value_t**>(jl_array_data(pArrVal));

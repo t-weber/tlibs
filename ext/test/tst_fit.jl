@@ -20,7 +20,7 @@ idxCtr = findfirst(cols, "ctr1")
 
 Es = data[:,idxE]
 cts = data[:,idxCtr]
-cts_err = sqrt(cts)
+cts_err = sqrt.(cts)
 
 println(lpad(cols[idxE], 12), " ", lpad(cols[idxCtr], 12))
 for (E, ct) in zip(Es, cts)
