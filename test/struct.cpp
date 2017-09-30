@@ -7,12 +7,14 @@
 // clang -o struct test/struct.cpp -lstdc++ -lm -std=c++11
 
 #define TLIBS_USE_GLOBAL_OPS
-#include "../math/atoms.h"
-#include "../math/mag.h"
+#include "../phys/atoms.h"
+#include "../phys/mag.h"
 #include <iostream>
 
 int main()
 {
+	//std::cout << tl::mag_scatlen_eff<double>(4.) << std::endl;
+
 	double a = 5.;
 	double h = 0., k = 0., l = 0.;
 

@@ -1,7 +1,7 @@
 /**
  * julia module
- * gcc -I. -I.. -I/usr/include/julia -I/usr/include/root -std=c++11 -shared -fPIC -o tlibs_jl.so ../log/log.cpp tlibs_jl.cpp -lstdc++ -lboost_system -lboost_iostreams -L/usr/lib64/root -lMinuit2
- * gcc -I. -I.. -I/usr/include/julia -I/usr/local/include -std=c++11 -shared -fPIC -o tlibs_jl.so ../log/log.cpp tlibs_jl.cpp -lstdc++ -lboost_system -lboost_iostreams -L/usr/local/lib64 -lMinuit2 -lgomp
+ * gcc -O2 -march=native -I. -I.. -I/usr/include/julia -I/usr/include/root -std=c++11 -shared -fPIC -o tlibs_jl.so ../log/log.cpp tlibs_jl.cpp -lstdc++ -lboost_system -lboost_iostreams -L/usr/lib64/root -lMinuit2
+ * gcc -O2 -march=native -I. -I.. -I/usr/include/julia -I/usr/local/include -std=c++11 -shared -fPIC -o tlibs_jl.so ../log/log.cpp tlibs_jl.cpp -lstdc++ -lboost_system -lboost_iostreams -L/usr/local/lib64 -lMinuit2 -lgomp
  *
  * @author Tobias Weber <tobias.weber@tum.de>
  * @date 23-apr-2017

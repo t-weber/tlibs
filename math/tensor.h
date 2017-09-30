@@ -11,6 +11,7 @@
 
 #include "math.h"
 #include "linalg.h"
+#include "linalg_ops.h"
 #include <algorithm>
 #include <numeric>
 
@@ -138,7 +139,7 @@ t_mat make_metric_cov(const t_lst<t_vec>& lstVecsCov)
 		std::size_t j;
 		for(iter2=lstVecsCov.begin(), j=0; j<iDim; ++iter2, ++j)
 		{
-			matG(i,j) = ublas::inner_prod(*iter, *iter2);
+			matG(i,j) = mult<t_vec, t_vec>(*iter, *iter2);
 		}
 	}
 
@@ -154,8 +155,8 @@ template<class t_mat = ublas::matrix<double>,
 typename t_vec::value_type inner_prod(const t_mat& matGCov,
 	const t_vec& vec1Contra, const t_vec& vec2Contra)
 {
-	t_vec vec1Cov = ublas::prod(matGCov, vec1Contra);
-	return ublas::inner_prod(vec1Cov, vec2Contra);
+	t_vec vec1Cov = mult<t_mat, t_vec>(matGCov, vec1Contra);
+	return mult<t_vec, t_vec>(vec1Cov, vec2Contra);
 }
 
 
