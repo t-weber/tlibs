@@ -12,6 +12,7 @@
 #include <julia.h>
 #include <tuple>
 #include <limits>
+#include <string>
 
 
 namespace tl
