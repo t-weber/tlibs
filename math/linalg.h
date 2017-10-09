@@ -17,7 +17,6 @@
 
 #include <initializer_list>
 #include <cmath>
-#include <complex>
 
 #include <boost/algorithm/minmax_element.hpp>
 #include <boost/numeric/ublas/vector.hpp>

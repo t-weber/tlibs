@@ -144,6 +144,8 @@ template<class Y=double> t_length<units::si::system, Y> get_one_angstrom()
 { return Y(1e-10) * units::si::meters; }
 template<class Y=double> t_length<units::si::system, Y> get_one_meter()
 { return Y(1) * units::si::meters; }
+template<class Y=double> t_length<units::si::system, Y> get_one_femtometer()
+{ return Y(1e-15) * units::si::meters; }
 template<class Y=double> t_area<units::si::system, Y> get_one_barn()
 { return Y(1e-28) * units::si::meters*units::si::meters; }
 template<class Y=double> t_temperature<units::si::system, Y> get_one_kelvin()
