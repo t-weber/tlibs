@@ -134,7 +134,7 @@ T mag_scatlen_eff(T tM)
 {
 	const T cFact = tl::get_r_e<T>() *
 		(-tl::get_mu_n<T>()/tl::get_mu_N<T>()) * T(0.5)
-		/ (tl::get_one_meter<T>() * T(1e-15));	// in fm
+		/ (tl::get_one_femtometer<T>());
 	//std::cout << cFact << std::endl;
 
 	return cFact * tM;
