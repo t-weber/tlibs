@@ -69,6 +69,7 @@ T j0_avg(T Q, const t_vec<T>& A, const t_vec<T>& a)
 	T c = *vecA.rbegin();
 	vecA.pop_back();
 
+	// same formula as for atomic form factor, just different coefficients
 	return tl::formfact<T, std::vector>(Q, vecA, vecB, c);
 }
 
