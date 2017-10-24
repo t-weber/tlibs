@@ -45,7 +45,7 @@ protected:
 
 public:
 	Off3d() = default;
-	virtual ~Off3d() = default;
+	~Off3d() = default;
 
 	void SetComment(const std::string& str) { m_strComment = str; }
 

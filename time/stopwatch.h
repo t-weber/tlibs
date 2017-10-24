@@ -34,7 +34,7 @@ class Stopwatch
 
 	public:
 		Stopwatch() = default;
-		virtual ~Stopwatch() = default;
+		~Stopwatch() = default;
 
 		void start()
 		{

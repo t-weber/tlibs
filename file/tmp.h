@@ -49,7 +49,7 @@ protected:
 
 public:
 	TmpFile();
-	virtual ~TmpFile();
+	~TmpFile();
 
 	bool open();
 	void close();

@@ -112,7 +112,7 @@ public:
 	}
 
 	Plane() = default;
-	virtual ~Plane() = default;
+	~Plane() = default;
 
 
 	const t_vec& GetX0() const { return m_vecX0; }
@@ -274,7 +274,7 @@ public:
 		: m_vecX0(vec0), m_vecDir(dir)
 	{}
 
-	virtual ~Line() {}
+	~Line() = default;
 
 	t_vec operator()(T t) const
 	{
@@ -870,7 +870,7 @@ public:
 	Quadric(const t_mat& Q, const t_vec& r, T s)
 		: m_Q(Q), m_r(r), m_s(s)
 	{ CheckSymm(); }
-	virtual ~Quadric() {}
+	~Quadric() {}
 
 	void SetDim(std::size_t iDim) { m_Q.resize(iDim, iDim, 1); }
 
@@ -1104,7 +1104,7 @@ public:
 			std::abs(this->m_s);
 	}
 
-	virtual ~QuadSphere() {}
+	~QuadSphere() {}
 };
 
 
@@ -1151,7 +1151,7 @@ public:
 		this->m_s = T(-1);
 	}
 
-	virtual ~QuadEllipsoid() {}
+	~QuadEllipsoid() {}
 
 	/**
 	 * only valid in principal axis system

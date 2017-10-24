@@ -89,8 +89,8 @@ class Brillouin3D
 
 
 	public:
-		Brillouin3D() {}
-		virtual ~Brillouin3D() {}
+		Brillouin3D() = default;
+		~Brillouin3D() = default;
 
 		const t_vec<T>& GetCentralReflex() const { return m_vecCentralReflex; }
 
@@ -490,8 +490,8 @@ class Brillouin2D
 		}
 
 	public:
-		Brillouin2D() {}
-		virtual ~Brillouin2D() {}
+		Brillouin2D() = default;
+		~Brillouin2D() = default;
 
 		const t_vertices<T>& GetVertices() const { return m_vecVertices; }
 		const t_vec<T>& GetCentralReflex() const { return m_vecCentralReflex; }

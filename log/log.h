@@ -70,7 +70,7 @@ protected:
 public:
 	Log();
 	Log(const std::string& strInfo, LogColor col, std::ostream* = nullptr);
-	virtual ~Log();
+	~Log();
 
 	void AddOstr(std::ostream* pOstr, bool bCol=1, bool bThreadLocal=0);
 	void RemoveOstr(std::ostream* pOstr);
