@@ -304,8 +304,8 @@ template<class t_quat = math::quaternion<double>,
 	typename T = typename t_quat::value_type>
 t_quat rotation_quat(const t_vec& _vec0, const t_vec& _vec1)
 {
-	t_vec vec0 = _vec0 / ublas::norm_2(_vec0);
-	t_vec vec1 = _vec1 / ublas::norm_2(_vec1);
+	t_vec vec0 = _vec0 / veclen(_vec0);
+	t_vec vec1 = _vec1 / veclen(_vec1);
 
 	if(vec_equal(vec0, vec1))
 	{ // parallel vectors -> do nothing
@@ -323,7 +323,7 @@ t_quat rotation_quat(const t_vec& _vec0, const t_vec& _vec1)
 	t_vec veccross = cross_3<t_vec>(vec0, vec1);
 
 	T dC = mult<t_vec, t_vec>(vec0, vec1);
-	T dS = ublas::norm_2(veccross);
+	T dS = veclen(veccross);
 	T dAngle = std::atan2(dS, dC);
 
 	return rotation_quat<t_quat, t_vec, T>(veccross, dAngle);

@@ -64,7 +64,7 @@ public:
 		t_vec vec1 = GetVertex(vecPolyIdx[1]) - GetVertex(vecPolyIdx[0]);
 		t_vec vec2 = GetVertex(vecPolyIdx[2]) - GetVertex(vecPolyIdx[1]);
 		vecNorm = cross_3(vec1, vec2);
-		vecNorm /= ublas::norm_2(vecNorm);
+		vecNorm /= veclen(vecNorm);
 
 		return vecNorm;
 	}
@@ -504,7 +504,7 @@ public:
 
 		for(t_vec& vecVertex : t_underlying_solid<t_vec>::m_vecVertices)
 		{
-			vecVertex /= ublas::norm_2(vecVertex);
+			vecVertex /= veclen(vecVertex);
 			vecVertex *= dRad;
 		}
 	}

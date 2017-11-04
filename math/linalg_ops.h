@@ -12,6 +12,7 @@
 #include <boost/numeric/ublas/matrix_expression.hpp>
 
 #include "math.h"
+#include "linalg.h"
 #include "../helper/exception.h"
 #include "../helper/traits.h"
 
@@ -34,7 +35,7 @@ struct linalg_mult_op_impl<T1, T2,
 	ret_type operator()(const T1& vec1, const T2& vec2) const
 	{
 		//typedef typename T1::value_type REAL;
-		return ublas::inner_prod(vec1, vec2);
+		return inner(vec1, vec2);
 	}
 };
 

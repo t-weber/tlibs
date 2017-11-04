@@ -114,7 +114,7 @@ class Bezier : public FunctionModel_param<ublas::vector<T>>
 
 	public:
 		Bezier(std::size_t N, const T *px, const T *py);
-		virtual ~Bezier();
+		virtual ~Bezier() = default;
 
 		virtual ublas::vector<T> operator()(T t) const override;
 		virtual const char* GetModelName() const override { return "bezier"; };
@@ -131,7 +131,7 @@ class BSpline : public FunctionModel_param<ublas::vector<T>>
 
 	public:
 		BSpline(std::size_t N, const T *px, const T *py, unsigned int iDegree=3);
-		virtual ~BSpline();
+		virtual ~BSpline() = default;
 
 		virtual ublas::vector<T> operator()(T t) const override;
 		virtual const char* GetModelName() const override { return "bspline"; };

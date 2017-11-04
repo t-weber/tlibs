@@ -14,6 +14,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <tuple>
 #include <type_traits>
 
 
@@ -81,12 +82,13 @@ bool file_exists(const t_char* pcDir)
 	return bExists && (bIsFile || bIsLink) && !bIsDir;
 }
 
+
 // ----------------------------------------------------------------------------
 
 
 // iterates over all files in a directory
-template<bool bRecursive=0, class t_char=char,
-	template<class...> class t_cont=std::vector>
+template<bool bRecursive=0, class t_char = char,
+	template<class...> class t_cont = std::vector>
 t_cont<std::basic_string<t_char>> get_all_files(const t_char* pcPath)
 {
 	t_cont<std::basic_string<t_char>> vecFiles;
@@ -107,6 +109,37 @@ t_cont<std::basic_string<t_char>> get_all_files(const t_char* pcPath)
 	}
 
 	return vecFiles;
+}
+
+// ----------------------------------------------------------------------------
+
+
+/**
+ * attempts to find a file in the given choice of paths
+ */
+template<class t_str = std::string, template<class...> class t_cont = std::vector>
+std::tuple<bool, t_str> find_file(const t_cont<t_str>& vecPaths, const t_str& strFile)
+{
+	fs::path filepath(strFile);
+
+	// if path is already absolute, use it directly
+	if(filepath.is_absolute())
+	{
+		bool bExists = fs::exists(filepath);
+		return std::make_tuple(bExists, t_str(filepath.string()));
+	}
+
+	for(const t_str& strPath : vecPaths)
+	{
+		fs::path path(strPath);
+		path /= filepath;
+
+		if(fs::exists(path))
+			return std::make_tuple(true, t_str(path.string()));
+	}
+
+	// nothing found
+	return std::make_tuple(false, t_str(""));
 }
 
 }

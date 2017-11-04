@@ -107,7 +107,7 @@ class Powder
 		{
 			ublas::vector<t_real> vecG = GetRecipLatticePos(dh, dk, dl);
 			if(vecG.size())
-				return ublas::norm_2(vecG);
+				return veclen(vecG);
 			return 0.;
 		}
 

@@ -380,7 +380,7 @@ Symbol* NodeRange::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym
 }
 
 void NodeRange::GetRangeIndices(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pSym,
-					t_int iMaxLen, t_int& iBeginIdx, t_int& iEndIdx)
+	t_int iMaxLen, t_int& iBeginIdx, t_int& iEndIdx)
 {
 	/*if(!pArr)
 	{
@@ -868,6 +868,7 @@ Symbol* NodeUnaryOp::eval(ParseInfo &info, RuntimeInfo& runinfo, SymbolTable *pS
 
 			if(m_pChild)
 				return m_pChild->eval(info, runinfo, pSym);
+			break;
 		}
 		default:
 			tl::log_warn(linenr(runinfo), "Unknown node type: ", GetType());

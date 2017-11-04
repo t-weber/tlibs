@@ -54,7 +54,7 @@ get_neighbours(const t_cont<t_vec>& vecAtoms, const t_vec& vecCentre,
 	t_cont<t_real> vecLens;
 	vecLens.reserve(vecAtoms.size());
 	for(const t_vec& vec : vecAtoms)
-		vecLens.push_back(ublas::norm_2(vec - vecCentre));
+		vecLens.push_back(veclen(vec - vecCentre));
 
 
 	// sort by lengths

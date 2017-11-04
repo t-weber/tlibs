@@ -52,13 +52,13 @@ public:
 		: m_vecX0(vec0), m_vecNorm(vecNorm)
 	{
 		// normalise normal
-		T tLenNorm = ublas::norm_2(m_vecNorm);
+		T tLenNorm = veclen(m_vecNorm);
 		if(float_equal<T>(tLenNorm, 0.) || tLenNorm!=tLenNorm)
 		{ m_bValid = 0; return; }
 		m_vecNorm /= tLenNorm;
 
 		// Hessian form: vecX0*vecNorm - d = 0
-		m_d = ublas::inner_prod(m_vecX0, m_vecNorm);
+		m_d = inner(m_vecX0, m_vecNorm);
 
 
 		// find direction vectors
@@ -73,7 +73,7 @@ public:
 		{
 			const t_vec& vec = vecTry[iIdx];
 
-			T dDotCur = std::abs(ublas::inner_prod(vec, m_vecNorm));
+			T dDotCur = std::abs(inner(vec, m_vecNorm));
 			if(dDotCur < dDot)
 			{
 				iIdxBest = iIdx;
@@ -84,8 +84,8 @@ public:
 		m_vecDir1 = cross_3(m_vecNorm, m_vecDir0);
 		m_vecDir0 = cross_3(m_vecDir1, m_vecNorm);
 
-		//m_vecDir0 /= ublas::norm_2(m_vecDir0);
-		//m_vecDir1 /= ublas::norm_2(m_vecDir1);
+		//m_vecDir0 /= veclen(m_vecDir0);
+		//m_vecDir1 /= veclen(m_vecDir1);
 
 		m_bValid = 1;
 	}
@@ -101,13 +101,13 @@ public:
 		m_vecNorm = cross_3(dir0, dir1);
 
 		// normalise normal
-		T tLenNorm = ublas::norm_2(m_vecNorm);
+		T tLenNorm = veclen(m_vecNorm);
 		if(float_equal<T>(tLenNorm, 0.) || tLenNorm!=tLenNorm)
 		{ m_bValid = 0; return; }
 		m_vecNorm /= tLenNorm;
 
 		// Hessian form: vecX0*vecNorm - d = 0
-		m_d = ublas::inner_prod(m_vecX0, m_vecNorm);
+		m_d = inner(m_vecX0, m_vecNorm);
 		m_bValid = 1;
 	}
 
@@ -124,19 +124,19 @@ public:
 
 	T GetDist(const t_vec& vecPt) const
 	{
-		return ublas::inner_prod(vecPt, m_vecNorm) - m_d;
+		return inner(vecPt, m_vecNorm) - m_d;
 	}
 
 	T GetAngle(const Plane<T>& plane) const
 	{
-		T dot = ublas::inner_prod(GetNorm(), plane.GetNorm());
+		T dot = inner(GetNorm(), plane.GetNorm());
 		return std::acos(dot);
 	}
 
 	T GetAngle(const t_vec& _vec) const
 	{
-		t_vec vec = _vec / ublas::norm_2(_vec);
-		T dot = ublas::inner_prod(GetNorm(), vec);
+		t_vec vec = _vec / veclen(_vec);
+		T dot = inner(GetNorm(), vec);
 		return std::asin(dot);
 	}
 
@@ -161,7 +161,7 @@ public:
 		if(pdDist)
 		{
 			t_vec vecD = vecP - vecdropped;
-			*pdDist = std::sqrt(ublas::inner_prod(vecD, vecD));
+			*pdDist = std::sqrt(inner(vecD, vecD));
 		}
 
 		return vecdropped;
@@ -293,16 +293,16 @@ public:
 
 		// vector normal to both directions defining the distance line
 		t_vec vecNorm = cross_3(l0.GetDir(), l1.GetDir());
-		T tlenNorm = ublas::norm_2(vecNorm);
+		T tlenNorm = veclen(vecNorm);
 
 		t_vec vec01 = l1.GetX0() - l0.GetX0();
 
 		// if the lines are parallel, any point (e.g. the X0s) can be used
 		if(float_equal(tlenNorm, T(0)))
-			return ublas::norm_2(vec01);
+			return veclen(vec01);
 
 		// project x0_1 - x0_0 onto vecNorm
-		T tdot = std::abs(ublas::inner_prod(vec01, vecNorm));
+		T tdot = std::abs(inner(vec01, vecNorm));
 		return tdot / tlenNorm;
 	}
 
@@ -314,11 +314,11 @@ public:
 		const t_vec& vecX0 = GetX0();
 		const t_vec& vecDir = GetDir();
 
-		T tlenDir = ublas::norm_2(vecDir);
+		T tlenDir = veclen(vecDir);
 
 		// area of parallelogram spanned by vecDir and vecPt-vecX0
 		// 	== ||vecDir||*||vecPt-vecX0||*sin(th)
-		T tArea = ublas::norm_2(cross_3(vecDir, vecPt-vecX0));
+		T tArea = veclen(cross_3(vecDir, vecPt-vecX0));
 
 		// length of perpendicular line from vecPt, also by sine theorem
 		// 	== ||vecPt-vecX0||*sin(th)
@@ -336,10 +336,10 @@ public:
 		t_vec dir1 = GetDir();
 		t_vec dir2 = line.GetDir();
 
-		dir1 /= ublas::norm_2(dir1);
-		dir2 /= ublas::norm_2(dir2);
+		dir1 /= veclen(dir1);
+		dir2 /= veclen(dir2);
 
-		T dot = ublas::inner_prod(dir1, dir2);
+		T dot = inner(dir1, dir2);
 		return std::acos(dot);
 	}
 
@@ -352,15 +352,14 @@ public:
 		const t_vec& vecDir = GetDir();
 
 		// projection of vecP-x0 onto vecDir
-		T t = ublas::inner_prod(vecP-GetX0(), vecDir)
-			/ ublas::inner_prod(vecDir, vecDir);
+		T t = inner<t_vec>(vecP-GetX0(), vecDir) / inner(vecDir, vecDir);
 
 		t_vec vecdropped = operator()(t);
 
 		if(pdDist)
 		{
 			t_vec vecD = vecP - vecdropped;
-			*pdDist = std::sqrt(ublas::inner_prod(vecD, vecD));
+			*pdDist = std::sqrt(inner(vecD, vecD));
 		}
 
 		return vecdropped;
@@ -386,7 +385,7 @@ public:
 		vecNorm[0] = m_vecDir[1];
 		vecNorm[1] = -m_vecDir[0];
 
-		T tDot = ublas::inner_prod(vecP-vecDropped, vecNorm);
+		T tDot = inner<t_vec>(vecP-vecDropped, vecNorm);
 		return tDot < T(0);
 	}
 
@@ -607,7 +606,7 @@ void sort_poly_verts_norm(t_cont<t_vec>& vecPoly, const t_vec& _vecNorm)
 
 	// line from centre to vertex
 	const t_vec vecCentre = mean_value(vecPoly);
-	const t_vec vecNorm = _vecNorm / ublas::norm_2(_vecNorm);
+	const t_vec vecNorm = _vecNorm / veclen(_vecNorm);
 
 	t_vec vec0 = vecPoly[0] - vecCentre;
 
@@ -663,7 +662,7 @@ void sort_poly_verts(t_cont<t_vec>& vecPoly)
 	for(std::size_t iVecPoly=1; iVecPoly<vecPoly.size(); ++iVecPoly)
 	{
 		t_vec vecNorm = cross_3<t_vec>(vecPoly[0]-vecCentre, vecPoly[1]-vecCentre);
-		T tCross = ublas::norm_2(vecNorm);
+		T tCross = veclen(vecNorm);
 		if(tCross > tBestCross)
 		{
 			tBestCross = tCross;
@@ -699,7 +698,7 @@ t_vec get_face_normal(const t_cont<t_vec>& vecVerts, t_vec vecCentre,
 	{
 		const t_vec& vec2 = vecVerts[iVec2] - vecVerts[0];
 		t_vec vecCross = tl::cross_3(vec1, vec2);
-		if(ublas::norm_2(vecCross) > eps)
+		if(veclen(vecCross) > eps)
 		{
 			vecNorm = vecCross;
 			break;
@@ -714,10 +713,10 @@ t_vec get_face_normal(const t_cont<t_vec>& vecVerts, t_vec vecCentre,
 	// vector pointing "outwards"
 	const t_vec vecPolyCentre = mean_value(vecVerts);
 	t_vec vecCentreToFace = vecPolyCentre - vecCentre;
-	vecCentreToFace /= ublas::norm_2(vecCentreToFace);
+	vecCentreToFace /= veclen(vecCentreToFace);
 
-	vecNorm /= ublas::norm_2(vecNorm);
-	if(ublas::inner_prod(vecNorm, vecCentreToFace) < T(0))
+	vecNorm /= veclen(vecNorm);
+	if(inner(vecNorm, vecCentreToFace) < T(0))
 		vecNorm = -vecNorm;
 
 	//tl::log_debug("vec = ", vecCentreToFace, ",\tnorm = ", vecNorm);
@@ -915,8 +914,8 @@ public:
 		t_vec x = _x-m_vecOffs;
 
 		t_vec vecQ = ublas::prod(m_Q, x);
-		T dQ = ublas::inner_prod(x, vecQ);
-		T dR = ublas::inner_prod(m_r, x);
+		T dQ = inner(x, vecQ);
+		T dR = inner(m_r, x);
 
 		return dQ + dR + m_s;
 	}
@@ -1032,13 +1031,13 @@ public:
 
 		// solving at^2 + bt + c = 0 for t
 		t_vec vecQd = ublas::prod(Q, d);
-		T a = ublas::inner_prod(d, vecQd);
+		T a = inner(d, vecQd);
 
 		t_vec vecQx0 = ublas::prod(Q, x0);
-		T c = ublas::inner_prod(x0, vecQx0) + s;
+		T c = inner(x0, vecQx0) + s;
 
-		T b = ublas::inner_prod(x0, vecQd);
-		b += ublas::inner_prod(d, vecQx0);
+		T b = inner(x0, vecQd);
+		b += inner(d, vecQx0);
 
 		//std::cout << "a=" << a << ", b=" << b << ", c=" << c << std::endl;
 		return quadratic_solve(a,b,c);

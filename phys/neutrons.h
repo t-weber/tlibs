@@ -688,9 +688,9 @@ template<typename T=double>
 ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	const ublas::vector<T>& kf, const ublas::vector<T>& q)
 {
-	const T dKi = ublas::norm_2(ki);
-	const T dKf = ublas::norm_2(kf);
-	const T dq = ublas::norm_2(q);
+	const T dKi = veclen(ki);
+	const T dKf = veclen(kf);
+	const T dq = veclen(q);
 
 	const T dAngleSensitivity = T(2.);
 	const T dQSensitivity = std::max(dKi, dKf) / T(50.);
@@ -706,8 +706,8 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 	// here: Q = ki - kf, E = Ei - Ef
 	ublas::vector<T> q_norm = -q;	q_norm /= dq;
 
-	T dAngleKfq = std::acos(ublas::inner_prod(kf_norm, q_norm));
-	T dAngleKiq = std::acos(ublas::inner_prod(ki_norm, q_norm));
+	T dAngleKfq = std::acos(inner(kf_norm, q_norm));
+	T dAngleKiq = std::acos(inner(ki_norm, q_norm));
 
 	//std::cout << "angle ki q: " << dAngleKiq/M_PI*180. << std::endl;
 	//std::cout << "angle kf q: " << dAngleKfq/M_PI*180. << std::endl;

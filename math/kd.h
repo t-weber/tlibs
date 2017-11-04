@@ -224,7 +224,7 @@ public:
 
 	Kd() = default;
 	Kd(std::list<std::vector<T>>& lstPoints) { Load(lstPoints); }
-	virtual ~Kd() { Unload(); }
+	~Kd() { Unload(); }
 
 	const KdNode<T>* GetRootNode() const { return m_pNode; }
 };

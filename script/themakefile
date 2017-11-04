@@ -25,7 +25,8 @@ endif
 
 DEFINES = -DNO_QT -DTLIBS_INC_HDR_IMPLS
 INCS =
-FLAGS = -std=c++11 -fopenmp ${OPT_FLAGS} ${DEFINES} ${INCS}
+FLAGS = -std=c++11 ${OPT_FLAGS} ${DEFINES} ${INCS}
+FLAGS += -fopenmp
 FLAGS += -Wpedantic -Wextra
 
 LIBS = -L/usr/local/lib
@@ -71,8 +72,10 @@ endif
 ifeq (${USE_FADDEEVA}, 1)
 	DEFINES += -DHAS_COMPLEX_ERF
 	INCS += -I/usr/local/include
+	INCS += -I../../3rdparty
 #	LIBS += -lopenspecfun
 	LIBS += /usr/local/include/Faddeeva.cc
+#	LIBS += ../../3rdparty/Faddeeva.cc
 endif
 
 

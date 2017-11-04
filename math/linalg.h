@@ -31,9 +31,11 @@ namespace tl {
 namespace ublas = boost::numeric::ublas;
 
 
-template<class matrix_type=ublas::matrix<double>>
+template<class matrix_type = ublas::matrix<double>>
 typename matrix_type::value_type determinant(const matrix_type& mat);
 
+
+// ----------------------------------------------------------------------------
 
 /**
  * creates a vector
@@ -178,6 +180,7 @@ t_vec_to<t_to> convert_vec_full(const t_vec_from<t_from>& vec)
 	return vecRet;
 }
 
+// ----------------------------------------------------------------------------
 
 
 template<class vec_type>
@@ -211,19 +214,109 @@ bool mat_equal(const mat_type& mat0, const mat_type& mat1,
 	return true;
 }
 
+// ----------------------------------------------------------------------------
 
-template<class vec_type>
-typename vec_type::value_type vec_len(const vec_type& vec)
+
+
+/**
+ * cross product
+ */
+template<typename vector_type = ublas::vector<double>>
+vector_type cross_3(const vector_type& vec0, const vector_type& vec1)
 {
-	typename vec_type::value_type t = typename vec_type::value_type();
-
-	for(std::size_t i=0; i<vec.size(); ++i)
-		t += vec[i]*vec[i];
-
-	t = std::sqrt(t);
-	return t;
+	return make_vec<vector_type>
+	({
+		vec0[1]*vec1[2] - vec1[1]*vec0[2],
+		vec0[2]*vec1[0] - vec1[2]*vec0[0],
+		vec0[0]*vec1[1] - vec1[0]*vec0[1]
+	});
 }
 
+
+/**
+ * inner product -- general version
+ */
+template<typename t_vec = ublas::vector<double>,
+	typename std::enable_if<!std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+typename t_vec::value_type inner(const t_vec& vec0, const t_vec& vec1)
+{
+	typename t_vec::value_type d(0);
+	std::size_t iSize = std::min(vec0.size(), vec1.size());
+
+	for(std::size_t i=0; i<iSize; ++i)
+		d += vec0[i]*vec1[i];
+	return d;
+}
+
+/**
+ * inner product -- ublas wrapper
+ */
+template<typename t_vec = ublas::vector<double>,
+	typename std::enable_if<std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+typename t_vec::value_type inner(const t_vec& vec0, const t_vec& vec1)
+{
+	return ublas::inner_prod(vec0, vec1);
+}
+
+
+/**
+ * outer product -- general version
+ */
+template<typename t_vec = ublas::vector<double>,
+	typename t_mat = ublas::matrix<typename t_vec::value_type>,
+	typename std::enable_if<!std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+t_mat outer(const t_vec& vec0, const t_vec& vec1)
+{
+	std::size_t iSize = std::min(vec0.size(), vec1.size());
+	t_mat mat(iSize, iSize);
+
+	for(std::size_t i=0; i<iSize; ++i)
+		for(std::size_t j=0; j<iSize; ++j)
+			mat(i,j) = vec0[i]*vec1[j];
+
+	return mat;
+}
+
+/**
+ * outer product -- ublas wrapper
+ */
+template<typename t_vec = ublas::vector<double>,
+	typename t_mat = ublas::matrix<typename t_vec::value_type>,
+	typename std::enable_if<std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+t_mat outer(const t_vec& vec0, const t_vec& vec1)
+{
+	return ublas::outer_prod(vec0, vec1);
+}
+
+
+/**
+ * 2-norm -- general version
+ */
+template<class t_vec = ublas::vector<double>,
+	typename std::enable_if<!std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+typename t_vec::value_type veclen(const t_vec& vec)
+{
+	using T = typename t_vec::value_type;
+	T len(0);
+
+	for(std::size_t i=0; i<vec.size(); ++i)
+		len += vec[i]*vec[i];
+
+	return std::sqrt(len);
+}
+
+/**
+ * 2-norm -- ublas wrapper
+ */
+template<class t_vec = ublas::vector<double>,
+	typename std::enable_if<std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+typename t_vec::value_type veclen(const t_vec& vec)
+{
+	return ublas::norm_2(vec);
+}
+
+
+// ----------------------------------------------------------------------------
 
 
 /**
@@ -310,8 +403,11 @@ matrix_type remove_elems(const matrix_type& mat, std::size_t iIdx)
 }
 
 
-template<class t_vec=ublas::vector<double>,
-	class t_mat=ublas::matrix<typename t_vec::value_type>>
+/**
+ * set matrix column
+ */
+template<class t_vec = ublas::vector<double>,
+	class t_mat = ublas::matrix<typename t_vec::value_type>>
 void set_column(t_mat& M, std::size_t iCol, const t_vec& vec)
 {
 	std::size_t s = std::min(vec.size(), M.size1());
@@ -319,18 +415,25 @@ void set_column(t_mat& M, std::size_t iCol, const t_vec& vec)
 		M(i, iCol) = vec[i];
 }
 
-template<class t_vec=ublas::vector<double>,
-	class t_mat=ublas::matrix<typename t_vec::value_type>>
+/**
+ * set matrix row
+ */
+template<class t_vec = ublas::vector<double>,
+	class t_mat = ublas::matrix<typename t_vec::value_type>>
 void set_row(t_mat& M, std::size_t iRow, const t_vec& vec)
 {
-	std::size_t s = std::min(vec.size(), M.size1());
+	std::size_t s = std::min(vec.size(), M.size2());
 	for(std::size_t i=0; i<s; ++i)
 		M(iRow, i) = vec[i];
 }
 
 
-template<class vector_type=ublas::vector<double>,
-	class matrix_type=ublas::matrix<typename vector_type::value_type>>
+/**
+ * get matrix column -- general version
+ */
+template<class vector_type = ublas::vector<double>,
+	class matrix_type = ublas::matrix<typename vector_type::value_type>,
+	typename std::enable_if<!std::is_convertible<matrix_type, ublas::matrix<typename vector_type::value_type>>::value, char>::type=0>
 vector_type get_column(const matrix_type& mat, std::size_t iCol)
 {
 	vector_type vecret(mat.size1());
@@ -341,8 +444,23 @@ vector_type get_column(const matrix_type& mat, std::size_t iCol)
 	return vecret;
 }
 
-template<class vector_type=ublas::vector<double>,
-	class matrix_type=ublas::matrix<typename vector_type::value_type>>
+/**
+ * get matrix column -- ublas wrapper
+ */
+template<class vector_type = ublas::vector<double>,
+	class matrix_type = ublas::matrix<typename vector_type::value_type>,
+	typename std::enable_if<std::is_convertible<matrix_type, ublas::matrix<typename vector_type::value_type>>::value, char>::type=0>
+vector_type get_column(const matrix_type& mat, std::size_t iRow)
+{
+	return vector_type(ublas::column(mat, iRow));
+}
+
+/**
+ * get matrix row -- general version
+ */
+template<class vector_type = ublas::vector<double>,
+	class matrix_type = ublas::matrix<typename vector_type::value_type>,
+	typename std::enable_if<!std::is_convertible<matrix_type, ublas::matrix<typename vector_type::value_type>>::value, char>::type=0>
 vector_type get_row(const matrix_type& mat, std::size_t iRow)
 {
 	vector_type vecret(mat.size2());
@@ -351,6 +469,17 @@ vector_type get_row(const matrix_type& mat, std::size_t iRow)
 		vecret[i] = mat(iRow, i);
 
 	return vecret;
+}
+
+/**
+ * get matrix row -- ublas wrapper
+ */
+template<class vector_type = ublas::vector<double>,
+	class matrix_type = ublas::matrix<typename vector_type::value_type>,
+	typename std::enable_if<std::is_convertible<matrix_type, ublas::matrix<typename vector_type::value_type>>::value, char>::type=0>
+vector_type get_row(const matrix_type& mat, std::size_t iRow)
+{
+	return vector_type(ublas::row(mat, iRow));
 }
 
 
@@ -369,7 +498,10 @@ cont_type get_columns(const matrix_type& mat)
 }
 
 
-template<class t_mat=ublas::matrix<double>>
+// ----------------------------------------------------------------------------
+
+
+template<class t_mat = ublas::matrix<double>>
 t_mat mirror_matrix(std::size_t iSize, std::size_t iComp)
 {
 	using T = typename t_mat::value_type;
@@ -381,7 +513,7 @@ t_mat mirror_matrix(std::size_t iSize, std::size_t iComp)
 }
 
 
-template<class matrix_type=ublas::matrix<double>>
+template<class matrix_type = ublas::matrix<double>>
 matrix_type rotation_matrix_2d(typename matrix_type::value_type angle)
 {
 	typedef typename matrix_type::value_type T;
@@ -408,7 +540,7 @@ matrix_type rotation_matrix_2d(typename matrix_type::value_type angle)
 /**
  * generates points in an arc defined by vec1 and vec2 at an angle phi around vec1
  */
-template<class t_vec=ublas::vector<double>>
+template<class t_vec = ublas::vector<double>>
 t_vec arc(const t_vec& vec1, const t_vec& vec2, tl::underlying_value_type_t<t_vec> phi)
 {
 	//using t_real = tl::underlying_value_type_t<t_vec>;
@@ -418,7 +550,7 @@ t_vec arc(const t_vec& vec1, const t_vec& vec2, tl::underlying_value_type_t<t_ve
 /**
  * generates points in a spherical shell
  */
-template<class t_vec=ublas::vector<double>>
+template<class t_vec = ublas::vector<double>>
 t_vec sph_shell(const t_vec& vec,
 	tl::underlying_value_type_t<t_vec> phi, tl::underlying_value_type_t<t_vec> theta)
 {
@@ -434,7 +566,7 @@ t_vec sph_shell(const t_vec& vec,
 }
 
 
-template<class matrix_type=ublas::matrix<double>>
+template<class matrix_type = ublas::matrix<double>>
 matrix_type rotation_matrix_3d_x(typename matrix_type::value_type angle)
 {
 	typedef typename matrix_type::value_type T;
@@ -457,7 +589,7 @@ matrix_type rotation_matrix_3d_x(typename matrix_type::value_type angle)
 		{0, s,  c}});
 }
 
-template<class matrix_type=ublas::matrix<double>>
+template<class matrix_type = ublas::matrix<double>>
 matrix_type rotation_matrix_3d_y(typename matrix_type::value_type angle)
 {
 	typedef typename matrix_type::value_type T;
@@ -480,7 +612,7 @@ matrix_type rotation_matrix_3d_y(typename matrix_type::value_type angle)
 		{-s, 0, c}});
 }
 
-template<class matrix_type=ublas::matrix<double>>
+template<class matrix_type = ublas::matrix<double>>
 matrix_type rotation_matrix_3d_z(typename matrix_type::value_type angle)
 {
 	typedef typename matrix_type::value_type T;
@@ -667,12 +799,12 @@ bool is_centering_matrix(const t_mat& mat)
  * Euler-Rodrigues formula
  * see e.g.: https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
  */
-template<class mat_type=ublas::matrix<double>,
-	class vec_type=ublas::vector<typename mat_type::value_type>,
+template<class mat_type = ublas::matrix<double>,
+	class vec_type = ublas::vector<typename mat_type::value_type>,
 	typename T = typename mat_type::value_type>
 mat_type rotation_matrix(const vec_type& _vec, T angle)
 {
-	const vec_type vec = _vec/ublas::norm_2(_vec);
+	const vec_type vec = _vec/veclen(_vec);
 
 	T s, c;
 	if(angle == T(0))
@@ -686,13 +818,13 @@ mat_type rotation_matrix(const vec_type& _vec, T angle)
 		c = std::cos(angle);
 	}
 
-	return (T(1) - c) * ublas::outer_prod(vec, vec) +
+	return (T(1) - c) * outer(vec, vec) +
 		c * unit_matrix(vec.size()) +
 		s * skew(vec);
 }
 
 
-template<class matrix_type=ublas::matrix<double>>
+template<class matrix_type = ublas::matrix<double>>
 typename matrix_type::value_type trace(const matrix_type& mat)
 {
 	typedef typename matrix_type::value_type T;
@@ -811,7 +943,7 @@ struct is_nan_or_inf_impl<mat_type, FKT, 2>		// matrix impl.
 	}
 };
 
-template<class T=ublas::matrix<double>>
+template<class T = ublas::matrix<double>>
 bool isnan(const T& mat)
 {
 	typedef underlying_value_type_t<T> real_type;
@@ -822,7 +954,7 @@ bool isnan(const T& mat)
 	return _isnan(mat);
 }
 
-template<class T=ublas::matrix<double>>
+template<class T = ublas::matrix<double>>
 bool isinf(const T& mat)
 {
 	typedef underlying_value_type_t<T> real_type;
@@ -833,7 +965,7 @@ bool isinf(const T& mat)
 	return _isinf(mat);
 }
 
-template<class T=ublas::matrix<double>>
+template<class T = ublas::matrix<double>>
 bool is_nan_or_inf(const T& mat)
 {
 	typedef underlying_value_type_t<T> real_type;
@@ -852,7 +984,7 @@ bool is_nan_or_inf(const T& mat)
  * @desc code for inverse based on boost/libs/numeric/ublas/test/test_lu.cpp
  * @desc Boost's test_lu.cpp is (c) 2008 by G. Winkler
  */
-template<class mat_type=ublas::matrix<double>>
+template<class mat_type = ublas::matrix<double>>
 bool inverse(const mat_type& mat, mat_type& inv)
 {
 	using T = typename mat_type::value_type;
@@ -889,7 +1021,7 @@ bool inverse(const mat_type& mat, mat_type& inv)
  * bCongr==1: do a congruence trafo
  * bCongr==0: do a similarity trafo
  */
-template<class mat_type=ublas::matrix<double>>
+template<class mat_type = ublas::matrix<double>>
 mat_type transform(const mat_type& mat, const mat_type& matTrafo, bool bCongr=0)
 {
 	mat_type matTrafoInv;
@@ -909,7 +1041,7 @@ mat_type transform(const mat_type& mat, const mat_type& matTrafo, bool bCongr=0)
  * bCongr==1: do a congruence trafo
  * bCongr==0: do a similarity trafo
  */
-template<class mat_type=ublas::matrix<double>>
+template<class mat_type = ublas::matrix<double>>
 mat_type transform_inv(const mat_type& mat, const mat_type& matTrafo, bool bCongr=0)
 {
 	mat_type matTrafoInv;
@@ -937,7 +1069,7 @@ bool solve_linear_approx(const ublas::matrix<T>& M, const ublas::vector<T>& v,
 /**
  * solve Mx = v for x
  */
-template<typename T=double>
+template<typename T = double>
 bool solve_linear(const ublas::matrix<T>& M,
 	const ublas::vector<T>& v, ublas::vector<T>& x)
 {
@@ -1055,7 +1187,7 @@ bool solve_linear(const ublas::matrix<T>& M,
 /**
  * solve M^T M x = M^T v for x
  */
-template<typename T=double>
+template<typename T = double>
 bool solve_linear_approx(const ublas::matrix<T>& M,
 	const ublas::vector<T>& v, ublas::vector<T>& x)
 {
@@ -1083,7 +1215,7 @@ bool solve_linear_approx(const ublas::matrix<T>& M,
 }
 
 
-template<class matrix_type=ublas::matrix<double>>
+template<class matrix_type = ublas::matrix<double>>
 bool is_diag_matrix(const matrix_type& mat)
 {
 	typedef typename matrix_type::value_type T;
@@ -1100,10 +1232,11 @@ bool is_diag_matrix(const matrix_type& mat)
 	return true;
 }
 
+// ----------------------------------------------------------------------------
 
-template<class matrix_type=ublas::matrix<double>,
-	class vec_type=ublas::vector<typename matrix_type::value_type>,
-	class container_type=std::initializer_list<vec_type>, const bool bRowMat>
+template<class matrix_type = ublas::matrix<double>,
+	class vec_type = ublas::vector<typename matrix_type::value_type>,
+	class container_type = std::initializer_list<vec_type>, const bool bRowMat>
 inline matrix_type row_col_matrix(const container_type& vecs)
 {
 	if(vecs.size() == 0)
@@ -1135,9 +1268,9 @@ inline matrix_type row_col_matrix(const container_type& vecs)
 /**
  * vectors form rows of matrix
  */
-template<class matrix_type=ublas::matrix<double>,
-	class vec_type=ublas::vector<typename matrix_type::value_type>,
-	class container_type=std::initializer_list<vec_type>>
+template<class matrix_type = ublas::matrix<double>,
+	class vec_type = ublas::vector<typename matrix_type::value_type>,
+	class container_type = std::initializer_list<vec_type>>
 matrix_type row_matrix(const container_type& vecs)
 {
 	return row_col_matrix<matrix_type, vec_type, container_type, true>(vecs);
@@ -1146,24 +1279,16 @@ matrix_type row_matrix(const container_type& vecs)
 /**
  * vectors form columns of matrix
  */
-template<class matrix_type=ublas::matrix<double>,
-	class vec_type=ublas::vector<typename matrix_type::value_type>,
-	class container_type=std::initializer_list<vec_type>>
+template<class matrix_type = ublas::matrix<double>,
+	class vec_type = ublas::vector<typename matrix_type::value_type>,
+	class container_type = std::initializer_list<vec_type>>
 matrix_type column_matrix(const container_type& vecs)
 {
 	return row_col_matrix<matrix_type, vec_type, container_type, false>(vecs);
 }
 
-template<typename vector_type = ublas::vector<double>>
-vector_type cross_3(const vector_type& vec0, const vector_type& vec1)
-{
-	return make_vec<vector_type>
-		({
-			vec0[1]*vec1[2] - vec1[1]*vec0[2],
-			vec0[2]*vec1[0] - vec1[2]*vec0[0],
-			vec0[0]*vec1[1] - vec1[0]*vec0[1]
-		});
-}
+
+// ----------------------------------------------------------------------------
 
 
 template<class t_mat/*=ublas::matrix<double>*/>
@@ -1188,7 +1313,7 @@ typename t_mat::value_type determinant(const t_mat& mat)
 		ublas::vector<T> vec2 = get_column(mat, 2);
 
 		ublas::vector<T> vecCross = cross_3<ublas::vector<T> >(vec1, vec2);
-		return ublas::inner_prod(vec0, vecCross);
+		return inner(vec0, vecCross);
 	}
 	else if(mat.size1()>3 && mat.size1()<6)		// recursive expansion, complexity: O(n!)
 	{
@@ -1289,7 +1414,7 @@ t_mat adjugate(const t_mat& mat, bool bTranspose=1)
 }
 
 
-template<class matrix_type=ublas::matrix<double>>
+template<class matrix_type = ublas::matrix<double>>
 typename matrix_type::value_type get_volume(const matrix_type& mat)
 {
 	//typedef typename matrix_type::value_type T;
@@ -1297,7 +1422,7 @@ typename matrix_type::value_type get_volume(const matrix_type& mat)
 }
 
 
-template<class matrix_type=ublas::matrix<double>>
+template<class matrix_type = ublas::matrix<double>>
 typename matrix_type::value_type get_ellipsoid_volume(const matrix_type& mat)
 {
 	typedef typename matrix_type::value_type T;
@@ -1306,6 +1431,7 @@ typename matrix_type::value_type get_ellipsoid_volume(const matrix_type& mat)
 	return T(4./3.) * get_pi<T>() * std::sqrt(T(1)/tDet);
 }
 
+// ----------------------------------------------------------------------------
 
 
 /**
@@ -1352,6 +1478,8 @@ bool fractional_basis_from_angles(typename t_vec::value_type a,
 
 	return true;
 }
+
+// ----------------------------------------------------------------------------
 
 
 /**
@@ -1439,10 +1567,10 @@ void set_eps_0(T& d, underlying_value_type_t<T> eps)
 template<typename t_vec, typename T = typename t_vec::value_type>
 bool vec_is_collinear(const t_vec& _vec1, const t_vec& _vec2, T eps = get_epsilon<T>())
 {
-	const t_vec vec1 = _vec1 / ublas::norm_2(_vec1);
-	const t_vec vec2 = _vec2 / ublas::norm_2(_vec2);
+	const t_vec vec1 = _vec1 / veclen(_vec1);
+	const t_vec vec2 = _vec2 / veclen(_vec2);
 
-	T tdot = std::abs(ublas::inner_prod(vec1, vec2));
+	T tdot = std::abs(inner(vec1, vec2));
 	return float_equal<T>(tdot, 1, eps);
 }
 
@@ -1464,16 +1592,16 @@ typename vec_type::value_type vec_angle(const vec_type& vec0,
 	}
 	if(vec0.size() == 3)
 	{
-		real_type dC = ublas::inner_prod(vec0, vec1);
+		real_type dC = inner(vec0, vec1);
 		vec_type veccross = cross_3<vec_type>(vec0, vec1);
-		real_type dS = ublas::norm_2(veccross);
+		real_type dS = veclen(veccross);
 
 		real_type dAngle = std::atan2(dS, dC);
 
 		// get signed angle
 		if(pvec_norm)
 		{
-			if(ublas::inner_prod(veccross, *pvec_norm) < real_type(0))
+			if(inner(veccross, *pvec_norm) < real_type(0))
 				dAngle = -dAngle;
 		}
 
@@ -1604,8 +1732,8 @@ template<class t_mat = ublas::matrix<double>,
 	// proj = (norm * norm^t) * pt
 	// "Lotfusspunkt" = pt - proj
 	// mirror_point = pt - 2*proj
-	t_mat mat = -T(2) * ublas::outer_prod(vecNorm, vecNorm);
-	mat /= ublas::inner_prod(vecNorm, vecNorm);
+	t_mat mat = -T(2) * outer(vecNorm, vecNorm);
+	mat /= inner(vecNorm, vecNorm);
 
 	for(std::size_t i=0; i<vecNorm.size(); ++i)
 		mat(i,i) += T(1);
@@ -1639,6 +1767,7 @@ template<class t_mat = ublas::matrix<double>,
 	t_mat M2 = t_mat(m+n, m+n);
 
 	for(std::size_t iR=0; iR<m+n; ++iR)
+	{
 		for(std::size_t jR=0; jR<m+n; ++jR)
 		{
 			if(iR<n || jR<n)
@@ -1646,6 +1775,7 @@ template<class t_mat = ublas::matrix<double>,
 			else
 				M2(iR, jR) = M(iR-n, jR-n);
 		}
+	}
 
 	return M2;
 }
@@ -1679,7 +1809,7 @@ bool qr_decomp(const t_mat& M, t_mat& Q, t_mat& R)
 		}
 
 		t_vec vecE0 = ublas::zero_vector<T>(vec0.size());
-		vecE0[0] = ublas::norm_2(vec0);
+		vecE0[0] = veclen(vec0);
 
 		t_vec vecReflNorm = vec0-vecE0;
 		//std::cout << "refl norm: " << vecReflNorm << std::endl;
@@ -1745,7 +1875,7 @@ t_mat norm_col_vecs(const t_mat& M)
 	for(std::size_t i=0; i<M.size2(); ++i)
 	{
 		t_vec vec0 = get_column(M, i);
-		vec0 /= ublas::norm_2(vec0);
+		vec0 /= veclen(vec0);
 
 		set_column(N, i, vec0);
 	}
@@ -1929,8 +2059,8 @@ bool eigenvec_dominant_sym(const t_mat& mat, t_vec& evec, T& eval,
 		vecInit = ublas::prod(mat, vecInit);
 	}
 
-	const T normInit = ublas::norm_2(vecInit);
-	const T normPrev = ublas::norm_2(vecPrev);
+	const T normInit = veclen(vecInit);
+	const T normPrev = veclen(vecPrev);
 
 	eval = normInit / normPrev;
 	evec = vecInit / normInit;
@@ -2116,8 +2246,8 @@ t_vec proj_vec(t_vec vec1, t_vec vec2)
 {
 	using T = typename t_vec::value_type;
 
-	T tnum = ublas::inner_prod(vec1, vec2);
-	T tden = ublas::inner_prod(vec2, vec2);
+	T tnum = inner(vec1, vec2);
+	T tden = inner(vec2, vec2);
 
 	t_vec vecProj = tnum/tden * vec2;
 	return vecProj;
@@ -2152,7 +2282,7 @@ std::vector<t_vec> gram_schmidt(const std::vector<t_vec>& vecs, bool bNorm/*=1*/
 	// normalise basis?
 	if(bNorm)
 		for(t_vec& vec : vecsOut)
-			vec /= ublas::norm_2(vec);
+			vec /= veclen(vec);
 
 	return vecsOut;
 }

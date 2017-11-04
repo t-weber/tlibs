@@ -19,6 +19,12 @@ int main()
 	ublas::matrix<double> mat1 = make_mat({{1., 2.}, {2.5, 3.}});
 	ublas::matrix<double> mat2 = make_mat({{1., 2.}, {2., 3.}});
 
+	std::cout << "row: " << get_row(mat1,0) << std::endl;
+	std::cout << "col: " << get_column(mat1,0) << std::endl;
+	std::cout << "collen: " << veclen(get_column(mat1,0)) << std::endl;
+	std::cout << "inner: " << inner(get_column(mat1,0), get_column(mat1,1)) << std::endl;
+	std::cout << "outer: " << outer(get_column(mat1,0), get_column(mat1,1)) << std::endl;
+
 	double(*sqrt)(double) = std::sqrt;
 	ublas::matrix<double> mat3 = apply_fkt(mat2, std::function<double(double)>(sqrt));
 

@@ -283,7 +283,7 @@ public:
 
 	Rt() { Init(); }
 	Rt(std::list<std::vector<T>>& lstPoints) { Load(lstPoints); }
-	virtual ~Rt() { Unload(); }
+	~Rt() { Unload(); }
 };
 
 }

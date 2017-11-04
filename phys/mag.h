@@ -149,7 +149,7 @@ T mag_scatlen_eff(T tM)
 template<class t_vec = ublas::vector<double>>
 t_vec get_S_perp_Q(const t_vec& S, const t_vec& Q)
 {
-	t_vec Qnorm = Q / ublas::norm_2(Q);
+	t_vec Qnorm = Q / veclen(Q);
 	// subtract parts of S not perpendicular to Q
 	return S - mult<t_vec, t_vec>(Qnorm, S)*Qnorm;
 }

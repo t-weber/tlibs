@@ -206,7 +206,7 @@ T gl_dist_mv()
 	gl_mv_pt(make_vec<t_vec>({0.,0.,0.,1.}), vecPos);
 	vecPos /= vecPos[3];
 	vecPos[3] = 0.;
-	T dDist = ublas::norm_2(vecPos);
+	T dDist = veclen(vecPos);
 	return dDist;
 }
 
@@ -241,7 +241,7 @@ T gl_proj_sphere_size(T dRadius)
 	t_vec vecProj = vecProj2 - vecProj1;
 
 	vecProj[3] = vecProj[2] = 0.;
-	return ublas::norm_2(vecProj);
+	return veclen(vecProj);
 }
 
 
@@ -312,8 +312,8 @@ public:
 	Cam(const t_vec& vecDir, const t_vec& vecUp)
 		: m_vecDir(vecDir), m_vecUp(vecUp)
 	{
-		m_vecDir = ublas::norm_2(m_vecDir);
-		m_vecUp = ublas::norm_2(m_vecUp);
+		m_vecDir = veclen(m_vecDir);
+		m_vecUp = veclen(m_vecUp);
 		m_vecRight = cross_3(m_vecUp, m_vecDir);
 		m_vecUp = cross_3(m_vecDir, m_vecRight);
 	}

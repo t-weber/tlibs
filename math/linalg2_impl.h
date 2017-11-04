@@ -119,8 +119,8 @@ bool eigenvec(const ublas::matrix<T>& mat,
 			++i; // check: (next eigenval) == -(currrent eigenval)
 		}
 
-		//evecs_real[i] /= ublas::norm_2(evecs_real[i]);
-		//evecs_imag[i] /= ublas::norm_2(evecs_imag[i]);
+		//evecs_real[i] /= veclen(evecs_real[i]);
+		//evecs_imag[i] /= veclen(evecs_imag[i]);
 	}
 	return bOk;
 }
@@ -226,7 +226,7 @@ bool eigenvec_sym(const ublas::matrix<T>& mat,
 	{
 		for(std::size_t j=0; j<iOrder; ++j)
 			evecs[i][j] = pMatrix[j*iOrder + i];
-		//evecs[i] /= ublas::norm_2(evecs[i]);
+		//evecs[i] /= veclen(evecs[i]);
 	}
 
 	//if(determinant<ublas::matrix<T>>(column_matrix(evecs)) < 0.)
@@ -445,7 +445,7 @@ bool qr(const ublas::matrix<T>& M,
 		for(std::size_t i=k+1; i<=iTauSize; ++i)
 			v[i-1] = pMat[(i-1)*n + (k-1)];
 
-		ublas::matrix<T> VV = ublas::outer_prod(v, ublas::trans(v));
+		ublas::matrix<T> VV = outer(v, ublas::trans(v));
 		ublas::matrix<T> H = ident - dTau*VV;
 
 		Q = ublas::prod(Q, H);

@@ -156,9 +156,9 @@ void Lattice<T>::RotateEulerRecip(const t_vec& vecRecipX,
 	t_vec vecY = get_column(matRecip,1);
 	t_vec vecZ = get_column(matRecip,2);
 
-	T dLenX = ublas::norm_2(vecX);
-	T dLenY = ublas::norm_2(vecY);
-	T dLenZ = ublas::norm_2(vecZ);
+	T dLenX = veclen(vecX);
+	T dLenY = veclen(vecY);
+	T dLenZ = veclen(vecZ);
 
 	if(float_equal<T>(dLenX, 0.) || float_equal<T>(dLenY, 0.) || float_equal<T>(dLenZ, 0.)
 		|| std::isnan(dLenX) || std::isnan(dLenY) || std::isnan(dLenZ))
@@ -184,15 +184,15 @@ void Lattice<T>::RotateEulerRecip(const t_vec& vecRecipX,
 }
 
 template<typename T> T Lattice<T>::GetAlpha() const
-{ return std::acos(ublas::inner_prod(m_vecs[1]/GetB(), m_vecs[2]/GetC())); }
+{ return std::acos(inner(m_vecs[1]/GetB(), m_vecs[2]/GetC())); }
 template<typename T> T Lattice<T>::GetBeta() const
-{ return std::acos(ublas::inner_prod(m_vecs[0]/GetA(), m_vecs[2]/GetC())); }
+{ return std::acos(inner(m_vecs[0]/GetA(), m_vecs[2]/GetC())); }
 template<typename T> T Lattice<T>::GetGamma() const
-{ return std::acos(ublas::inner_prod(m_vecs[0]/GetA(), m_vecs[1]/GetB())); }
+{ return std::acos(inner(m_vecs[0]/GetA(), m_vecs[1]/GetB())); }
 
-template<typename T> T Lattice<T>::GetA() const { return ublas::norm_2(m_vecs[0]); }
-template<typename T> T Lattice<T>::GetB() const { return ublas::norm_2(m_vecs[1]); }
-template<typename T> T Lattice<T>::GetC() const { return ublas::norm_2(m_vecs[2]); }
+template<typename T> T Lattice<T>::GetA() const { return veclen(m_vecs[0]); }
+template<typename T> T Lattice<T>::GetB() const { return veclen(m_vecs[1]); }
+template<typename T> T Lattice<T>::GetC() const { return veclen(m_vecs[2]); }
 
 template<typename T>
 T Lattice<T>::GetVol() const
@@ -422,7 +422,7 @@ void get_tas_angles(const Lattice<T>& lattice_real,
 		throw Err(ostrErr.str());
 	}
 
-	T dQ = ublas::norm_2(vecQ);
+	T dQ = veclen(vecQ);
 	*pTwoTheta = get_sample_twotheta(dKi/angs, dKf/angs, dQ/angs, bSense) / rad;
 	T dKiQ = get_angle_ki_Q(dKi/angs, dKf/angs, dQ/angs, /*bSense*/1) / rad;
 	vecQ.resize(2, true);
@@ -595,7 +595,7 @@ math::quaternion<T> get_euler_angles(const Lattice<T>& lattice_real,
 
 
 	// two theta
-	T dG = ublas::norm_2(vecG);
+	T dG = veclen(vecG);
 	*pTwoTheta = get_sample_twotheta(dKi/angs, dKi/angs, dG/angs, 1) / rad;
 
 
@@ -603,7 +603,7 @@ math::quaternion<T> get_euler_angles(const Lattice<T>& lattice_real,
 	bool bSense = 1;
 	t_mat matUB = get_UB(lattice_real, vecQx_rlu, vecQy_rlu);
 	t_vec vecQx = ublas::prod(matUB, vecQx_rlu);	
-	//T dQx = ublas::norm_2(vecQx);
+	//T dQx = veclen(vecQx);
 	T dKiQ = get_angle_ki_Q(dKi/angs, dKi/angs, dG/angs, bSense) / rad;
 
 	vecQx.resize(2, true);

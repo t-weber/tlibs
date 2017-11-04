@@ -275,7 +275,7 @@ covariance(const std::vector<ublas::vector<T>>& vecVals, const std::vector<T>* p
 		t_innervec vec = vecVals[i] - vecMean;
 
 		// matrix elements, AA^t
-		t_mat matOuter = ublas::outer_prod(vec, vec);
+		t_mat matOuter = outer(vec, vec);
 
 		// probabilities for final averaging, <...>
 		if(pProb)
@@ -301,7 +301,7 @@ covariance(const std::vector<ublas::vector<T>>& vecVals, const std::vector<T>* p
 		[](typename t_innervec::value_type d) -> typename t_innervec::value_type
 		{ return std::sqrt(d); });
 
-	t_mat matStdDev = ublas::outer_prod(vecStdDev, vecStdDev);
+	t_mat matStdDev = outer(vecStdDev, vecStdDev);
 	t_mat matCorr = ublas::element_div(matCov, matStdDev);
 	// --------------------------------------------------------------------------------
 

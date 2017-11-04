@@ -13,8 +13,9 @@
 #include "lang/calls.h"
 #include <thread>
 #include <future>
-#include <wait.h>
+//#include <wait.h>
 #include <cstdlib>
+
 
 static inline Symbol* fkt_exec(const std::vector<Symbol*>& vecSyms,
 	ParseInfo& info, RuntimeInfo &runinfo, SymbolTable* pSymTab)
