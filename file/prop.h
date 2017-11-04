@@ -428,6 +428,11 @@ public:
 		return bOk;
 	}
 
+	bool PathExists(const t_str& strAddr) const
+	{
+		return GetChildNodes(strAddr).size() != 0;
+	}
+
 
 	/*template<class T = t_str>
 	void Add(T&& tKey, T&& tVal)
