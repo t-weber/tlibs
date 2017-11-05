@@ -455,15 +455,15 @@ public:
 
 		const t_vec pos = pos0-pos1;
 		t_mat M = column_matrix({-dir0, dir1});
-		t_mat Mt = ublas::trans(M);
-		t_mat MtM = ublas::prod(Mt, M);
+		t_mat Mt = transpose(M);
+		t_mat MtM = prod_mm(Mt, M);
 
 		t_mat MtMinv;
 		if(!tl::inverse(MtM, MtMinv))
 			return false;
 
-		t_vec Mtb = ublas::prod(Mt, pos);
-		t_vec params = ublas::prod(MtMinv, Mtb);
+		t_vec Mtb = prod_mv(Mt, pos);
+		t_vec params = prod_mv(MtMinv, Mtb);
 		t = params[0];
 
 		return true;
@@ -845,11 +845,11 @@ public:
 
 protected:
 	// x^T Q x  +  r x  +  s  =  0
-	t_mat m_Q = ublas::zero_matrix<T>(3,3);
-	t_vec m_r = ublas::zero_vector<T>(3);
+	t_mat m_Q = zero_m<t_mat>(3,3);
+	t_vec m_r = zero_v<t_vec>(3);
 	T m_s = 0;
 
-	t_vec m_vecOffs = ublas::zero_vector<T>(3);
+	t_vec m_vecOffs = zero_v<t_vec>(3);
 	bool m_bQSymm = 1;
 
 protected:
@@ -862,7 +862,7 @@ protected:
 public:
 	Quadric() {}
 	Quadric(std::size_t iDim)
-		: m_Q(ublas::zero_matrix<T>(iDim,iDim)), m_r(ublas::zero_vector<T>(iDim))
+		: m_Q(zero_m<t_mat>(iDim,iDim)), m_r(zero_v<t_vec>(iDim))
 	{ CheckSymm(); }
 	Quadric(const t_mat& Q) : m_Q(Q)
 	{ CheckSymm(); }
@@ -913,7 +913,7 @@ public:
 	{
 		t_vec x = _x-m_vecOffs;
 
-		t_vec vecQ = ublas::prod(m_Q, x);
+		t_vec vecQ = prod_mv(m_Q, x);
 		T dQ = inner(x, vecQ);
 		T dR = inner(m_r, x);
 
@@ -986,8 +986,8 @@ public:
 			pquadPrincipal->SetQ(matEvals);
 			pquadPrincipal->SetS(GetS());
 
-			t_mat matEvecsT = ublas::trans(matEvecs);
-			pquadPrincipal->SetR(ublas::prod(matEvecsT, GetR()));
+			t_mat matEvecsT = transpose(matEvecs);
+			pquadPrincipal->SetR(prod_mv(matEvecsT, GetR()));
 		}
 
 		return true;
@@ -1030,10 +1030,10 @@ public:
 		const t_vec x0 = line.GetX0() - m_vecOffs;;
 
 		// solving at^2 + bt + c = 0 for t
-		t_vec vecQd = ublas::prod(Q, d);
+		t_vec vecQd = prod_mv(Q, d);
 		T a = inner(d, vecQd);
 
-		t_vec vecQx0 = ublas::prod(Q, x0);
+		t_vec vecQx0 = prod_mv(Q, x0);
 		T c = inner(x0, vecQx0) + s;
 
 		T b = inner(x0, vecQd);

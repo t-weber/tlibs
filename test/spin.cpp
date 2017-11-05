@@ -22,7 +22,7 @@ using t_vec = ublas::vector<std::complex<t_real>>;
 int main()
 {
 	auto vec = get_spin_matrices();
-	auto I = unit_matrix<t_mat>(2);
+	auto I = unit_m<t_mat>(2);
 
 	// operator components for spin 1
 	t_mat S1x = tensor_prod(vec[0], I);

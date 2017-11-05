@@ -25,7 +25,7 @@ template<typename T=double>
 bool reciprocal(const ublas::matrix<T>& matReal, ublas::matrix<T>& matRecip)
 {
 	ublas::matrix<T> matInv;
-	if(!inverse<ublas::matrix<T>>(ublas::trans(matReal), matInv))
+	if(!inverse<ublas::matrix<T>>(transpose(matReal), matInv))
 		return false;
 
 	matRecip = T(2)*get_pi<T>()*matInv;
@@ -130,11 +130,11 @@ void Lattice<T>::RotateEuler(T dPhi, T dTheta, T dPsi)
 	t_mat mat2 = rotation_matrix_3d_x(dTheta);
 	t_mat mat3 = rotation_matrix_3d_z(dPsi);
 
-	t_mat mat21 = ublas::prod(mat2,mat1);
-	t_mat mat = ublas::prod(mat3, mat21);
+	t_mat mat21 = prod_mm(mat2,mat1);
+	t_mat mat = prod_mm(mat3, mat21);
 
 	for(std::size_t i=0; i<3; ++i)
-		m_vecs[i] = ublas::prod(mat, m_vecs[i]);
+		m_vecs[i] = prod_mv(mat, m_vecs[i]);
 }
 
 template<typename T>
@@ -176,11 +176,11 @@ void Lattice<T>::RotateEulerRecip(const t_vec& vecRecipX,
 	t_mat mat2 = rotation_matrix(vecX, dTheta);
 	t_mat mat3 = rotation_matrix(vecZ, dPsi);
 
-	t_mat mat21 = ublas::prod(mat2,mat1);
-	t_mat mat = ublas::prod(mat3, mat21);
+	t_mat mat21 = prod_mm(mat2, mat1);
+	t_mat mat = prod_mm(mat3, mat21);
 
 	for(std::size_t i=0; i<3; ++i)
-		m_vecs[i] = ublas::prod(mat, m_vecs[i]);
+		m_vecs[i] = prod_mv(mat, m_vecs[i]);
 }
 
 template<typename T> T Lattice<T>::GetAlpha() const
@@ -225,7 +225,7 @@ typename Lattice<T>::t_vec Lattice<T>::GetHKL(const t_vec& vec) const
 	if(!inverse(mat, matInv))
 		throw Err("Miller indices could not be calculated.");
 
-	return ublas::prod(matInv, vec);
+	return prod_mv(matInv, vec);
 }
 
 template<typename T>
@@ -269,8 +269,8 @@ typename Lattice<T>::t_mat Lattice<T>::GetBaseMatrixCont() const
 	t_mat matCov = GetBaseMatrixCov();
 	t_mat matGCont = GetMetricCont() /** T(2)*get_pi<T>()*/;
 
-	t_mat matBase = ublas::prod(matCov, matGCont);
-	//matBase = ublas::trans(matBase);
+	t_mat matBase = prod_mm(matCov, matGCont);
+	//matBase = transpose(matBase);
 
 	set_eps_0(matBase);
 	return matBase;
@@ -351,8 +351,8 @@ ublas::matrix<T> get_U(const ublas::vector<T>& _vec1, const ublas::vector<T>& _v
 	if(pmatB)
 	{
 		// in 1/A
-		vec1 = ublas::prod(*pmatB, _vec1);
-		vec2 = ublas::prod(*pmatB, _vec2);
+		vec1 = prod_mv(*pmatB, _vec1);
+		vec2 = prod_mv(*pmatB, _vec2);
 	}
 	else
 	{
@@ -380,7 +380,7 @@ ublas::matrix<T> get_UB(const Lattice<T>& lattice_real,
 	t_mat matB = get_B(lattice_real, 1);		// rlu to 1/A
 	t_mat matU = get_U(_vec1, _vec2, &matB);	// scattering in 1/A
 
-	t_mat matUB = ublas::prod(matU, matB);
+	t_mat matUB = prod_mm(matU, matB);
 	return matUB;
 }
 
@@ -410,7 +410,7 @@ void get_tas_angles(const Lattice<T>& lattice_real,
 	t_mat matUB = get_UB(lattice_real, _vec1, _vec2);
 
 	t_vec vechkl = make_vec({dh, dk, dl});
-	t_vec vecQ = ublas::prod(matUB, vechkl);
+	t_vec vecQ = prod_mv(matUB, vechkl);
 	if(pVecQ) *pVecQ = vecQ;
 
 	if(std::fabs(vecQ[2]) > dDelta)
@@ -475,8 +475,8 @@ void get_hkl_from_tas_angles(const Lattice<T>& lattice_real,
 		throw Err("Cannot invert UB.");
 
 	t_mat rot = rotation_matrix_3d_z(Qvec1);
-	t_vec vecQ = ublas::prod(rot, make_vec({Q,0.,0.}));
-	t_vec vechkl = ublas::prod(matUBinv, vecQ);
+	t_vec vecQ = prod_mv(rot, make_vec({Q,0.,0.}));
+	t_vec vechkl = prod_mv(matUBinv, vecQ);
 
 	if(pVecQ) *pVecQ = vecQ;
 
@@ -522,15 +522,15 @@ math::quaternion<T> get_hkl_orient(const Lattice<T>& lattice_real,
 	t_mat matUB = get_UB(lattice_real, vecQx_rlu, vecQy_rlu);
 
 	t_vec vecG_rlu = make_vec({dh, dk, dl});
-	t_vec vecG = ublas::prod(matUB, vecG_rlu);
+	t_vec vecG = prod_mv(matUB, vecG_rlu);
 
 	t_vec vecGnew_rlu = make_vec({dh_new, dk_new, dl_new});
-	t_vec vecGnew = ublas::prod(matUB, vecGnew_rlu);
+	t_vec vecGnew = prod_mv(matUB, vecGnew_rlu);
 
 	// scattering plane
-	t_vec vecQx = ublas::prod(matUB, vecQx_rlu);
-	//t_vec vecQy = ublas::prod(matUB, vecQy_rlu);
-	t_vec vecQz = ublas::prod(matUB, vecQz_rlu);
+	t_vec vecQx = prod_mv(matUB, vecQx_rlu);
+	//t_vec vecQy = prod_mv(matUB, vecQy_rlu);
+	t_vec vecQz = prod_mv(matUB, vecQz_rlu);
 
 
 	if(pvecG) *pvecG = vecG;
@@ -541,7 +541,7 @@ math::quaternion<T> get_hkl_orient(const Lattice<T>& lattice_real,
 
 	// ------------------------------------------------------------------------
 	t_vec vechklUp = make_vec({up_h, up_k, up_l});
-	t_vec vecUp = ublas::prod(matUB, vechklUp);
+	t_vec vecUp = prod_mv(matUB, vechklUp);
 
 	// get angle between vecUp and vecQz
 	t_vec vec0 = make_vec<t_vec>({T(0), T(0), T(0)});
@@ -591,7 +591,7 @@ math::quaternion<T> get_euler_angles(const Lattice<T>& lattice_real,
 	/*t_mat matRot = quat_to_rot3<t_mat>(quatRot);
 	tl::log_debug("R = ", matRot);
 	tl::log_debug("G = ", vecG);
-	tl::log_debug("R*G = ", ublas::prod(matRot, vecG));*/
+	tl::log_debug("R*G = ", prod_mv(matRot, vecG));*/
 
 
 	// two theta
@@ -602,7 +602,7 @@ math::quaternion<T> get_euler_angles(const Lattice<T>& lattice_real,
 	// theta angle of vecQx
 	bool bSense = 1;
 	t_mat matUB = get_UB(lattice_real, vecQx_rlu, vecQy_rlu);
-	t_vec vecQx = ublas::prod(matUB, vecQx_rlu);	
+	t_vec vecQx = prod_mv(matUB, vecQx_rlu);	
 	//T dQx = veclen(vecQx);
 	T dKiQ = get_angle_ki_Q(dKi/angs, dKi/angs, dG/angs, bSense) / rad;
 

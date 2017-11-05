@@ -430,7 +430,7 @@ bool qr(const ublas::matrix<T>& M,
 
 	ublas::vector<T> v(iTauSize);
 
-	const ublas::matrix<T> ident = ublas::identity_matrix<T>(iTauSize);
+	const ublas::matrix<T> ident = unit_m<ublas::matrix<T>>(iTauSize);
 	Q = ident;
 
 	for(std::size_t k=1; k<=iTauSize; ++k)
@@ -445,10 +445,10 @@ bool qr(const ublas::matrix<T>& M,
 		for(std::size_t i=k+1; i<=iTauSize; ++i)
 			v[i-1] = pMat[(i-1)*n + (k-1)];
 
-		ublas::matrix<T> VV = outer(v, ublas::trans(v));
+		ublas::matrix<T> VV = outer(v, transpose(v));
 		ublas::matrix<T> H = ident - dTau*VV;
 
-		Q = ublas::prod(Q, H);
+		Q = prod_mm(Q, H);
 	}
 
 	//std::cout << "Q = " << Q << std::endl;

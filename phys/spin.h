@@ -53,8 +53,8 @@ t_vec<t_mat<std::complex<t_real>>> get_ladder_ops()
 template<class t_mat=ublas::matrix<double>>
 t_mat commutator(const t_mat& A, const t_mat& B)
 {
-	t_mat AB = ublas::prod(A, B);
-	t_mat BA = ublas::prod(B, A);
+	t_mat AB = prod_mm(A, B);
+	t_mat BA = prod_mm(B, A);
 	return AB - BA;
 }
 
@@ -66,7 +66,7 @@ template<template<class...> class t_mat = ublas::matrix, class t_real = double>
 t_mat<std::complex<t_real>> rot_spin(int iComp, t_real dAngle)
 {
 	const auto vecS = get_spin_matrices<t_mat, ublas::vector, t_real>();
-	const auto matI = unit_matrix<t_mat<std::complex<t_real>>>(2);
+	const auto matI = unit_m<t_mat<std::complex<t_real>>>(2);
 	const std::complex<t_real> I(0,1);
 
 	t_mat<std::complex<t_real>> mat =

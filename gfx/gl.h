@@ -151,8 +151,8 @@ template<typename t_mat = t_mat4_gen<GLdouble>, typename t_vec = t_vec4_gen<GLdo
 void proj_pt(T dX, T dY, T dZ, const t_mat& matProj, const t_mat& matMV,
 	T& dXProj, T& dYProj)
 {
-	t_mat mat = ublas::prod(matProj, matMV);
-	t_vec vec = ublas::prod(mat, make_vec<t_vec>({dX, dY, dZ, 1.}));
+	t_mat mat = prod_mm(matProj, matMV);
+	t_vec vec = prod_mv(mat, make_vec<t_vec>({dX, dY, dZ, 1.}));
 	vec /= vec[3];
 
 	dXProj = vec[0];
@@ -192,7 +192,7 @@ void gl_mv_pt(const t_vec& vec, t_vec& vecOut)
 	t_mat matMV_inv;
 	tl::inverse(matMV, matMV_inv);
 
-	vecOut = ublas::prod(matMV_inv, vec);
+	vecOut = prod_mv(matMV_inv, vec);
 }
 
 /**
@@ -236,8 +236,8 @@ T gl_proj_sphere_size(T dRadius)
 	t_vec vec1 = make_vec<t_vec>({0., dRadius, dDist, 1.});
 	t_vec vec2 = make_vec<t_vec>({0., -dRadius, dDist, 1.});
 
-	t_vec vecProj1 = ublas::prod(matProj, vec1); vecProj1 /= vecProj1[3];
-	t_vec vecProj2 = ublas::prod(matProj, vec2); vecProj2 /= vecProj2[3];
+	t_vec vecProj1 = prod_mv(matProj, vec1); vecProj1 /= vecProj1[3];
+	t_vec vecProj2 = prod_mv(matProj, vec2); vecProj2 /= vecProj2[3];
 	t_vec vecProj = vecProj2 - vecProj1;
 
 	vecProj[3] = vecProj[2] = 0.;
@@ -253,15 +253,15 @@ template<typename t_mat = t_mat4_gen<GLdouble>, typename t_vec = t_vec4_gen<GLdo
 	typename T = typename t_mat::value_type>
 Line<T> screen_ray(T dX, T dY, const t_mat& matProj, const t_mat& matMV)
 {
-	t_mat mat = ublas::prod(matProj, matMV);
+	t_mat mat = prod_mm(matProj, matMV);
 	t_mat matInv;
 	inverse(mat, matInv);
 
 	t_vec vecNear = make_vec<t_vec>({dX, dY, T(-1.), T(1.)});
 	t_vec vecFar = make_vec<t_vec>({dX, dY, T(1.), T(1.)});
 
-	vecNear = ublas::prod(matInv, vecNear);
-	vecFar = ublas::prod(matInv, vecFar);
+	vecNear = prod_mv(matInv, vecNear);
+	vecFar = prod_mv(matInv, vecFar);
 
 	vecNear /= vecNear[3];
 	vecFar /= vecFar[3];
@@ -342,27 +342,27 @@ public:
 			{  0, 0, 1, m_vecPos[2]},
 			{  0, 0, 0,          1 }});
 
-		mat = ublas::prod(mat, matTrans);
+		mat = prod_mm(mat, matTrans);
 		return mat;
 	}
 
 	void RotateAroundRight(T tAngle)
 	{
 		t_mat matRot = rotation_matrix<t_mat>(m_vecRight, tAngle);
-		m_vecUp = ublas::prod(m_vecUp, matRot);
-		m_vecDir = ublas::prod(m_vecDir, matRot);
+		m_vecUp = prod_vm(m_vecUp, matRot);
+		m_vecDir = prod_vm(m_vecDir, matRot);
 	}
 	void RotateAroundUp(T tAngle)
 	{
 		t_mat matRot = rotation_matrix<t_mat>(m_vecUp, tAngle);
-		m_vecRight = ublas::prod(m_vecRight, matRot);
-		m_vecDir = ublas::prod(m_vecDir, matRot);
+		m_vecRight = prod_vm(m_vecRight, matRot);
+		m_vecDir = prod_vm(m_vecDir, matRot);
 	}
 	void RotateAroundDir(T tAngle)
 	{
 		t_mat matRot = rotation_matrix<t_mat>(m_vecDir, tAngle);
-		m_vecRight = ublas::prod(m_vecRight, matRot);
-		m_vecUp = ublas::prod(m_vecUp, matRot);
+		m_vecRight = prod_vm(m_vecRight, matRot);
+		m_vecUp = prod_vm(m_vecUp, matRot);
 	}
 
 	void MoveForward(T t)

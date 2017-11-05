@@ -344,9 +344,9 @@ class DFT : public Fourier_base<T>
 			const ublas::vector<std::complex<T>>& vec, bool bInv=0)
 		{
 			if(!bInv)
-				return ublas::prod(m_matCoeff, vec);
+				return prod_mv(m_matCoeff, vec);
 			else
-				return ublas::prod(m_matCoeffInv, vec);
+				return prod_mv(m_matCoeffInv, vec);
 		}
 
 		virtual void trafo(const T* pInR, const T* pInI,

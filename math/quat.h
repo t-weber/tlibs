@@ -196,7 +196,7 @@ template<template<class...> class t_mat = ublas::matrix,
 t_mat<std::complex<t_real>> quat_to_cmat(const t_quat& quat)
 {
 	const auto vecS = get_spin_matrices<t_mat, ublas::vector, t_real>();
-	const auto matI = unit_matrix<t_mat<std::complex<t_real>>>(2);
+	const auto matI = unit_m<t_mat<std::complex<t_real>>>(2);
 
 	t_mat<std::complex<t_real>> mat =
 		std::complex<t_real>(quat.R_component_1()) * matI +

@@ -487,7 +487,7 @@ static Symbol* fkt_length(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 	}
 
 	t_vec<t_real> vec = sym_to_vec<t_vec>(vecSyms[0]);
-	t_real dLen = std::sqrt(ublas::inner_prod(vec, vec));
+	t_real dLen = std::sqrt(tl::inner(vec, vec));
 	return new SymbolReal(dLen);
 }
 
@@ -583,7 +583,7 @@ static Symbol* fkt_matrix(const std::vector<Symbol*>& vecSyms, ParseInfo& info, 
 	if(vecSyms.size() >= 2)
 		iCols = vecSyms[1]->GetValInt();
 
-	t_mat<t_real> mat = ublas::zero_matrix<t_real>(iRows, iCols);
+	t_mat<t_real> mat = tl::zero_m<t_mat<t_real>>(iRows, iCols);
 	return mat_to_sym<t_mat>(mat);
 }
 
@@ -602,7 +602,7 @@ static Symbol* fkt_transpose(const std::vector<Symbol*>& vecSyms,
 		throw tl::Err(ostrErr.str(),0);
 	}
 
-	t_mat<t_real> mat_trans = ublas::trans(mat);
+	t_mat<t_real> mat_trans = tl::transpose(mat);
 	return mat_to_sym<t_mat>(mat_trans);
 }
 
@@ -675,7 +675,7 @@ static Symbol* fkt_unitmatrix(const std::vector<Symbol*>& vecSyms,
 		return 0;
 
 	t_int iSize = vecSyms[0]->GetValInt();
-	t_mat<t_real> mat = tl::unit_matrix<t_mat<t_real>>(iSize);
+	t_mat<t_real> mat = tl::unit_m<t_mat<t_real>>(iSize);
 
 	return mat_to_sym<t_mat>(mat);
 }
@@ -696,7 +696,7 @@ static Symbol* fkt_outerproduct(const std::vector<Symbol*>& vecSyms,
 	t_vec<t_real> vec1 = sym_to_vec<t_vec>(vecSyms[0]);
 	t_vec<t_real> vec2 = sym_to_vec<t_vec>(vecSyms[1]);
 
-	t_mat<t_real> mat = ublas::outer_prod(vec1, vec2);
+	t_mat<t_real> mat = tl::outer(vec1, vec2);
 	return mat_to_sym<t_mat>(mat);
 }
 
@@ -716,7 +716,7 @@ static Symbol* fkt_dot(const std::vector<Symbol*>& vecSyms,
 	t_vec<t_real> vec1 = sym_to_vec<t_vec>(vecSyms[0]);
 	t_vec<t_real> vec2 = sym_to_vec<t_vec>(vecSyms[1]);
 
-	return new SymbolReal(ublas::inner_prod(vec1, vec2));
+	return new SymbolReal(tl::inner(vec1, vec2));
 }
 
 static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms,
@@ -755,7 +755,7 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms,
 			t_mat<t_real> mat1 = sym_to_mat<t_mat, t_vec>(vecSyms[0]);
 			t_mat<t_real> mat2 = sym_to_mat<t_mat, t_vec>(vecSyms[1]);
 
-			t_mat<t_real> matProd = ublas::prod(mat1, mat2);
+			t_mat<t_real> matProd = tl::prod_mm(mat1, mat2);
 			pRet = mat_to_sym<t_mat>(matProd);
 		}
 		else if(bFirstIsMat && bSecondIsVec)
@@ -763,7 +763,7 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms,
 			t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[0]);
 			t_vec<t_real> vec = sym_to_vec<t_vec>(vecSyms[1]);
 
-			t_vec<t_real> vecProd = ublas::prod(mat, vec);
+			t_vec<t_real> vecProd = tl::prod_mv(mat, vec);
 			pRet = vec_to_sym<t_vec>(vecProd);
 		}
 		else if(bFirstIsVec && bSecondIsMat)
@@ -771,7 +771,7 @@ static Symbol* fkt_product(const std::vector<Symbol*>& vecSyms,
 			t_vec<t_real> vec = sym_to_vec<t_vec>(vecSyms[0]);
 			t_mat<t_real> mat = sym_to_mat<t_mat, t_vec>(vecSyms[1]);
 
-			t_vec<t_real> vecProd = ublas::prod(vec, mat);
+			t_vec<t_real> vecProd = tl::prod_vm(vec, mat);
 			pRet = vec_to_sym<t_vec>(vecProd);
 		}
 	}

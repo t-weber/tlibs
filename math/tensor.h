@@ -208,7 +208,7 @@ t_vec cross_prod_contra(const t_mat& matGCov,
 	t_mat matGContra;
 	inverse(matGCov, matGContra);
 
-	t_vec vecCrossContra = ublas::zero_vector<T>(iDim);
+	t_vec vecCrossContra = zero_v<t_vec>(iDim);
 
 	for(std::size_t j=0; j<iDim; ++j)
 	{

@@ -18,7 +18,7 @@ int main()
 {
 	std::ifstream ifstr("/home/tweber/tmp/coord.dat");
 	std::vector<t_vec> vecVertices;
-	t_vec vecCentral = tl::ublas::zero_vector<T>(3);
+	t_vec vecCentral = tl::zero_v<t_vec>(3);
 
 	while(1)
 	{

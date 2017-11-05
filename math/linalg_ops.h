@@ -48,7 +48,7 @@ struct linalg_mult_op_impl<T1, T2,
 
 	ret_type operator()(const T1& mat1, const T2& mat2) const
 	{
-		return ublas::prod(mat1, mat2);
+		return prod_mm(mat1, mat2);
 	}
 };
 
@@ -61,7 +61,7 @@ struct linalg_mult_op_impl<T1, T2,
 
 	ret_type operator()(const T1& mat, const T2& vec) const
 	{
-		return ublas::prod(mat, vec);
+		return prod_mv(mat, vec);
 	}
 };
 

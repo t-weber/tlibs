@@ -147,10 +147,10 @@ bool pseudoinverse(const ublas::matrix<T>& mat, ublas::matrix<T>& matInv)
 
 	ublas::matrix<T> matS = diag_matrix(vecS);
 	matS = pseudoinverse_diag(matS);
-	matU = ublas::trans(matU);
+	matU = transpose(matU);
 
-	matInv = ublas::prod(matS, matU);
-	matInv = ublas::prod(matV, matInv);
+	matInv = prod_mm(matS, matU);
+	matInv = prod_mm(matV, matInv);
 
 	return true;
 }

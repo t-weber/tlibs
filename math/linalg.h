@@ -102,16 +102,94 @@ t_mat make_mat(t_lst<t_lst<typename t_mat::value_type>>&& lst)
 	return mat;
 }
 
-template<class matrix_type = ublas::matrix<double>>
-matrix_type unit_matrix(std::size_t N)
-{
-	matrix_type mat(N,N);
 
+/**
+ * unit matrix -- general version
+ */
+template<class t_mat = ublas::matrix<double>,
+	typename std::enable_if<!std::is_convertible<t_mat, ublas::matrix<typename t_mat::value_type>>::value, char>::type=0>
+t_mat unit_m(std::size_t N)
+{
+	t_mat mat(N, N);
 	for(std::size_t i=0; i<N; ++i)
 		for(std::size_t j=0; j<N; ++j)
 			mat(i,j) = (i==j ? 1 : 0);
 	return mat;
 }
+
+/**
+ * unit matrix -- ublas wrapper
+ */
+template<class t_mat = ublas::matrix<double>,
+typename std::enable_if<std::is_convertible<t_mat, ublas::matrix<typename t_mat::value_type>>::value, char>::type=0>
+t_mat unit_m(std::size_t N)
+{
+	return ublas::identity_matrix<typename t_mat::value_type>(N);
+}
+
+
+/**
+ * zero matrix -- general version
+ */
+template<class t_mat = ublas::matrix<double>,
+typename std::enable_if<!std::is_convertible<t_mat, ublas::matrix<typename t_mat::value_type>>::value, char>::type=0>
+t_mat zero_m(std::size_t N, std::size_t M)
+{
+	t_mat mat(N, M);
+	for(std::size_t i=0; i<N; ++i)
+		for(std::size_t j=0; j<M; ++j)
+			mat(i,j) = 0;
+	return mat;
+}
+
+/**
+ * zero matrix -- ublas wrapper
+ */
+template<class t_mat = ublas::matrix<double>,
+typename std::enable_if<std::is_convertible<t_mat, ublas::matrix<typename t_mat::value_type>>::value, char>::type=0>
+t_mat zero_m(std::size_t N, std::size_t M)
+{
+	return ublas::zero_matrix<typename t_mat::value_type>(N, M);
+}
+
+/**
+ * zero matrix -- synonym
+ */
+template<class t_mat = ublas::matrix<double>>
+t_mat zero_matrix(std::size_t N, std::size_t M)
+{ return zero_m<t_mat>(N, M); }
+
+
+/**
+ * zero vector -- general version
+ */
+template<class t_vec = ublas::vector<double>,
+	typename std::enable_if<!std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+t_vec zero_v(std::size_t N)
+{
+	t_vec vec(N);
+	for(std::size_t i=0; i<N; ++i)
+		vec(i) = 0;
+	return vec;
+}
+
+/**
+ * zero vector -- ublas wrapper
+ */
+template<class t_vec = ublas::vector<double>,
+	typename std::enable_if<std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+t_vec zero_v(std::size_t N)
+{
+	return ublas::zero_vector<typename t_vec::value_type>(N);
+}
+
+/**
+ * zero vector -- synonym
+ */
+template<class t_vec = ublas::vector<double>>
+t_vec zero_vector(std::size_t N)
+{ return zero_v<t_vec>(N); }
+
 
 
 /**
@@ -217,9 +295,37 @@ bool mat_equal(const mat_type& mat0, const mat_type& mat1,
 // ----------------------------------------------------------------------------
 
 
+/**
+ * transpose -- general version
+ */
+template<typename t_mat = ublas::matrix<double>,
+	typename std::enable_if<!std::is_convertible<t_mat, ublas::matrix<typename t_mat::value_type>>::value, char>::type=0>
+t_mat transpose(const t_mat& mat)
+{
+	t_mat matret(mat.size2(), mat.size(1));
+
+	for(std::size_t i=0; i<mat.size1(); ++i)
+		for(std::size_t j=0; j<mat.size2(); ++j)
+			matret(j,i) = mat(i,j);
+
+	return matret;
+}
 
 /**
- * cross product
+ * transpose -- general version
+ */
+template<typename t_mat = ublas::matrix<double>,
+	typename std::enable_if<std::is_convertible<t_mat, ublas::matrix<typename t_mat::value_type>>::value, char>::type=0>
+t_mat transpose(const t_mat& mat)
+{
+	return ublas::trans(mat);
+}
+
+// ----------------------------------------------------------------------------
+
+
+/**
+ * cross product, c_i = eps_ijk a_j b_k
  */
 template<typename vector_type = ublas::vector<double>>
 vector_type cross_3(const vector_type& vec0, const vector_type& vec1)
@@ -287,6 +393,97 @@ t_mat outer(const t_vec& vec0, const t_vec& vec1)
 {
 	return ublas::outer_prod(vec0, vec1);
 }
+
+
+/**
+ * matrix-matrix product -- general version
+ * c_ij = a_ik b_kj
+ */
+template<typename t_mat = ublas::matrix<double>,
+typename std::enable_if<!std::is_convertible<t_mat, ublas::matrix<typename t_mat::value_type>>::value, char>::type=0>
+t_mat prod_mm(const t_mat& mat0, const t_mat& mat1)
+{
+	if(mat0.size2() != mat1.size1())
+		return t_mat(0,0);
+
+	std::size_t iSize1 = mat0.size1();
+	std::size_t iSize2 = mat1.size2();
+	std::size_t iSize3 = mat0.size2();
+	t_mat mat(iSize1, iSize2);
+
+	for(std::size_t i=0; i<iSize1; ++i)
+	{
+		for(std::size_t j=0; j<iSize2; ++j)
+		{
+			mat(i,j) = typename t_mat::value_type(0);
+			for(std::size_t k=0; k<iSize3; ++k)
+				mat(i,j) += mat0(i,k)*mat1(k,j);
+		}
+	}
+
+	return mat;
+}
+
+/**
+ * matrix-matrix product -- ublas wrapper
+ */
+template<typename t_mat = ublas::matrix<double>,
+typename std::enable_if<std::is_convertible<t_mat, ublas::matrix<typename t_mat::value_type>>::value, char>::type=0>
+t_mat prod_mm(const t_mat& mat0, const t_mat& mat1)
+{
+	return ublas::prod(mat0, mat1);
+}
+
+
+/**
+ * matrix-vector product -- general version
+ * c_i = a_ij b_j
+ */
+template<typename t_vec = ublas::vector<double>,
+typename t_mat = ublas::matrix<typename t_vec::value_type>,
+typename std::enable_if<!std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+t_vec prod_mv(const t_mat& mat, const t_vec& vec)
+{
+	if(mat.size2() != vec.size())
+		return t_vec(0);
+
+	std::size_t iSize1 = mat.size1();
+	std::size_t iSize2 = mat.size2();
+	t_vec vecret(iSize2);
+
+	for(std::size_t i=0; i<iSize1; ++i)
+	{
+		vecret(i) = typename t_vec::value_type(0);
+		for(std::size_t j=0; j<iSize2; ++j)
+			vecret(i) += mat(i,j)*vec(j);
+	}
+
+	return vecret;
+}
+
+/**
+ * matrix-vector product -- ublas wrapper
+ */
+template<typename t_vec = ublas::vector<double>,
+typename t_mat = ublas::matrix<typename t_vec::value_type>,
+typename std::enable_if<std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+t_vec prod_mv(const t_mat& mat, const t_vec& vec)
+{
+	return ublas::prod(mat, vec);
+}
+
+
+/**
+ * vector-matrix product
+ */
+template<typename t_vec = ublas::vector<double>,
+typename t_mat = ublas::matrix<typename t_vec::value_type>,
+typename std::enable_if<std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+t_vec prod_vm(const t_vec& vec, const t_mat& mat)
+{
+	return prod_mv(transpose(mat), vec);
+}
+
 
 
 /**
@@ -506,7 +703,7 @@ t_mat mirror_matrix(std::size_t iSize, std::size_t iComp)
 {
 	using T = typename t_mat::value_type;
 
-	t_mat mat = unit_matrix<t_mat>(iSize);
+	t_mat mat = unit_m<t_mat>(iSize);
 	mat(iComp, iComp) = T(-1);
 
 	return mat;
@@ -662,7 +859,7 @@ template<class matrix_type = ublas::matrix<double>,
 	class cont_type = std::initializer_list<typename matrix_type::value_type>>
 matrix_type diag_matrix(const cont_type& lst)
 {
-	matrix_type mat = unit_matrix<matrix_type>(lst.size());
+	matrix_type mat = unit_m<matrix_type>(lst.size());
 
 	std::size_t i = 0;
 	for(typename cont_type::const_iterator iter=lst.begin(); iter!=lst.end(); ++iter, ++i)
@@ -702,7 +899,7 @@ template<class t_mat = ublas::matrix<double>,
 	class t_cont = std::initializer_list<typename t_mat::value_type>>
 t_mat translation_matrix(const t_cont& lst)
 {
-	t_mat mat = unit_matrix<t_mat>(lst.size()+1);
+	t_mat mat = unit_m<t_mat>(lst.size()+1);
 
 	const std::size_t iJ = mat.size2();
 	std::size_t i = 0;
@@ -819,7 +1016,7 @@ mat_type rotation_matrix(const vec_type& _vec, T angle)
 	}
 
 	return (T(1) - c) * outer(vec, vec) +
-		c * unit_matrix(vec.size()) +
+		c * unit_m(vec.size()) +
 		s * skew(vec);
 }
 
@@ -852,10 +1049,10 @@ t_mat proj_matrix(T l, T r, T b, T t, T n, T f, bool bParallel)
 	t_mat matScale = scale_matrix<t_mat>({ T(2)/(r-l), T(2)/(t-b), T(1), T(1) });
 	// translate to [-1:1]
 	t_mat matTrans = translation_matrix<t_mat>({ -T(0.5)*(r+l), -T(0.5)*(t+b), T(0) });
-	matScale = ublas::prod(matScale, matTrans);
+	matScale = prod_mm(matScale, matTrans);
 
 	// project
-	t_mat matProj = unit_matrix<t_mat>(4);
+	t_mat matProj = unit_m<t_mat>(4);
 
 	if(bParallel)	// parallel
 	{
@@ -870,7 +1067,7 @@ t_mat proj_matrix(T l, T r, T b, T t, T n, T f, bool bParallel)
 		matProj(3,3) = T(0);
 	}
 
-	return ublas::prod(matScale, matProj);
+	return prod_mm(matScale, matProj);
 }
 
 /**
@@ -1002,13 +1199,13 @@ bool inverse(const mat_type& mat, mat_type& inv)
 		if(ublas::lu_factorize(lu, perm) != 0)
 			return false;
 
-		inv = unit_matrix<mat_type>(N);
+		inv = unit_m<mat_type>(N);
 		ublas::lu_substitute(lu, perm, inv);
 	}
 	catch(const std::exception& ex)
 	{
 		log_err("Matrix inversion failed with exception: ", ex.what(), ".", "\n",
-				"Matrix to be inverted was: ", mat, ".");
+			"Matrix to be inverted was: ", mat, ".");
 		//log_backtrace();
 		return false;
 	}
@@ -1026,12 +1223,12 @@ mat_type transform(const mat_type& mat, const mat_type& matTrafo, bool bCongr=0)
 {
 	mat_type matTrafoInv;
 	if(bCongr)
-		matTrafoInv = ublas::trans(matTrafo);
+		matTrafoInv = transpose(matTrafo);
 	else
 		inverse(matTrafo, matTrafoInv);
 
-	mat_type MT = ublas::prod(mat, matTrafo);
-	mat_type TinvMT = ublas::prod(matTrafoInv, MT);
+	mat_type MT = prod_mm(mat, matTrafo);
+	mat_type TinvMT = prod_mm(matTrafoInv, MT);
 
 	return TinvMT;
 }
@@ -1046,12 +1243,12 @@ mat_type transform_inv(const mat_type& mat, const mat_type& matTrafo, bool bCong
 {
 	mat_type matTrafoInv;
 	if(bCongr)
-		matTrafoInv = ublas::trans(matTrafo);
+		matTrafoInv = transpose(matTrafo);
 	else
 		inverse(matTrafo, matTrafoInv);
 
-	mat_type MT = ublas::prod(mat, matTrafoInv);
-	mat_type TinvMT = ublas::prod(matTrafo, MT);
+	mat_type MT = prod_mm(mat, matTrafoInv);
+	mat_type TinvMT = prod_mm(matTrafo, MT);
 
 	return TinvMT;
 }
@@ -1106,14 +1303,14 @@ bool solve_linear(const ublas::matrix<T>& M,
 		// QR x = v
 		// R x = Q^T v
 
-		ublas::vector<T> vnew = ublas::prod(ublas::trans(Q), v);
+		ublas::vector<T> vnew = prod_mv(transpose(Q), v);
 
 		/*std::cout << "M = " << M << std::endl;
 		std::cout << "Q = " << Q << std::endl;
 		std::cout << "R = " << R << std::endl;
 		std::cout << "v' = " << vnew << std::endl;*/
 
-		x = ublas::zero_vector<T>(M.size2());
+		x = zero_v<ublas::vector<T>>(M.size2());
 		ublas::vector<T> xnew(R.size1());
 		bool bOk = 0;
 
@@ -1205,12 +1402,12 @@ bool solve_linear_approx(const ublas::matrix<T>& M,
 	// R^T Q^T Q R x = R^T Q^T v
 	// R^T R x = R^T Q^T v
 
-	const ublas::matrix<T> RT = ublas::trans(R);
-	const ublas::matrix<T> QT = ublas::trans(Q);
-	const ublas::matrix<T> RTR = ublas::prod(RT, R);
-	const ublas::matrix<T> RTQT = ublas::prod(RT, QT);
+	const ublas::matrix<T> RT = transpose(R);
+	const ublas::matrix<T> QT = transpose(Q);
+	const ublas::matrix<T> RTR = prod_mm(RT, R);
+	const ublas::matrix<T> RTQT = prod_mm(RT, QT);
 
-	const ublas::vector<T> vnew = ublas::prod(RTQT, v);
+	const ublas::vector<T> vnew = prod_mv(RTQT, v);
 	return solve_linear<T>(RTR, vnew, x);
 }
 
@@ -1409,7 +1606,7 @@ t_mat adjugate(const t_mat& mat, bool bTranspose=1)
 		}
 
 	if(bTranspose)
-		matRet = ublas::trans(matRet);
+		matRet = transpose(matRet);
 	return matRet;
 }
 
@@ -1750,7 +1947,7 @@ template<class t_vec = ublas::vector<double>,
 	t_vec reflection(const t_vec& vec, const t_vec& vecNorm)
 {
 	t_mat mat = reflection_matrix<t_mat, t_vec, T>(vecNorm);
-	return ublas::prod(mat, vec);
+	return prod_mv(mat, vec);
 }
 
 /**
@@ -1801,21 +1998,21 @@ bool qr_decomp(const t_mat& M, t_mat& Q, t_mat& R)
 
 		// vector of form [123.4 0 0 0] ?
 		t_vec vec0_rest = ublas::subrange(vec0, 1, vec0.size());
-		if(vec_equal<t_vec>(vec0_rest, ublas::zero_vector<T>(vec0_rest.size())))
+		if(vec_equal<t_vec>(vec0_rest, zero_v<t_vec>(vec0_rest.size())))
 		{
-			t_mat matReflM = unit_matrix(m);
+			t_mat matReflM = unit_m(m);
 			vecRefls.push_back(matReflM);
 			continue;
 		}
 
-		t_vec vecE0 = ublas::zero_vector<T>(vec0.size());
+		t_vec vecE0 = zero_v<t_vec>(vec0.size());
 		vecE0[0] = veclen(vec0);
 
 		t_vec vecReflNorm = vec0-vecE0;
 		//std::cout << "refl norm: " << vecReflNorm << std::endl;
 		t_mat matRefl = reflection_matrix(vecReflNorm);
 
-		A = ublas::prod(matRefl, A);
+		A = prod_mm(matRefl, A);
 		A = submatrix(A,0,0);
 
 		t_mat matReflM = insert_unity(matRefl, m-matRefl.size1());
@@ -1826,20 +2023,20 @@ bool qr_decomp(const t_mat& M, t_mat& Q, t_mat& R)
 	if(vecRefls.size() == 0)
 		return false;
 
-	Q = unit_matrix(m);
+	Q = unit_m(m);
 	for(const t_mat& matRefl : vecRefls)
 	{
-		t_mat matReflT = ublas::trans(matRefl);
-		Q = ublas::prod(Q, matReflT);
+		t_mat matReflT = transpose(matRefl);
+		Q = prod_mm(Q, matReflT);
 	}
 
 	/*R = vecRefls[vecRefls.size()-1];
 	for(int i=vecRefls.size()-2; i>=0; --i)
-		R = ublas::prod(R, vecRefls[i]);
-	R = ublas::prod(R, M);*/
+		R = prod_mv(R, vecRefls[i]);
+	R = prod_mm(R, M);*/
 
-	t_mat QT = ublas::trans(Q);
-	R = ublas::prod(QT, M);
+	t_mat QT = transpose(Q);
+	R = prod_mm(QT, M);
 
 	return true;
 }
@@ -1860,7 +2057,7 @@ bool qr_decomp_gs(const t_mat& M, t_mat& Q, t_mat& R)
 	Q = column_matrix(gram_schmidt(get_columns(M), 1));
 
 	// M = QR  =>  Q^T M = R
-	R = ublas::prod(ublas::trans(Q), M);
+	R = prod_mm(transpose(Q), M);
 	return 1;
 }
 
@@ -2056,7 +2253,7 @@ bool eigenvec_dominant_sym(const t_mat& mat, t_vec& evec, T& eval,
 	{
 		if(iIter == iMaxIter-1)
 			vecPrev = vecInit;
-		vecInit = ublas::prod(mat, vecInit);
+		vecInit = prod_mv(mat, vecInit);
 	}
 
 	const T normInit = veclen(vecInit);
@@ -2114,7 +2311,7 @@ bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vecto
 #endif
 
 	const std::size_t n = mat.size1();
-	t_mat I = unit_matrix<t_mat>(n);
+	t_mat I = unit_m<t_mat>(n);
 	t_mat M = mat;
 
 	std::size_t iIter = 0;
@@ -2130,8 +2327,8 @@ bool eigenvec_sym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vecto
 		//Q = norm_col_vecs(Q);
 
 		t_mat Mlast = M;
-		M = ublas::prod(R, Q);
-		I = ublas::prod(I, Q);
+		M = prod_mm(R, Q);
+		I = prod_mm(I, Q);
 
 
 		bool bConverged = 1;
@@ -2172,7 +2369,7 @@ template<class t_mat = ublas::matrix<double>,
 bool eigenvec_approxsym_simple(const t_mat& mat, std::vector<t_vec>& evecs, std::vector<T>& evals,
 	std::size_t MAX_ITER=512, T tEps = std::cbrt(get_epsilon<T>()))
 {
-	t_mat MtM = ublas::prod(ublas::trans(mat), mat);
+	t_mat MtM = prod_mm(transpose(mat), mat);
 	bool bOk = eigenvec_sym_simple(MtM, evecs, evals, MAX_ITER, tEps);
 
 	for(T& eval : evals)

@@ -326,7 +326,9 @@ std::string GnuPlot<t_real>::BuildCmd()
 				ostr << "using ($1):($2) with lines linetype 2 linewidth " << dSize << " ";
 				break;
 			default:
-				log_warn("Unknown line style.");
+				log_warn("Unknown line style, using points.");
+				ostr << strPointStyle;
+				break;
 			case STYLE_POINTS:
 				ostr << strPointStyle;
 				break;
