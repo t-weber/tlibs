@@ -271,12 +271,14 @@ T LinInterp<T>::operator()(T x) const
 	//	[](const T& x, const ublas::vector<T>& vec) -> bool
 	//	{ return x < vec[0]; });
 
-	if(iterLower == iterEnd)
+	// lower bound at end of range?
+	if(iterLower == iterEnd || iterLower == iterEnd-1)
 		iterLower = iterEnd - 2;
 	const auto* iter2 = iterLower + 1;
 
 	T xrange = (*iter2)[0] - (*iterLower)[0];
 	T xpos = (x-(*iterLower)[0]) / xrange;
+
 	return tl::lerp<T,T>((*iterLower)[1], (*iter2)[1], xpos);
 }
 
