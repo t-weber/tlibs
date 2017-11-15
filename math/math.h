@@ -127,6 +127,13 @@ bool float_equal(T t1, T t2, typename _get_epsilon_impl<T>::t_eps eps = get_epsi
 }
 
 
+template<class T=double>
+bool is_integer(T d, T eps = get_epsilon<T>())
+{
+	T d_rd = d - std::round(d);
+	return float_equal<T>(d_rd, T(0), eps);
+}
+
 // -----------------------------------------------------------------------------
 
 
