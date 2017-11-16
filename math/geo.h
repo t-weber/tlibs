@@ -575,19 +575,31 @@ bool intersect_line_poly(const Line<T>& line,
 
 	// is intersection point within polygon?
 	const t_vec vecFaceCentre = mean_value(vertPoly);
+
+	//std::ostringstream ostr;
+	//ostr << "intersect: " << vecIntersect << ", face centre: " << vecFaceCentre << "\n";
+
 	for(std::size_t iVert = 0; iVert < vertPoly.size(); ++iVert)
 	{
-		std::size_t iNextVert = iVert < vertPoly.size()-1 ? iVert+1 : 0;
+		std::size_t iNextVert = iVert < (vertPoly.size()-1) ? iVert+1 : 0;
 
-		const t_vec vecEdgeCentre = vertPoly[iVert] + T(0.5)*(vertPoly[iNextVert] - vertPoly[iVert]);
-		const t_vec vecNorm = vecFaceCentre-vecEdgeCentre;
+		const t_vec vecEdge = vertPoly[iNextVert] - vertPoly[iVert];
+		const t_vec vecEdgeCentre = vertPoly[iVert] + T(0.5)*vecEdge;
+		const t_vec vecOut = vecFaceCentre - vecEdgeCentre;
+		t_vec vecNorm = cross_3(vecEdge, planePoly.GetNorm());
+		if(inner(vecNorm, vecOut) < T(0))
+			vecNorm = -vecNorm;
 
 		const Plane<T> planeEdge(vecEdgeCentre, vecNorm);
 
 		if(planeEdge.GetDist(vecIntersect) < -eps)
 			return false;
+
+		//ostr << "Face " << iVert << ": " << vecEdgeCentre << ", " << vecNorm << ", "
+		//	<< planeEdge.GetDist(vecIntersect) << "\n";
 	}
 
+	//std::cout << ostr.str() << std::endl;
 	return true;
 }
 

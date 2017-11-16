@@ -959,9 +959,68 @@ bool is_identity_matrix(const t_mat& mat)
 }
 
 
+/**
+ * do the absolute elements form an identity matrix
+ * also return the indices of the negative values on the diagonal
+ */
+template<class t_mat = ublas::matrix<double>>
+std::pair<bool, std::vector<std::size_t>> is_abs_identity_matrix(const t_mat& mat)
+{
+	using T = typename t_mat::value_type;
+	if(mat.size1() != mat.size2())
+		return false;
+
+	const std::size_t iN = mat.size1();
+	std::vector<std::size_t> vecMinusses;
+
+	for(std::size_t i=0; i<iN; ++i)
+	{
+		for(std::size_t j=0; j<iN; ++j)
+		{
+			if(i != j)	// off-diagonal elements
+			{
+				if(!float_equal<T>(mat(i, j), T(0)))
+					return std::make_pair(false, vecMinusses);
+			}
+			else	// diagonal elements
+			{
+				if(!float_equal<T>(std::abs(mat(i, j)), T(1)))
+					return std::make_pair(false, vecMinusses);
+				if(mat(i,j) < T(0))
+					vecMinusses.push_back(i);
+			}
+		}
+	}
+
+	return std::make_pair(true, vecMinusses);
+}
+
+
 template<class t_mat = ublas::matrix<double>>
 bool is_inverting_matrix(const t_mat& mat)
 { return is_identity_matrix(-mat); }
+
+
+/**
+ * does the homogeneous matrix mat have a translation component?
+ */
+template<class t_mat = ublas::matrix<double>>
+bool has_translation_components(const t_mat& mat)
+{
+	using T = typename t_mat::value_type;
+	const std::size_t iN = mat.size1();
+	if(iN != mat.size2())
+		return false;
+
+	// translation?
+	for(std::size_t i=0; i<iN-1; ++i)
+	{
+		if(!float_equal<T>(mat(i, iN-1), T(0)))
+			return true;
+	}
+
+	return false;
+}
 
 
 /**
@@ -982,12 +1041,8 @@ bool is_centering_matrix(const t_mat& mat)
 		return false;
 
 	// translation?
-	for(std::size_t i=0; i<iN-1; ++i)
-	{
-		if(!float_equal<T>(mat(i, iN-1), T(0)))
+	if(has_translation_components<t_mat>(mat))
 			return true;
-	}
-
 	return false;
 }
 
