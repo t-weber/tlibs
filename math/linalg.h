@@ -966,13 +966,13 @@ bool is_identity_matrix(const t_mat& mat)
 template<class t_mat = ublas::matrix<double>>
 std::pair<bool, std::vector<std::size_t>> is_abs_identity_matrix(const t_mat& mat)
 {
-	using T = typename t_mat::value_type;
-	if(mat.size1() != mat.size2())
-		return false;
-
-	const std::size_t iN = mat.size1();
 	std::vector<std::size_t> vecMinusses;
 
+	using T = typename t_mat::value_type;
+	if(mat.size1() != mat.size2())
+		return std::make_pair(false, vecMinusses);
+
+	const std::size_t iN = mat.size1();
 	for(std::size_t i=0; i<iN; ++i)
 	{
 		for(std::size_t j=0; j<iN; ++j)
