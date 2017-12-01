@@ -11,6 +11,7 @@
 
 #include "../math/linalg.h"
 #include "../math/linalg_ops.h"
+#include "../math/rt.h"
 #include "lattice.h"
 #include <tuple>
 
@@ -18,21 +19,96 @@
 namespace tl{
 
 /**
- * Maps atom position back to units cell
+ * Maps fractional atom position back to [tMin, tMax]
  */
 template<class t_vec>
 void restrict_to_uc(t_vec& vec,
 	typename t_vec::value_type tMin=0, typename t_vec::value_type tMax=1)
 {
 	using T = typename t_vec::value_type;
+	const T dSize = std::abs(tMax-tMin);
 
 	for(std::size_t i=0; i<vec.size(); ++i)
 	{
-		vec[i] = std::fmod(vec[i], T(1));
+		vec[i] = std::fmod(vec[i], dSize);
 
-		while(vec[i] < tMin) vec[i] += T(1);
-		while(vec[i] >= tMax) vec[i] -= T(1);
+		while(vec[i] < tMin) vec[i] += dSize;
+		while(vec[i] >= tMax) vec[i] -= dSize;
 	}
+}
+
+
+/**
+ * Maps atom position back to units cell using an rt index tree (in angs coordinates!)
+ */
+template<class t_vec, class t_mat>
+void restrict_to_uc(const Rt<typename t_vec::value_type, 3, 8, 0>& rtPeaks,
+	const t_mat& matA, const t_mat& matB, t_vec& vecAtom,
+	typename t_vec::value_type eps = std::numeric_limits<typename t_vec::value_type>::epsilon())
+{
+	using T = typename t_vec::value_type;
+
+	t_vec vecAtomAA = mult<t_mat, t_vec>(matA, vecAtom);
+	std::vector<T> nodeNearestAA =
+		rtPeaks.GetNearestNode(std::vector<T>{{ vecAtomAA[0], vecAtomAA[1], vecAtomAA[2] }});
+
+	// if atom is not in the (000) zone, subtract a lattice vector to shift it there
+	if(!float_equal<T>(nodeNearestAA[0], 0, eps) ||
+		!float_equal<T>(nodeNearestAA[1], 0, eps) ||
+		!float_equal<T>(nodeNearestAA[2], 0, eps))
+	{
+		t_mat matAinv = transpose(matB) / (tl::get_pi<T>()*T(2));
+		//inverse<t_mat>(matA, matAinv);
+
+		const t_vec vecNearestAA = tl::make_vec<t_vec>({nodeNearestAA[0], nodeNearestAA[1], nodeNearestAA[2]});
+		const t_vec vecNearestFrac = mult<t_mat, t_vec>(matAinv, vecNearestAA);
+		//log_debug("nearest lattice vector: ", vecNearestFrac, ", ", vecNearestAA);
+
+
+		// don't shift atoms on the border of the next cell
+		const T dAtomTo000 = veclen<t_vec>(vecAtomAA);
+		const T dAtomToNearest = veclen<t_vec>(vecAtomAA-vecNearestAA);
+
+		if(dAtomToNearest < dAtomTo000-eps)
+			vecAtom -= vecNearestFrac;
+	}
+}
+
+
+/**
+ * test if position (in fractional units) and equivalent
+ * positions are already occupied
+ */
+template<class t_vec, template<class...> class t_cont>
+bool position_occupied_frac(const t_cont<t_vec>& vecvecPos, const t_vec& vecPos,
+	typename t_vec::value_type eps)
+{
+	static const t_cont<t_vec> vecEquiv
+	{{
+		make_vec<t_vec>( {0., 0., 0.} ), make_vec<t_vec>( {0., 0., 1.} ),
+		make_vec<t_vec>( {0., 0., -1.} ), make_vec<t_vec>( {0., 1., 0.} ),
+		make_vec<t_vec>( {0., -1., 0.} ), make_vec<t_vec>( {1., 0., 0.} ),
+		make_vec<t_vec>( {-1., 0., 0.} ),
+
+		make_vec<t_vec>( {0., 1., 1.} ), make_vec<t_vec>( {0., 1., -1.} ),
+		make_vec<t_vec>( {0., -1., 1.} ), make_vec<t_vec>( {0., -1., -1.} ),
+		make_vec<t_vec>( {1., 1., 0.} ), make_vec<t_vec>( {1., -1., 0.} ),
+		make_vec<t_vec>( {-1., 1., 0.} ), make_vec<t_vec>( {-1., -1., 0.} ),
+		make_vec<t_vec>( {1., 0., 1.} ), make_vec<t_vec>( {1., 0., -1.} ),
+		make_vec<t_vec>( {-1., 0., 1.} ), make_vec<t_vec>( {-1., 0., -1.} ),
+
+		make_vec<t_vec>( {1., 1., 1.} ), make_vec<t_vec>( {1., 1., -1.} ),
+		make_vec<t_vec>( {1., -1., 1.} ), make_vec<t_vec>( {-1., 1., 1.} ),
+		make_vec<t_vec>( {1., -1., -1.} ), make_vec<t_vec>( {-1., 1., -1.} ),
+		make_vec<t_vec>( {-1., -1., 1.} ), make_vec<t_vec>( {-1., -1., -1.} ),
+	}};
+
+	for(const t_vec& vecOld : vecvecPos)
+		for(const t_vec& vecShift : vecEquiv)
+			if(vec_equal<t_vec>(vecPos+vecShift, vecOld, eps))
+				return true;
+
+	return false;
 }
 
 
@@ -40,30 +116,53 @@ void restrict_to_uc(t_vec& vec,
  * Generates atom positions using trafo matrices
  */
 template<class t_mat, class t_vec, template<class...> class t_cont>
-t_cont<t_vec> generate_atoms(const t_cont<t_mat>& trafos, const t_vec& vecAtom,
-	typename t_vec::value_type tUCMin=0, typename t_vec::value_type tUCMax=1,
-	typename t_vec::value_type eps = std::numeric_limits<typename t_vec::value_type>::epsilon())
+t_cont<t_vec> generate_atoms(const t_cont<t_mat>& trafos, const t_vec& _vecAtom,
+	typename t_vec::value_type eps = std::numeric_limits<typename t_vec::value_type>::epsilon(),
+	const t_mat* pmatA = nullptr, const t_mat* pmatB = nullptr)
 {
-	//typedef typename t_vec::value_type t_real;
+	using T = typename t_vec::value_type;
+
+
+	// calculate lattice in angs units to calculate unit cell infos
+	constexpr const T max_peak = 8;
+	Rt<T, 3, 8, 0> rtPeaks;
+	if(pmatA && pmatB)
+	{
+		// generate spatial index tree using angs coords
+		for(T h=-max_peak; h<=max_peak; h+=1)
+			for(T k=-max_peak; k<=max_peak; k+=1)
+				for(T l=-max_peak; l<=max_peak; l+=1)
+				{
+					t_vec vecPeakFrac = make_vec<t_vec>({h, k, l});
+					t_vec vecPeakAA = mult<t_mat, t_vec>(*pmatA, vecPeakFrac);
+					//log_debug("lattice vector: ", vecPeakFrac, ", ", vecPeakAA);
+
+					rtPeaks.InsertPoint(
+						std::vector<T>{{vecPeakAA[0], vecPeakAA[1], vecPeakAA[2]}}, 0);
+				}
+	}
+
+
+	// trafos are in homogeneous coordinates
+	t_vec vecAtom = _vecAtom;
+	vecAtom.resize(4,1); vecAtom[3] = T(1);
+
 	t_cont<t_vec> vecvecRes;
 
 	for(const t_mat& mat : trafos)
 	{
 		t_vec vecRes = mult<t_mat, t_vec>(mat, vecAtom);
-		restrict_to_uc<t_vec>(vecRes, tUCMin, tUCMax);
+		// back to non-homogeneous coordinates
+		vecRes.resize(3,1);
 
-		bool bPushBack = 1;
-		// already have pos?
-		for(const t_vec& vecOld : vecvecRes)
-		{
-			if(vec_equal(vecOld, vecRes, eps))
-			{
-				bPushBack = 0;
-				break;
-			}
-		}
+		// restrict atoms to fractional coordinates of [-0.5, 0.5]
+		restrict_to_uc<t_vec>(vecRes, T(-0.5), T(0.5));
+		// if crystal matrix is available, restrict atoms to unit cell
+		if(pmatA && pmatB)
+			restrict_to_uc<t_vec, t_mat>(rtPeaks, *pmatA, *pmatB, vecRes, eps);
 
-		if(bPushBack)
+		// skip already occupied positions
+		if(!position_occupied_frac<t_vec, t_cont>(vecvecRes, vecRes, eps))
 			vecvecRes.push_back(std::move(vecRes));
 	}
 
@@ -80,8 +179,8 @@ template<class t_mat, class t_vec, template<class...> class t_cont,
 std::tuple<t_cont<t_str>, t_cont<t_vec>, t_cont<t_vec>, t_cont<std::size_t>>
 generate_all_atoms(const t_cont<t_mat>& trafos,
 	const t_cont<t_vec>& vecAtoms, const t_cont<t_str>* pvecNames,
-	const t_mat& matA, t_real tUCMin=0, t_real tUCMax=1,
-	t_real eps = std::numeric_limits<t_real>::epsilon())
+	const t_mat& matA, t_real eps = std::numeric_limits<t_real>::epsilon(),
+	const t_mat* pmatB = nullptr)
 {
 	t_cont<t_vec> vecAllAtoms, vecAllAtomsFrac;
 	t_cont<t_str> vecAllNames;
@@ -89,11 +188,9 @@ generate_all_atoms(const t_cont<t_mat>& trafos,
 
 	for(std::size_t iAtom=0; iAtom<vecAtoms.size(); ++iAtom)
 	{
-		t_vec vecAtom = vecAtoms[iAtom];
+		const t_vec& vecAtom = vecAtoms[iAtom];
 		t_str strNone;
 
-		// homogeneous coordinates
-		vecAtom.resize(4,1); vecAtom[3] = t_real(1);
 		const t_str& strElem = pvecNames ? (*pvecNames)[iAtom] : strNone;
 
 		t_cont<t_vec> vecOtherAtoms = vecAtoms;
@@ -101,14 +198,12 @@ generate_all_atoms(const t_cont<t_mat>& trafos,
 
 		t_cont<t_vec> vecSymPos =
 			tl::generate_atoms<t_mat, t_vec, t_cont>
-				(trafos, vecAtom, tUCMin, tUCMax, eps);
+				(trafos, vecAtom, eps, &matA, pmatB);
 
 
 		std::size_t iGeneratedAtoms = 0;
 		for(t_vec vecThisAtom : vecSymPos)
 		{
-			vecThisAtom.resize(3,1);
-
 			// is the atom position in the unit cell still free?
 			if(std::find_if(vecAllAtomsFrac.begin(), vecAllAtomsFrac.end(),
 				[&vecThisAtom, eps](const t_vec& _v) -> bool

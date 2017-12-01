@@ -19,7 +19,8 @@
 namespace tl {
 
 /**
- * reciprocal matrix to A: 2*pi * A(^-1)
+ * reciprocal matrix to A: B = 2*pi * A^(-T)
+ * see e.g.: https://en.wikipedia.org/wiki/Reciprocal_lattice
  */
 template<typename T=double>
 bool reciprocal(const ublas::matrix<T>& matReal, ublas::matrix<T>& matRecip)
