@@ -8,11 +8,11 @@
 #ifndef __TLIBS_GEO_H__
 #define __TLIBS_GEO_H__
 
+#include "quat.h"
 #include "../helper/flags.h"
 #include "../helper/exception.h"
 #include "linalg.h"
 #include "linalg2.h"
-#include "quat.h"
 #include "stat.h"
 #include "../log/log.h"
 

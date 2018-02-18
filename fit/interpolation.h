@@ -15,8 +15,8 @@
 #include <algorithm>
 #include <limits>
 
-#include "../math/math.h"
 #include "../math/geo.h"
+#include "../math/math.h"
 #include "../helper/misc.h"
 #include "../log/log.h"
 #include "funcmod.h"

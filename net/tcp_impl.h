@@ -151,7 +151,9 @@ void TcpTxtClient<t_ch, t_str>::disconnect(bool bAlwaysSendSignal)
 	// clean up write buffer
 	const t_str* pstr = nullptr;
 	while(m_listWriteBuffer.pop(pstr))
-		if(pstr) delete pstr;
+	{
+		if(pstr) { delete pstr; pstr = nullptr; }
+	}
 }
 
 template<class t_ch, class t_str>
@@ -273,7 +275,9 @@ void TcpTxtClient<t_ch, t_str>::add_connect(const typename t_sigConn::slot_type&
 // --------------------------------------------------------------------------------
 
 
+
 // ================================================================================
+
 
 
 template<class t_ch, class t_str>
@@ -288,8 +292,7 @@ TcpTxtServer<t_ch, t_str>::~TcpTxtServer()
 template<class t_ch, class t_str>
 void TcpTxtServer<t_ch, t_str>::disconnect(bool bAlwaysSendSignal)
 {
-	if(this->is_connected())
-	{}
+	//if(!this->is_connected()) { return; }
 	if(m_pacceptor) { delete m_pacceptor; m_pacceptor = nullptr; }
 	if(m_pendpoint) { delete m_pendpoint; m_pendpoint = nullptr; }
 
