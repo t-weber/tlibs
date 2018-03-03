@@ -312,6 +312,18 @@ T lorentz_model_amp(T x, T x0, T hwhm, T amp, T offs)
 	return amp*hwhm*hwhm / ((x-x0)*(x-x0) + hwhm*hwhm) + offs;
 }
 
+template<class T=double>
+T gauss_model_amp_slope(T x, T x0, T sigma, T amp, T offs, T slope)
+{
+	return amp * std::exp(-0.5 * ((x-x0)/sigma)*((x-x0)/sigma)) + x*slope + offs;
+}
+
+template<class T=double>
+T lorentz_model_amp_slope(T x, T x0, T hwhm, T amp, T offs, T slope)
+{
+	return amp*hwhm*hwhm / ((x-x0)*(x-x0) + hwhm*hwhm) + x*slope + offs;
+}
+
 
 // -----------------------------------------------------------------------------
 template<class t_real_to, class t_real_from,
@@ -389,6 +401,13 @@ T voigt_model_amp(T x, T x0, T sigma, T gamma, T amp, T offs)
 {
 	std::complex<T> z = std::complex<T>(x-x0, gamma) / (sigma * std::sqrt(T(2)));
 	return amp * faddeeva<T>(z).real() + offs;
+}
+
+template<class T=double>
+T voigt_model_amp_slope(T x, T x0, T sigma, T gamma, T amp, T offs, T slope)
+{
+	std::complex<T> z = std::complex<T>(x-x0, gamma) / (sigma * std::sqrt(T(2)));
+	return amp * faddeeva<T>(z).real() + x*slope + offs;
 }
 
 #endif
