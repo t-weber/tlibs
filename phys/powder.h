@@ -185,7 +185,7 @@ class Powder
 				{
 					t_real curG = std::get<3>(peak);
 					t_real pkG = std::get<3>(pk);
-					
+
 					return is_eq(curG, pkG);
 				});
 
@@ -230,7 +230,7 @@ bool powder_align(t_real _d_mono, const std::vector<t_real>& vecGs,
 		catch(const std::exception& ex)
 		{
 			tl::log_err(ex.what());
-			return t_real(0.);
+			return t_real(std::numeric_limits<t_real>::max());
 		}
 
 		return t_real(twotheta/get_one_radian<t_real>()) + _dtt;
@@ -244,9 +244,9 @@ bool powder_align(t_real _d_mono, const std::vector<t_real>& vecGs,
 
 	std::vector<std::string> vecParams = { "k", "dtt" };
 	bool bFitOk = fit<3>(fktBragg,
-		container_cast<t_real_min, t_real, std::vector>()(vecGs), 
-		container_cast<t_real_min, t_real, std::vector>()(vecTTs),
-		container_cast<t_real_min, t_real, std::vector>()(vecTTErrs),
+		container_cast<t_real_min, t_real, std::vector>()(vecGs), 	// x
+		container_cast<t_real_min, t_real, std::vector>()(vecTTs),	// y
+		container_cast<t_real_min, t_real, std::vector>()(vecTTErrs),	// yerr
 		vecParams, _vecRes, _vecResErrs);
 
 	// back-conversion
