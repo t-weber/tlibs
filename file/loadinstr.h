@@ -78,6 +78,8 @@ class FileInstrBase
 
 		virtual std::string GetScanCommand() const = 0;
 
+		virtual std::size_t NumPolChannels() const;
+
 	public:
 		virtual bool MatchColumn(const std::string& strRegex,
 			std::string& strColName, bool bSortByCounts=0, bool bFilterEmpty=1) const;
@@ -106,8 +108,19 @@ class FilePsi : public FileInstrBase<_t_real>
 		t_vecColNames m_vecColNames;
 		t_vecDat m_vecData;
 
+		// incoming and outgoing polarisation states
+		std::vector<std::array<t_real, 6>> m_vecPolStates;
+
+		// instrument-specific device names
+		std::string m_strPolVec1 = "p1";
+		std::string m_strPolVec2 = "p2";
+		std::string m_strPolCur1 = "i1";
+		std::string m_strPolCur2 = "i2";
+
+
 	protected:
 		void ReadData(std::istream& istr);
+		void ParsePolData();
 		void GetInternalParams(const std::string& strAll, t_mapIParams& mapPara);
 
 	public:
@@ -163,6 +176,14 @@ class FilePsi : public FileInstrBase<_t_real>
 		virtual std::string GetMonVar() const override;
 
 		virtual std::string GetScanCommand() const override;
+
+		virtual std::size_t NumPolChannels() const override;
+
+	public:
+		void SetPolVec1Name(const char* pc) { m_strPolVec1 = pc; }
+		void SetPolVec2Name(const char* pc) { m_strPolVec2 = pc; }
+		void SetPolCur1Name(const char* pc) { m_strPolCur1 = pc; }
+		void SetPolCur2Name(const char* pc) { m_strPolCur2 = pc; }
 };
 
 

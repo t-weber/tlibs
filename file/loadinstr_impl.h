@@ -207,6 +207,7 @@ bool FileInstrBase<t_real>::MergeWith(const FileInstrBase<t_real>* pDat)
 	return true;
 }
 
+
 template<class t_real>
 void FileInstrBase<t_real>::SmoothData(const std::string& strCol,
 	t_real dEps, bool bIterate)
@@ -260,6 +261,14 @@ void FileInstrBase<t_real>::SmoothData(const std::string& strCol,
 }
 
 
+template<class t_real>
+std::size_t FileInstrBase<t_real>::NumPolChannels() const
+{
+	return 0;
+}
+
+
+
 // -----------------------------------------------------------------------------
 
 
@@ -302,6 +311,7 @@ void FilePsi<t_real>::ReadData(std::istream& istr)
 	}
 }
 
+
 template<class t_real>
 void FilePsi<t_real>::GetInternalParams(const std::string& strAll, FilePsi<t_real>::t_mapIParams& mapPara)
 {
@@ -323,6 +333,124 @@ void FilePsi<t_real>::GetInternalParams(const std::string& strAll, FilePsi<t_rea
 		//std::cout << "Key: " << pair.first << ", Val: " << dVal << std::endl;
 	}
 }
+
+
+template<class t_real>
+void FilePsi<t_real>::ParsePolData()
+{
+	typename t_mapParams::const_iterator iter = m_mapParams.find("POLAN");
+	if(iter == m_mapParams.end())
+		return;
+
+	std::vector<std::string> vecLines;
+	tl::get_tokens<std::string, std::string>(iter->second, ",", vecLines);
+
+	// initial and final polarisation states
+	t_real Pix = t_real(0), Piy = t_real(0), Piz = t_real(0);
+	t_real Pfx = t_real(0), Pfy = t_real(0), Pfz = t_real(0);
+	t_real Pi_sign = t_real(1);
+	t_real Pf_sign = t_real(1);
+
+
+	// check if a string describes a number
+	auto is_num = [](const std::string& str) -> bool
+	{
+		for(typename std::string::value_type c : str)
+		{
+			if(c!='0' && c!='1' && c!='2' && c!='3' && c!='4'
+				&& c!='5' && c!='6' && c!='7' && c!='8' && c!='9'
+				&& c!='+'&& c!='-'&& c!='.')
+				return false;
+		}
+		return true;
+	};
+
+
+	// iterate command lines
+	for(std::string& strLine : vecLines)
+	{
+		tl::trim(strLine);
+		strLine = tl::str_to_lower(strLine);
+
+		std::vector<std::string> vecLine;
+		tl::get_tokens<std::string, std::string>(strLine, " \t", vecLine);
+
+		if(vecLine.size() == 0)
+			continue;
+
+		if(vecLine[0] == "dr")	// polarisation vector or current driven
+		{
+			std::string strCurDev = "";
+
+			std::size_t iCurComp = 0;
+			for(std::size_t iDr=1; iDr<vecLine.size(); ++iDr)
+			{
+				const std::string& strWord = vecLine[iDr];
+
+				if(is_num(strWord))	// value to drive to
+				{
+					t_real dNum = tl::str_to_var<t_real>(strWord);
+
+					if(strCurDev == m_strPolVec1)
+					{	// incoming polarisation vector changed
+						switch(iCurComp)
+						{
+							case 0: Pix = dNum; break;
+							case 1: Piy = dNum; break;
+							case 2: Piz = dNum; break;
+						}
+					}
+					else if(strCurDev == m_strPolVec2)
+					{	// outgoing polarisation vector changed
+						switch(iCurComp)
+						{
+							case 0: Pfx = dNum; break;
+							case 1: Pfy = dNum; break;
+							case 2: Pfz = dNum; break;
+						}
+					}
+					else if(strCurDev == m_strPolCur1)
+					{	// sign of polarisation vector 1 changed
+						if(iCurComp == 0)
+						{
+							if(dNum >= t_real(0))
+								Pi_sign = t_real(1);
+							else
+								Pi_sign = t_real(-1);
+						}
+					}
+					else if(strCurDev == m_strPolCur2)
+					{	// sign of polarisation vector 2 changed
+						if(iCurComp == 0)
+						{
+							if(dNum >= t_real(0))
+								Pf_sign = t_real(1);
+							else
+								Pf_sign = t_real(-1);
+						}
+					}
+
+					++iCurComp;
+				}
+				else	// (next) device to drive
+				{
+					strCurDev = strWord;
+					iCurComp = 0;
+				}
+			}
+		}
+		else if(vecLine[0] == "co")	// count command issued -> save current spin states
+		{
+			m_vecPolStates.push_back(std::array<t_real,6>({
+				Pi_sign*Pix, Pi_sign*Piy, Pi_sign*Piz,
+				Pf_sign*Pfx, Pf_sign*Pfy, Pf_sign*Pfz }));
+
+			//std::cout << Pi_sign*Pix << " " << Pi_sign*Piy << " " << Pi_sign*Piz << " -> "
+			//	<< Pf_sign*Pfx << " " << Pf_sign*Pfy << " " << Pf_sign*Pfz << std::endl;
+		}
+	}
+}
+
 
 template<class t_real>
 bool FilePsi<t_real>::Load(const char* pcFile)
@@ -365,10 +493,10 @@ bool FilePsi<t_real>::Load(const char* pcFile)
 	}
 
 	typename t_mapParams::const_iterator iterParams = m_mapParams.find("PARAM"),
-				iterZeros = m_mapParams.find("ZEROS"),
-				iterVars = m_mapParams.find("VARIA"),
-				iterPos = m_mapParams.find("POSQE"),
-				iterSteps = m_mapParams.find("STEPS");
+		iterZeros = m_mapParams.find("ZEROS"),
+		iterVars = m_mapParams.find("VARIA"),
+		iterPos = m_mapParams.find("POSQE"),
+		iterSteps = m_mapParams.find("STEPS");
 
 	if(iterParams!=m_mapParams.end()) GetInternalParams(iterParams->second, m_mapParameters);
 	if(iterZeros!=m_mapParams.end()) GetInternalParams(iterZeros->second, m_mapZeros);
@@ -376,8 +504,10 @@ bool FilePsi<t_real>::Load(const char* pcFile)
 	if(iterPos!=m_mapParams.end()) GetInternalParams(iterPos->second, m_mapPosHkl);
 	if(iterSteps!=m_mapParams.end()) GetInternalParams(iterSteps->second, m_mapScanSteps);
 
+	ParsePolData();
 	return true;
 }
+
 
 template<class t_real>
 const typename FileInstrBase<t_real>::t_vecVals& 
@@ -719,6 +849,7 @@ std::vector<std::string> FilePsi<t_real>::GetScannedVars() const
 	return vecVars;
 }
 
+
 template<class t_real>
 std::string FilePsi<t_real>::GetCountVar() const
 {
@@ -756,6 +887,14 @@ std::string FilePsi<t_real>::GetTimestamp() const
 		strDate = iter->second;
 	return strDate;
 }
+
+
+template<class t_real>
+std::size_t FilePsi<t_real>::NumPolChannels() const
+{
+	return m_vecPolStates.size();
+}
+
 
 // -----------------------------------------------------------------------------
 
