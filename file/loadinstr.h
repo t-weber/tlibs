@@ -78,7 +78,12 @@ class FileInstrBase
 
 		virtual std::string GetScanCommand() const = 0;
 
+		// polarisation stuff
+		virtual void ParsePolData();
 		virtual std::size_t NumPolChannels() const;
+		virtual const std::vector<std::array<t_real, 6>>& GetPolStates() const;
+		virtual void SetPolNames(const char* pVec1, const char* pVec2,
+			const char* pCur1, const char* pCur2);
 
 	public:
 		virtual bool MatchColumn(const std::string& strRegex,
@@ -108,6 +113,9 @@ class FilePsi : public FileInstrBase<_t_real>
 		t_vecColNames m_vecColNames;
 		t_vecDat m_vecData;
 
+		// automatically look and parse for polarisation data
+		bool m_bAutoParsePol = false;
+
 		// incoming and outgoing polarisation states
 		std::vector<std::array<t_real, 6>> m_vecPolStates;
 
@@ -120,7 +128,6 @@ class FilePsi : public FileInstrBase<_t_real>
 
 	protected:
 		void ReadData(std::istream& istr);
-		void ParsePolData();
 		void GetInternalParams(const std::string& strAll, t_mapIParams& mapPara);
 
 	public:
@@ -180,10 +187,20 @@ class FilePsi : public FileInstrBase<_t_real>
 		virtual std::size_t NumPolChannels() const override;
 
 	public:
-		void SetPolVec1Name(const char* pc) { m_strPolVec1 = pc; }
-		void SetPolVec2Name(const char* pc) { m_strPolVec2 = pc; }
-		void SetPolCur1Name(const char* pc) { m_strPolCur1 = pc; }
-		void SetPolCur2Name(const char* pc) { m_strPolCur2 = pc; }
+		void SetAutoParsePolData(bool b) { m_bAutoParsePol = b; }
+		virtual void ParsePolData() override;
+
+		virtual const std::vector<std::array<t_real, 6>>& GetPolStates() const override
+		{
+			return m_vecPolStates;
+		}
+
+		virtual void SetPolNames(const char* pVec1, const char* pVec2,
+			const char* pCur1, const char* pCur2) override
+		{
+			m_strPolVec1 = pVec1; m_strPolVec2 = pVec2;
+			m_strPolCur1 = pCur1; m_strPolCur2 = pCur2;
+		}
 };
 
 

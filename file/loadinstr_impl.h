@@ -262,9 +262,23 @@ void FileInstrBase<t_real>::SmoothData(const std::string& strCol,
 
 
 template<class t_real>
+void FileInstrBase<t_real>::ParsePolData()
+{}
+
+template<class t_real>
+void FileInstrBase<t_real>::SetPolNames(const char* pVec1, const char* pVec2,
+	const char* pCur1, const char* pCur2)
+{}
+
+template<class t_real>
 std::size_t FileInstrBase<t_real>::NumPolChannels() const
+{ return 0; }
+
+template<class t_real>
+const std::vector<std::array<t_real, 6>>& FileInstrBase<t_real>::GetPolStates() const
 {
-	return 0;
+	static const std::vector<std::array<t_real, 6>> vecNull;
+	return vecNull;
 }
 
 
@@ -449,6 +463,14 @@ void FilePsi<t_real>::ParsePolData()
 			//	<< Pf_sign*Pfx << " " << Pf_sign*Pfy << " " << Pf_sign*Pfz << std::endl;
 		}
 	}
+
+
+	// cleanup
+	for(std::size_t iPol=0; iPol<m_vecPolStates.size(); ++iPol)
+	{
+		for(unsigned iComp=0; iComp<6; ++iComp)
+			set_eps_0(m_vecPolStates[iPol][iComp]);
+	}
 }
 
 
@@ -504,7 +526,8 @@ bool FilePsi<t_real>::Load(const char* pcFile)
 	if(iterPos!=m_mapParams.end()) GetInternalParams(iterPos->second, m_mapPosHkl);
 	if(iterSteps!=m_mapParams.end()) GetInternalParams(iterSteps->second, m_mapScanSteps);
 
-	ParsePolData();
+	if(m_bAutoParsePol)
+		ParsePolData();
 	return true;
 }
 
