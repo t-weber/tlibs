@@ -233,7 +233,8 @@ std::vector<T> rotation_angle(const ublas::matrix<T, Args...>& rot)
 	}
 	else if(rot.size2()==3)
 	{
-		math::quaternion<T> quat = rot3_to_quat(rot);
+		math::quaternion<T> quat =
+			rot3_to_quat<decltype(rot), math::quaternion<T>>(rot);
 		vecResult = quat_to_euler(quat);
 	}
 
