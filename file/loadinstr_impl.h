@@ -455,9 +455,9 @@ void FilePsi<t_real>::ParsePolData()
 		}
 		else if(vecLine[0] == "co")	// count command issued -> save current spin states
 		{
-			m_vecPolStates.push_back(std::array<t_real,6>({
+			m_vecPolStates.push_back(std::array<t_real,6>({{
 				Pi_sign*Pix, Pi_sign*Piy, Pi_sign*Piz,
-				Pf_sign*Pfx, Pf_sign*Pfy, Pf_sign*Pfz }));
+				Pf_sign*Pfx, Pf_sign*Pfy, Pf_sign*Pfz }}));
 
 			//std::cout << Pi_sign*Pix << " " << Pi_sign*Piy << " " << Pi_sign*Piz << " -> "
 			//	<< Pf_sign*Pfx << " " << Pf_sign*Pfy << " " << Pf_sign*Pfz << std::endl;
