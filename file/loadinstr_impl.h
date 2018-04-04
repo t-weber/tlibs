@@ -50,41 +50,49 @@ FileInstrBase<t_real>* FileInstrBase<t_real>::LoadInstr(const char* pcFile)
 	std::istream* pIstr = &ifstr;
 #endif
 
-	std::string strLine, strLine2;
+	std::string strLine, strLine2, strLine3;
 	std::getline(*pIstr, strLine);
 	std::getline(*pIstr, strLine2);
+	std::getline(*pIstr, strLine3);
 	//pIstr->close();
 
 
 	trim(strLine);
 	trim(strLine2);
+	trim(strLine3);
 	strLine = str_to_lower(strLine);
 	strLine2 = str_to_lower(strLine2);
+	strLine3 = str_to_lower(strLine3);
 
 	if(strLine == "")
 		return nullptr;
 
 	const std::string strNicos("nicos data file");
 	const std::string strMacs("ice");
+	const std::string strPsi("tas data");
 
 	if(strLine.find(strNicos) != std::string::npos)
 	{ // frm file
-		//log_info(pcFile, " is an frm file.");
+		//log_debug(pcFile, " is an frm file.");
 		pDat = new FileFrm<t_real>();
 	}
-	else if(strLine.find(strMacs) != std::string::npos)
+	else if(strLine.find('#') != std::string::npos &&
+		strLine.find(strMacs) != std::string::npos &&
+		strLine2.find('#') != std::string::npos)
 	{ // macs file
-		//log_info(pcFile, " is a macs file.");
+		//log_debug(pcFile, " is a macs file.");
 		pDat = new FileMacs<t_real>();
 	}
 	else if(strLine2.find("scan start") != std::string::npos)
 	{ // trisp file
-		//log_info(pcFile, " is a trisp file.");
+		//log_debug(pcFile, " is a trisp file.");
 		pDat = new FileTrisp<t_real>();
 	}
-	else if(strLine.find('#')==std::string::npos && strLine2.find('#')==std::string::npos)
+	else if(strLine.find('#') == std::string::npos &&
+		strLine2.find('#') == std::string::npos &&
+		strLine3.find(strPsi) != std::string::npos)
 	{ // psi or ill file
-		//log_info(pcFile, " is an ill or psi file.");
+		//log_debug(pcFile, " is an ill or psi file.");
 		pDat = new FilePsi<t_real>();
 	}
 	else
