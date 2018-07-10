@@ -70,6 +70,7 @@ FileInstrBase<t_real>* FileInstrBase<t_real>::LoadInstr(const char* pcFile)
 	const std::string strNicos("nicos data file");
 	const std::string strMacs("ice");
 	const std::string strPsi("tas data");
+	const std::string strPsiOld("instr:");
 
 	if(strLine.find(strNicos) != std::string::npos)
 	{ // frm file
@@ -90,7 +91,8 @@ FileInstrBase<t_real>* FileInstrBase<t_real>::LoadInstr(const char* pcFile)
 	}
 	else if(strLine.find('#') == std::string::npos &&
 		strLine2.find('#') == std::string::npos &&
-		strLine3.find(strPsi) != std::string::npos)
+		(strLine3.find(strPsi) != std::string::npos ||
+		strLine.find(strPsiOld) != std::string::npos))
 	{ // psi or ill file
 		//log_debug(pcFile, " is an ill or psi file.");
 		pDat = new FilePsi<t_real>();

@@ -1670,7 +1670,7 @@ template<class matrix_type = ublas::matrix<double>>
 typename matrix_type::value_type get_volume(const matrix_type& mat)
 {
 	//typedef typename matrix_type::value_type T;
-	return determinant<matrix_type>(mat);
+	return std::abs(determinant<matrix_type>(mat));
 }
 
 
@@ -1678,7 +1678,7 @@ template<class matrix_type = ublas::matrix<double>>
 typename matrix_type::value_type get_ellipsoid_volume(const matrix_type& mat)
 {
 	typedef typename matrix_type::value_type T;
-	T tDet = determinant<matrix_type>(mat);
+	T tDet = std::abs(determinant<matrix_type>(mat));
 
 	return T(4./3.) * get_pi<T>() * std::sqrt(T(1)/tDet);
 }
