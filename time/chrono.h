@@ -53,7 +53,7 @@ T epoch()
  * create a string representation of epoch
  */
 template<typename T=double>
-std::string epoch_to_str(T tSeconds)
+std::string epoch_to_str(T tSeconds, const char *pcFmt="%a %Y-%b-%d %H:%M:%S %Z")
 {
 	namespace ch = std::chrono;
 
@@ -64,7 +64,7 @@ std::string epoch_to_str(T tSeconds)
 	std::tm tm = *std::localtime(&t);
 
 	char cTime[256];
-	std::strftime(cTime, sizeof cTime, "%a %Y-%b-%d %H:%M:%S %Z", &tm);
+	std::strftime(cTime, sizeof cTime, pcFmt, &tm);
 	return std::string(cTime);
 }
 
