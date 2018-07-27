@@ -108,7 +108,8 @@ R convolute(const std::function<R(A)>& fkt0, const std::function<R(A)>& fkt1,
 	};
 
 	// ... at fixed arg x
-	std::function<R(A)> fktbnd = std::bind1st(fkt, x);
+	//std::function<R(A)> fktbnd = std::bind1st(fkt, x); /*deprecated in C++17*/
+	std::function<R(A)> fktbnd = [&fkt, &x](A t) -> R { return fkt(x, t); };
 
 	return numint_simpN(fktbnd, x0, x1, N);
 }
