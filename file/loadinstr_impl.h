@@ -303,6 +303,11 @@ void FilePsi<t_real>::ReadData(std::istream& istr)
 	std::string strHdr;
 	std::getline(istr, strHdr);
 	get_tokens<std::string, std::string, t_vecColNames>(strHdr, " \t", m_vecColNames);
+	for(std::string& _str : m_vecColNames)
+	{
+		tl::find_all_and_replace<std::string>(_str, "\n", "");
+		tl::find_all_and_replace<std::string>(_str, "\r", "");
+	}
 
 	m_vecData.resize(m_vecColNames.size());
 
@@ -991,6 +996,11 @@ void FileFrm<t_real>::ReadData(std::istream& istr)
 	std::getline(istr, strLineQuantities);
 	get_tokens<std::string, std::string, t_vecColNames>
 		(strLineQuantities, " \t", m_vecQuantities);
+	for(std::string& _str : m_vecQuantities)
+	{
+		tl::find_all_and_replace<std::string>(_str, "\n", "");
+		tl::find_all_and_replace<std::string>(_str, "\r", "");
+	}
 
 	skip_after_char<char>(istr, '#');
 	std::string strLineUnits;
