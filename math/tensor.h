@@ -200,7 +200,8 @@ typename t_vec::value_type vec_angle(const t_mat& matGCov,
 template<class t_mat = ublas::matrix<double>,
 	class t_vec = ublas::vector<double>>
 t_vec cross_prod_contra(const t_mat& matGCov,
-	const t_vec& vec1Contra, const t_vec& vec2Contra)
+	const t_vec& vec1Contra, const t_vec& vec2Contra,
+	bool bNorm = false)
 {
 	using T = typename t_mat::value_type;
 	const std::size_t iDim = matGCov.size1();
@@ -225,6 +226,8 @@ t_vec cross_prod_contra(const t_mat& matGCov,
 		}
 	}
 
+	if(bNorm)
+		vecCrossContra /= vec_len<t_mat, t_vec>(matGCov, vecCrossContra);
 	return vecCrossContra;
 }
 
