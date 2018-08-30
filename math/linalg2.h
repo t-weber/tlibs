@@ -72,12 +72,25 @@ bool eigenvec(const ublas::matrix<T>& mat,
 	std::vector<T>& evals_real, std::vector<T>& evals_imag);
 
 /**
+ * calculates only the eigenvalues of a general matrix
+ */
+template<typename T=double>
+bool eigenval(const ublas::matrix<T>& mat,
+	std::vector<T>& evals_real, std::vector<T>& evals_imag);
+
+/**
  * calculates the eigenvectors of a general complex matrix
  */
 template<typename T=double>
 bool eigenvec_cplx(const ublas::matrix<std::complex<T>>& mat,
 	std::vector<ublas::vector<std::complex<T>> >& evecs,
 	std::vector<std::complex<T>>& evals);
+
+/**
+ * calculates only the eigenvalues of a general complex matrix
+ */
+template<typename T=double>
+bool eigenval_cplx(const ublas::matrix<std::complex<T>>& mat, std::vector<std::complex<T>>& evals);
 
 
 /**
@@ -88,12 +101,24 @@ bool eigenvec_sym(const ublas::matrix<T>& mat,
 	std::vector<ublas::vector<T>>& evecs, std::vector<T>& evals);
 
 /**
+ * calculates only the eigenvalues of a symmetric matrix
+ */
+template<typename T=double>
+bool eigenval_sym(const ublas::matrix<T>& mat, std::vector<T>& evals);
+
+/**
  * calculates the eigenvectors of a hermitian matrix
  */
 template<typename T=double>
 bool eigenvec_herm(const ublas::matrix<std::complex<T>>& mat,
 	std::vector<ublas::vector<std::complex<T>>>& evecs,
 	std::vector<T>& evals);
+
+/**
+ * calculates only the eigenvalues of a hermitian matrix
+ */
+template<typename T=double>
+bool eigenval_herm(const ublas::matrix<std::complex<T>>& mat, std::vector<T>& evals);
 
 
 /**

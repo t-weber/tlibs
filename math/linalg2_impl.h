@@ -125,6 +125,45 @@ bool eigenvec(const ublas::matrix<T>& mat,
 	return bOk;
 }
 
+
+template<class T>
+bool eigenval(const ublas::matrix<T>& mat, std::vector<T>& evals_real, std::vector<T>& evals_imag)
+{
+	bool bOk = true;
+	select_func<float, double, decltype(LAPACKE_sgeev), decltype(LAPACKE_dgeev)>
+		sfunc(LAPACKE_sgeev, LAPACKE_dgeev);
+	auto pfunc = sfunc.get_func<T>();
+
+	if(mat.size1() != mat.size2())
+		return false;
+	if(mat.size1()==0 || mat.size1()==1)
+		return false;
+
+	const std::size_t iOrder = mat.size1();
+	evals_real.resize(iOrder); evals_imag.resize(iOrder);
+
+	std::unique_ptr<T, std::default_delete<T[]>> uptrMem(new T[iOrder*iOrder]);
+	T *pMatrix = uptrMem.get();
+
+	for(std::size_t i=0; i<iOrder; ++i)
+		for(std::size_t j=0; j<iOrder; ++j)
+			pMatrix[i*iOrder + j] = mat(i,j);
+
+	int iInfo = (*pfunc)(LAPACK_ROW_MAJOR, 'N', 'N', iOrder,
+		pMatrix, iOrder, evals_real.data(), evals_imag.data(),
+		nullptr, iOrder, nullptr, iOrder);
+
+	if(iInfo!=0)
+	{
+		log_err("Could not solve general real eigenproblem", 
+			" (lapack error ", iInfo , ").");
+		bOk = false;
+	}
+
+	return bOk;
+}
+
+
 template<class T>
 bool eigenvec_cplx(const ublas::matrix<std::complex<T>>& mat,
 	std::vector<ublas::vector<std::complex<T>>>& evecs,
@@ -175,6 +214,51 @@ bool eigenvec_cplx(const ublas::matrix<std::complex<T>>& mat,
 			evecs[i][j] = pEVs[j*iOrder + i];
 		evals[i] = pEVals[i];
 	}
+
+	return bOk;
+}
+
+
+template<class T>
+bool eigenval_cplx(const ublas::matrix<std::complex<T>>& mat, std::vector<std::complex<T>>& evals)
+{
+	using t_cplx = std::complex<T>;
+	bool bOk = true;
+	select_func<float, double, decltype(LAPACKE_cgeev), decltype(LAPACKE_zgeev)>
+		sfunc(LAPACKE_cgeev, LAPACKE_zgeev);
+	auto pfunc = sfunc.get_func<T>();
+
+	if(mat.size1() != mat.size2())
+		return false;
+	if(mat.size1()==0 || mat.size1()==1)
+		return false;
+
+	const std::size_t iOrder = mat.size1();
+	evals.resize(iOrder);
+
+	std::unique_ptr<t_cplx, std::default_delete<t_cplx[]>>
+		uptrMem(new t_cplx[iOrder*iOrder + iOrder]);
+	t_cplx *pMatrix = uptrMem.get();
+
+	for(std::size_t i=0; i<iOrder; ++i)
+		for(std::size_t j=0; j<iOrder; ++j)
+			pMatrix[i*iOrder + j] = mat(i,j);
+
+	t_cplx *pEVals = pMatrix + iOrder*iOrder;
+
+	int iInfo = (*pfunc)(LAPACK_ROW_MAJOR, 'N', 'N', iOrder,
+		pMatrix, iOrder, pEVals,
+		nullptr, iOrder, nullptr, iOrder);
+
+	if(iInfo!=0)
+	{
+		log_err("Could not solve general complex eigenproblem",
+			" (lapack error ", iInfo , ").");
+		bOk = false;
+	}
+
+	for(std::size_t i=0; i<iOrder; ++i)
+		evals[i] = pEVals[i];
 
 	return bOk;
 }
@@ -237,6 +321,44 @@ bool eigenvec_sym(const ublas::matrix<T>& mat,
 
 
 template<class T>
+bool eigenval_sym(const ublas::matrix<T>& mat, std::vector<T>& evals)
+{
+	bool bOk = true;
+	select_func<float, double, decltype(LAPACKE_ssyev), decltype(LAPACKE_dsyev)>
+		sfunc(LAPACKE_ssyev, LAPACKE_dsyev);
+	auto pfunc = sfunc.get_func<T>();
+
+	if(mat.size1() != mat.size2())
+		return false;
+	if(mat.size1()==0 || mat.size1()==1)
+		return false;
+
+	const std::size_t iOrder = mat.size1();
+	evals.resize(iOrder);
+
+	std::unique_ptr<T, std::default_delete<T[]>>
+		uptrMat(new T[iOrder*iOrder]);
+	T *pMatrix = uptrMat.get();
+
+	for(std::size_t i=0; i<iOrder; ++i)
+		for(std::size_t j=0; j<iOrder; ++j)
+			pMatrix[i*iOrder + j] = mat(i,j);
+
+	int iInfo = (*pfunc)(LAPACK_ROW_MAJOR, 'N', 'U',
+		iOrder, pMatrix, iOrder, evals.data());
+
+	if(iInfo!=0)
+	{
+		log_err("Could not solve symmetric eigenproblem",
+			" (lapack error ", iInfo, ").");
+		bOk = false;
+	}
+
+	return bOk;
+}
+
+
+template<class T>
 bool eigenvec_herm(const ublas::matrix<std::complex<T>>& mat,
 	std::vector<ublas::vector<std::complex<T>>>& evecs,
 	std::vector<T>& evals)
@@ -280,6 +402,46 @@ bool eigenvec_herm(const ublas::matrix<std::complex<T>>& mat,
 	for(std::size_t i=0; i<iOrder; ++i)
 		for(std::size_t j=0; j<iOrder; ++j)
 			evecs[i][j] = pMatrix[j*iOrder + i];
+	return bOk;
+}
+
+
+template<class T>
+bool eigenval_herm(const ublas::matrix<std::complex<T>>& mat, std::vector<T>& evals)
+{
+	using t_cplx = std::complex<T>;
+	bool bOk = true;
+
+	select_func<float, double, decltype(LAPACKE_cheev), decltype(LAPACKE_zheev)>
+		sfunc(LAPACKE_cheev, LAPACKE_zheev);
+	auto pfunc = sfunc.get_func<T>();
+
+	if(mat.size1() != mat.size2())
+		return false;
+	if(mat.size1()==0 || mat.size1()==1)
+		return false;
+
+	const std::size_t iOrder = mat.size1();
+	evals.resize(iOrder);
+
+	std::unique_ptr<t_cplx, std::default_delete<t_cplx[]>>
+		uptrMat(new t_cplx[iOrder*iOrder]);
+	t_cplx *pMatrix = uptrMat.get();
+
+	for(std::size_t i=0; i<iOrder; ++i)
+		for(std::size_t j=0; j<iOrder; ++j)
+			pMatrix[i*iOrder + j] = mat(i,j);
+
+	int iInfo = (*pfunc)(LAPACK_ROW_MAJOR, 'N', 'U',
+		iOrder, pMatrix, iOrder, evals.data());
+
+	if(iInfo != 0)
+	{
+		log_err("Could not solve hermitian eigenproblem",
+			" (lapack error ", iInfo, ").");
+		bOk = false;
+	}
+
 	return bOk;
 }
 
