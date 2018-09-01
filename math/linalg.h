@@ -302,7 +302,7 @@ template<typename t_mat = ublas::matrix<double>,
 	typename std::enable_if<!std::is_convertible<t_mat, ublas::matrix<typename t_mat::value_type>>::value, char>::type=0>
 t_mat transpose(const t_mat& mat)
 {
-	t_mat matret(mat.size2(), mat.size(1));
+	t_mat matret(mat.size2(), mat.size1());
 
 	for(std::size_t i=0; i<mat.size1(); ++i)
 		for(std::size_t j=0; j<mat.size2(); ++j)
@@ -319,6 +319,43 @@ template<typename t_mat = ublas::matrix<double>,
 t_mat transpose(const t_mat& mat)
 {
 	return ublas::trans(mat);
+}
+
+
+/**
+ * conjugate matrix
+ */
+template<typename t_mat = ublas::matrix<std::complex<double>>>
+t_mat conjugate_mat(t_mat mat)
+{
+	for(std::size_t i=0; i<mat.size1(); ++i)
+		for(std::size_t j=0; j<mat.size2(); ++j)
+			mat(i,j) = std::conj(mat(i,j));
+	return mat;
+}
+
+
+/**
+ * hermitian conjugated matrix
+ */
+template<typename t_mat = ublas::matrix<std::complex<double>>>
+t_mat hermitian(const t_mat& mat)
+{
+	t_mat matret = transpose<t_mat>(mat);
+	matret = conjugate_mat<t_mat>(matret);
+	return matret;
+}
+
+
+/**
+ * conjugate vector
+ */
+template<typename t_vec = ublas::vector<std::complex<double>>>
+t_vec conjugate_vec(t_vec vec)
+{
+	for(typename t_vec::value_type& val : vec)
+		val = std::conj(val);
+	return vec;
 }
 
 // ----------------------------------------------------------------------------

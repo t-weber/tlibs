@@ -42,7 +42,7 @@ int main()
 
 	std::vector<ublas::vector<T>> evecs2;
 	std::vector<T> evals2;
-	tl::eigenvec_sym_simple(M, evecs2, evals2);
+	tl::eigenvec_sym_simple(M, evecs2, evals2, true);
 	for(int i=0; i<evals2.size(); ++i)
 		std::cout << "eval: " << evals2[i] <<
 		", evec: " << (evecs2[i]/ublas::norm_2(evecs2[i])) <<
@@ -52,7 +52,7 @@ int main()
 	std::vector<ublas::vector<T>> evecs2_r, evecs2_i;
 	std::vector<T> evals2_r, evals2_i;
 	std::vector<T> evals2_r_check, evals2_i_check;
-	tl::eigenvec(M, evecs2_r, evecs2_i, evals2_r, evals2_i);
+	tl::eigenvec(M, evecs2_r, evecs2_i, evals2_r, evals2_i, true);
 	tl::eigenval(M, evals2_r_check, evals2_i_check);
 	for(int i=0; i<evals2_r.size(); ++i)
 		std::cout << "eval r: " << evals2_r[i] <<
@@ -70,12 +70,13 @@ int main()
 	std::vector<ublas::vector<std::complex<T>>> evecs_c;
 	std::vector<T> evals_c, evals_c_check;
 	ublas::matrix<std::complex<T>> Mc = tl::make_mat<ublas::matrix<std::complex<T>>>({
-		{std::complex<T>(1., 0.), std::complex<T>(3., 1.5)},
-		{std::complex<T>(3., -1.5), std::complex<T>(2., 0.)}
+		{std::complex<T>(1., 0.), std::complex<T>(3., 1.5),std::complex<T>(5., 2.)},
+		{std::complex<T>(3., -1.5), std::complex<T>(2., 0.), std::complex<T>(2.2, -1.7)},
+		{std::complex<T>(5., -2.), std::complex<T>(2.2, 1.7), std::complex<T>(4., 0.)},
 	});
-	std::cout << Mc << std::endl;
+	std::cout << "hermitian: " << Mc << std::endl;
 
-	tl::eigenvec_herm<T>(Mc, evecs_c, evals_c);
+	tl::eigenvec_herm<T>(Mc, evecs_c, evals_c, true);
 	tl::eigenval_herm<T>(Mc, evals_c_check);
 	for(int i=0; i<evals_c.size(); ++i)
 		std::cout << "eval: " << evals_c[i] <<
@@ -94,7 +95,7 @@ int main()
 	std::vector<std::complex<T>> evals_c2;
 	std::vector<std::complex<T>> evals_c2_check;
 
-	tl::eigenvec_cplx<T>(Mc, evecs_c2, evals_c2);
+	tl::eigenvec_cplx<T>(Mc, evecs_c2, evals_c2, true);
 	tl::eigenval_cplx<T>(Mc, evals_c2_check);
 	for(int i=0; i<evals_c2.size(); ++i)
 		std::cout << "eval: " << evals_c2[i] <<

@@ -51,7 +51,8 @@ bool eigenvec(const ublas::matrix<T>& mat,
 	std::vector<ublas::vector<T>>& evecs_real,
 	std::vector<ublas::vector<T>>& evecs_imag,
 	std::vector<T>& evals_real,
-	std::vector<T>& evals_imag)
+	std::vector<T>& evals_imag,
+	bool bNorm)
 {
 	bool bOk = true;
 	select_func<float, double, decltype(LAPACKE_sgeev), decltype(LAPACKE_dgeev)>
@@ -118,10 +119,24 @@ bool eigenvec(const ublas::matrix<T>& mat,
 			}
 			++i; // check: (next eigenval) == -(currrent eigenval)
 		}
-
-		//evecs_real[i] /= veclen(evecs_real[i]);
-		//evecs_imag[i] /= veclen(evecs_imag[i]);
 	}
+
+
+	// normalise
+	if(bNorm && bOk)
+	{
+		for(std::size_t i=0; i<evecs_real.size(); ++i)
+		{
+			T len = T(0);
+			for(std::size_t j=0; j<evecs_real[i].size(); ++j)
+				len += evecs_real[i][j]*evecs_real[i][j] + evecs_imag[i][j]*evecs_imag[i][j];
+			len = std::sqrt(len);
+
+			evecs_real[i] /= len;
+			evecs_imag[i] /= len;
+		}
+	}
+
 	return bOk;
 }
 
@@ -167,7 +182,8 @@ bool eigenval(const ublas::matrix<T>& mat, std::vector<T>& evals_real, std::vect
 template<class T>
 bool eigenvec_cplx(const ublas::matrix<std::complex<T>>& mat,
 	std::vector<ublas::vector<std::complex<T>>>& evecs,
-	std::vector<std::complex<T>>& evals)
+	std::vector<std::complex<T>>& evals,
+	bool bNorm)
 {
 	using t_cplx = std::complex<T>;
 	bool bOk = true;
@@ -213,6 +229,9 @@ bool eigenvec_cplx(const ublas::matrix<std::complex<T>>& mat,
 		for(std::size_t j=0; j<iOrder; ++j)
 			evecs[i][j] = pEVs[j*iOrder + i];
 		evals[i] = pEVals[i];
+
+		if(bNorm && bOk)
+			evecs[i] /= veclen(evecs[i]);
 	}
 
 	return bOk;
@@ -270,7 +289,8 @@ bool eigenval_cplx(const ublas::matrix<std::complex<T>>& mat, std::vector<std::c
 template<class T>
 bool eigenvec_sym(const ublas::matrix<T>& mat,
 	std::vector<ublas::vector<T>>& evecs,
-	std::vector<T>& evals)
+	std::vector<T>& evals,
+	bool bNorm)
 {
 	bool bOk = true;
 	select_func<float, double, decltype(LAPACKE_ssyev), decltype(LAPACKE_dsyev)>
@@ -294,7 +314,7 @@ bool eigenvec_sym(const ublas::matrix<T>& mat,
 
 	for(std::size_t i=0; i<iOrder; ++i)
 		for(std::size_t j=0; j<iOrder; ++j)
-			pMatrix[i*iOrder + j] = mat(i,j);
+			pMatrix[i*iOrder + j] = (j>=i ? mat(i,j) : T(0));
 
 	int iInfo = (*pfunc)(LAPACK_ROW_MAJOR, 'V', 'U',
 		iOrder, pMatrix, iOrder, evals.data());
@@ -310,12 +330,13 @@ bool eigenvec_sym(const ublas::matrix<T>& mat,
 	{
 		for(std::size_t j=0; j<iOrder; ++j)
 			evecs[i][j] = pMatrix[j*iOrder + i];
-		//evecs[i] /= veclen(evecs[i]);
+
+		if(bNorm && bOk)
+			evecs[i] /= veclen(evecs[i]);
 	}
 
 	//if(determinant<ublas::matrix<T>>(column_matrix(evecs)) < 0.)
 	//	evecs[0] = -evecs[0];
-
 	return bOk;
 }
 
@@ -361,7 +382,8 @@ bool eigenval_sym(const ublas::matrix<T>& mat, std::vector<T>& evals)
 template<class T>
 bool eigenvec_herm(const ublas::matrix<std::complex<T>>& mat,
 	std::vector<ublas::vector<std::complex<T>>>& evecs,
-	std::vector<T>& evals)
+	std::vector<T>& evals,
+	bool bNorm)
 {
 	using t_cplx = std::complex<T>;
 	bool bOk = true;
@@ -387,7 +409,7 @@ bool eigenvec_herm(const ublas::matrix<std::complex<T>>& mat,
 
 	for(std::size_t i=0; i<iOrder; ++i)
 		for(std::size_t j=0; j<iOrder; ++j)
-			pMatrix[i*iOrder + j] = mat(i,j);
+			pMatrix[i*iOrder + j] = (j>=i ? mat(i,j) : T(0));
 
 	int iInfo = (*pfunc)(LAPACK_ROW_MAJOR, 'V', 'U',
 		iOrder, pMatrix, iOrder, evals.data());
@@ -400,8 +422,12 @@ bool eigenvec_herm(const ublas::matrix<std::complex<T>>& mat,
 	}
 
 	for(std::size_t i=0; i<iOrder; ++i)
+	{
 		for(std::size_t j=0; j<iOrder; ++j)
 			evecs[i][j] = pMatrix[j*iOrder + i];
+		if(bNorm)
+			evecs[i] /= veclen(evecs[i]);
+	}
 	return bOk;
 }
 
