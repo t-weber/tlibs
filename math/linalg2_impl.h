@@ -472,6 +472,83 @@ bool eigenval_herm(const ublas::matrix<std::complex<T>>& mat, std::vector<T>& ev
 }
 
 
+template<class T>
+bool eigenvecsel_herm(const ublas::matrix<std::complex<T>>& mat,
+	std::vector<ublas::vector<std::complex<T>>>& evecs,
+	std::vector<T>& evals,
+	bool bNorm, T minval, T maxval, T eps)
+{
+	// select needed functions
+	select_func<float, double, decltype(LAPACKE_cheevr), decltype(LAPACKE_zheevr)>
+	sfunc(LAPACKE_cheevr, LAPACKE_zheevr);
+	auto pfunc = sfunc.get_func<T>();
+
+	select_func<float, double, decltype(LAPACKE_slamch), decltype(LAPACKE_dlamch)>
+	_lamch(LAPACKE_slamch, LAPACKE_dlamch);
+	auto lamch = _lamch.get_func<T>();
+
+
+	using t_cplx = std::complex<T>;
+	bool bOk = true;
+
+	if(mat.size1() != mat.size2())
+		return false;
+	if(mat.size1()==0 || mat.size1()==1)
+		return false;
+
+	const std::size_t iOrder = mat.size1();
+	evecs.resize(iOrder);
+	evals.resize(iOrder);
+	for(std::size_t i=0; i<iOrder; ++i)
+		evecs[i].resize(iOrder);
+
+	std::unique_ptr<t_cplx, std::default_delete<t_cplx[]>>
+		uptrMat(new t_cplx[iOrder*iOrder + iOrder*iOrder]);
+	t_cplx *pMatrix = uptrMat.get();
+	t_cplx *pEVsOrtho = pMatrix + iOrder*iOrder;
+
+	std::unique_ptr<int, std::default_delete<int[]>>
+		uptrIdxArr(new int[2*iOrder]);
+	int *pIdxArr = uptrIdxArr.get();
+
+	for(std::size_t i=0; i<iOrder; ++i)
+		for(std::size_t j=0; j<iOrder; ++j)
+			pMatrix[i*iOrder + j] = (j>=i ? mat(i,j) : T(0));
+
+	// use maximum precision if none given
+	if(eps < T(0))
+		eps = lamch('S');
+	//std::cout << "eps = " << eps << std::endl;
+
+	// if an invalid range is given, select all eigenvalues
+	bool bSelectAll = (minval > maxval);
+
+	int minidx = 1, maxidx = iOrder;
+	int iNumFound = 0;
+	int iInfo = (*pfunc)(LAPACK_ROW_MAJOR, 'V', bSelectAll?'A':'V', 'U',
+		iOrder, pMatrix, iOrder, minval, maxval, minidx, maxidx,
+		eps, &iNumFound, evals.data(), pEVsOrtho, iOrder, pIdxArr);
+
+	if(iInfo != 0)
+	{
+		log_err("Could not solve hermitian eigenproblem",
+				" (lapack error ", iInfo, ").");
+		bOk = false;
+	}
+
+	evecs.resize(iNumFound);
+	evals.resize(iNumFound);
+	for(std::size_t i=0; i<iNumFound; ++i)
+	{
+		for(std::size_t j=0; j<iOrder; ++j)
+			evecs[i][j] = /*pMatrix*/pEVsOrtho[j*iOrder + i];
+		if(bNorm)
+			evecs[i] /= veclen(evecs[i]);
+	}
+	return bOk;
+}
+
+
 // ----------------------------------------------------------------------------
 
 

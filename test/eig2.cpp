@@ -67,8 +67,8 @@ int main()
 
 	// ----------------------------------------------------------------
 
-	std::vector<ublas::vector<std::complex<T>>> evecs_c;
-	std::vector<T> evals_c, evals_c_check;
+	std::vector<ublas::vector<std::complex<T>>> evecs_c, evecs_c_sel;
+	std::vector<T> evals_c, evals_c_sel, evals_c_check;
 	ublas::matrix<std::complex<T>> Mc = tl::make_mat<ublas::matrix<std::complex<T>>>({
 		{std::complex<T>(1., 0.), std::complex<T>(3., 1.5),std::complex<T>(5., 2.)},
 		{std::complex<T>(3., -1.5), std::complex<T>(2., 0.), std::complex<T>(2.2, -1.7)},
@@ -77,16 +77,32 @@ int main()
 	std::cout << "hermitian: " << Mc << std::endl;
 
 	tl::eigenvec_herm<T>(Mc, evecs_c, evals_c, true);
+	tl::eigenvecsel_herm<T>(Mc, evecs_c_sel, evals_c_sel, true, -5., 5., 1e-4);
 	tl::eigenval_herm<T>(Mc, evals_c_check);
 	for(int i=0; i<evals_c.size(); ++i)
+	{
 		std::cout << "eval: " << evals_c[i] <<
 		", eval_check: " << evals_c_check[i] <<
 		", evec: " << evecs_c[i] << std::endl;
+	}
 	std::cout << std::endl;
 	for(int i=0; i<evals_c.size(); ++i)
 		std::cout <<
 		"val*vec: " << evals_c[i]*evecs_c[i] <<
 		"\nmat*vec:" << ublas::prod(Mc, evecs_c[i]) << std::endl;
+	std::cout << std::endl;
+
+	for(int i=0; i<evals_c_sel.size(); ++i)
+	{
+		std::cout << "eval_sel: " << evals_c_sel[i] <<
+		", evec_sel: " << evecs_c_sel[i] << std::endl;
+	}
+	std::cout << std::endl;
+
+	for(int i=0; i<evals_c_sel.size(); ++i)
+		std::cout <<
+			"val*vec_sel: " << evals_c_sel[i]*evecs_c_sel[i] <<
+			"\nmat*vec_sel:" << ublas::prod(Mc, evecs_c_sel[i]) << std::endl;
 	std::cout << std::endl;
 
 

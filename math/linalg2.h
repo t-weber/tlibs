@@ -138,6 +138,15 @@ bool eigenval_herm(const ublas::matrix<std::complex<T>>& mat, std::vector<T>& ev
 
 
 /**
+ * calculates selected eigenvectors of a hermitian matrix
+ */
+template<typename T=double>
+bool eigenvecsel_herm(const ublas::matrix<std::complex<T>>& mat,
+	std::vector<ublas::vector<std::complex<T>>>& evecs,
+	std::vector<T>& evals, bool bNorm=0, T minval=-1, T maxval=-2, T eps=T(-1));
+
+
+/**
  * calculates the singular values of a real matrix: M = U diag(vals) V^t
  */
 template<typename T=double>
