@@ -358,6 +358,7 @@ t_vec conjugate_vec(t_vec vec)
 	return vec;
 }
 
+
 // ----------------------------------------------------------------------------
 
 
@@ -549,6 +550,20 @@ typename t_vec::value_type veclen(const t_vec& vec)
 	return ublas::norm_2(vec);
 }
 
+
+/**
+ * matrix element <x|M|y>
+ */
+template<typename t_mat = ublas::matrix<std::complex<double>>,
+	typename t_vec = ublas::vector<std::complex<double>>>
+typename t_vec::value_type
+mat_elem(const t_vec& x, const t_mat& M, const t_vec& y)
+{
+	t_vec My = prod_mv<t_vec, t_mat>(M, y);
+	t_vec x_conj = conjugate_vec<t_vec>(x);
+
+	return inner<t_vec>(x_conj, My);
+}
 
 // ----------------------------------------------------------------------------
 
