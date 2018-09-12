@@ -77,8 +77,8 @@ struct EnumDirectHash
 
 	#define T_STR
 
-        #define STR_TO_WSTR 
-        #define WSTR_TO_STR 
+        #define STR_TO_WSTR
+        #define WSTR_TO_STR
 #endif
 
 #endif
