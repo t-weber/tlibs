@@ -1,7 +1,7 @@
 /**
  * advanced linalg helpers
  * @author: Tobias Weber <tobias.weber@tum.de>
- * @date: 2013-2016
+ * @date: 2013-2018
  * @license GPLv2 or GPLv3
  */
 

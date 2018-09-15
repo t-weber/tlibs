@@ -1,7 +1,7 @@
 /**
  * basic linalg helpers
  * @author Tobias Weber <tobias.weber@tum.de>
- * @date 2013-2016
+ * @date 2013-2018
  * @license GPLv2 or GPLv3
  */
 
@@ -353,8 +353,8 @@ t_mat hermitian(const t_mat& mat)
 template<typename t_vec = ublas::vector<std::complex<double>>>
 t_vec conjugate_vec(t_vec vec)
 {
-	for(typename t_vec::value_type& val : vec)
-		val = std::conj(val);
+	for(std::size_t i=0; i<vec.size(); ++i)
+		vec[i] = std::conj(vec[i]);
 	return vec;
 }
 
@@ -392,6 +392,23 @@ typename t_vec::value_type inner(const t_vec& vec0, const t_vec& vec1)
 	return d;
 }
 
+
+/**
+ * complex inner product -- general version
+ */
+template<typename t_vec = ublas::vector<std::complex<double>>,
+	typename std::enable_if<!std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+typename t_vec::value_type inner_cplx(const t_vec& vec0, const t_vec& vec1)
+{
+	typename t_vec::value_type d(0);
+	std::size_t iSize = std::min(vec0.size(), vec1.size());
+
+	for(std::size_t i=0; i<iSize; ++i)
+		d += std::conj(vec0[i])*vec1[i];
+	return d;
+}
+
+
 /**
  * inner product -- ublas wrapper
  */
@@ -400,6 +417,18 @@ template<typename t_vec = ublas::vector<double>,
 typename t_vec::value_type inner(const t_vec& vec0, const t_vec& vec1)
 {
 	return ublas::inner_prod(vec0, vec1);
+}
+
+
+/**
+ * complex inner product -- ublas wrapper
+ */
+template<typename t_vec = ublas::vector<std::complex<double>>,
+	typename std::enable_if<std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+typename t_vec::value_type inner_cplx(const t_vec& vec0, const t_vec& vec1)
+{
+	t_vec vec0_c = conjugate_vec<t_vec>(vec0);
+	return ublas::inner_prod(vec0_c, vec1);
 }
 
 
@@ -421,6 +450,26 @@ t_mat outer(const t_vec& vec0, const t_vec& vec1)
 	return mat;
 }
 
+
+/**
+ * complex outer product -- general version
+ */
+template<typename t_vec = ublas::vector<std::complex<double>>,
+	typename t_mat = ublas::matrix<typename t_vec::value_type>,
+	typename std::enable_if<!std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+t_mat outer_cplx(const t_vec& vec0, const t_vec& vec1)
+{
+	std::size_t iSize = std::min(vec0.size(), vec1.size());
+	t_mat mat(iSize, iSize);
+
+	for(std::size_t i=0; i<iSize; ++i)
+		for(std::size_t j=0; j<iSize; ++j)
+			mat(i,j) = vec0[i]*std::conj(vec1[j]);
+
+	return mat;
+}
+
+
 /**
  * outer product -- ublas wrapper
  */
@@ -430,6 +479,19 @@ template<typename t_vec = ublas::vector<double>,
 t_mat outer(const t_vec& vec0, const t_vec& vec1)
 {
 	return ublas::outer_prod(vec0, vec1);
+}
+
+
+/**
+ * complex outer product -- ublas wrapper
+ */
+template<typename t_vec = ublas::vector<std::complex<double>>,
+	typename t_mat = ublas::matrix<typename t_vec::value_type>,
+	typename std::enable_if<std::is_convertible<t_vec, ublas::vector<typename t_vec::value_type>>::value, char>::type=0>
+t_mat outer_cplx(const t_vec& vec0, const t_vec& vec1)
+{
+	t_vec vec1_c = conjugate_vec<t_vec>(vec1);
+	return ublas::outer_prod(vec0, vec1_c);
 }
 
 
