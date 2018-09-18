@@ -8,7 +8,9 @@
 #ifndef __CHRONO_HELPERS_H__
 #define __CHRONO_HELPERS_H__
 
+
 #include <chrono>
+#include <string>
 
 
 namespace tl {
@@ -40,6 +42,7 @@ t_dur epoch_dur()
 	return ch::duration_cast<t_dur>(ch::system_clock::now().time_since_epoch());
 }
 
+
 /**
  * seconds since epoch
  */
@@ -48,6 +51,7 @@ T epoch()
 {
 	return epoch_dur<t_dur_secs<T>>().count();
 }
+
 
 /**
  * create a string representation of epoch

@@ -1,15 +1,17 @@
 /**
  * simple stopwatch for debugging
  * @author Tobias Weber <tobias.weber@tum.de>
- * @date jan-2015
+ * @date jan-2015 - 2018
  */
 
 #ifndef __STOPWATCH_H__
 #define __STOPWATCH_H__
 
+
 #include <chrono>
 #include <ctime>
 #include <cmath>
+#include "../string/string.h"
 
 
 namespace tl {
@@ -119,6 +121,7 @@ std::string get_duration_str_secs(t_real dDur)
 
 	return strAge;
 }
+
 
 template<class t_real = double>
 std::string get_duration_str(const std::chrono::duration<t_real>& dur)

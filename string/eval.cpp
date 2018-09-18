@@ -5,6 +5,7 @@
  * @license GPLv2 or GPLv3
  */
 
+#include <boost/integer_fwd.hpp>
 #include "eval.h"
 #include "eval_impl.h"
 
