@@ -31,6 +31,8 @@ class FileInstrBase
 		typedef std::vector<t_vecVals> t_vecDat;
 
 	protected:
+		void RenameDuplicateCols();
+
 		std::array<t_real, 5> GetScanHKLKiKf(const char* pcH, const char* pcK,
 			const char* pcL, const char* pcE, std::size_t i) const;
 

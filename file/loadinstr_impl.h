@@ -32,6 +32,31 @@
 
 namespace tl{
 
+template<class t_real>
+void FileInstrBase<t_real>::RenameDuplicateCols()
+{
+	using t_mapCols = std::unordered_map<std::string, std::size_t>;
+	t_mapCols mapCols;
+
+	t_vecColNames& vecCols = const_cast<t_vecColNames&>(this->GetColNames());
+	for(std::string& strCol : vecCols)
+	{
+		t_mapCols::iterator iter = mapCols.find(strCol);
+		if(iter == mapCols.end())
+		{
+			mapCols.insert(std::make_pair(strCol, 0));
+		}
+		else
+		{
+			tl::log_warn("Column \"", strCol, "\" is duplicate, renaming it.");
+
+			++iter->second;
+			strCol += "_" + tl::var_to_str(iter->second);
+		}
+	}
+}
+
+
 // automatically choose correct instrument
 template<class t_real>
 FileInstrBase<t_real>* FileInstrBase<t_real>::LoadInstr(const char* pcFile)
@@ -204,6 +229,7 @@ bool FileInstrBase<t_real>::MergeWith(const FileInstrBase<t_real>* pDat)
 	{
 		t_vecVals& col1 = this->GetCol(strCol);
 		const t_vecVals& col2 = pDat->GetCol(strCol);
+		//std::cout << "merging \"" << strCol << "\", size 1: " << col1.size() << ", size 2: " << col2.size() << std::endl;
 
 		if(col1.size() == 0 || col2.size() == 0)
 		{
@@ -310,6 +336,8 @@ void FilePsi<t_real>::ReadData(std::istream& istr)
 	}
 
 	m_vecData.resize(m_vecColNames.size());
+	FileInstrBase<t_real>::RenameDuplicateCols();
+
 
 	// data
 	while(!istr.eof())
@@ -562,7 +590,7 @@ FilePsi<t_real>::GetCol(const std::string& strName, std::size_t *pIdx)
 
 	for(std::size_t i=0; i<m_vecColNames.size(); ++i)
 	{
-		if(m_vecColNames[i] == strName)
+		if(str_to_lower(m_vecColNames[i]) == str_to_lower(strName))
 		{
 			if(pIdx) *pIdx = i;
 			return m_vecData[i];
@@ -816,6 +844,7 @@ std::vector<std::string> FilePsi<t_real>::GetScannedVars() const
 	// steps parameter
 	for(const typename t_mapIParams::value_type& pair : m_mapScanSteps)
 	{
+		//std::cout << pair.first << ", " << pair.second << std::endl;
 		if(!float_equal<t_real>(pair.second, 0.) && pair.first.length())
 		{
 			if(std::tolower(pair.first[0]) == 'd')
@@ -1035,6 +1064,8 @@ void FileFrm<t_real>::ReadData(std::istream& istr)
 		for(std::size_t iTok=0; iTok<vecToks.size(); ++iTok)
 			m_vecData[iTok].push_back(vecToks[iTok]);
 	}
+
+	FileInstrBase<t_real>::RenameDuplicateCols();
 }
 
 
@@ -1448,6 +1479,8 @@ void FileMacs<t_real>::ReadHeader(std::istream& istr)
 		else if(pairLine.first == "Columns")
 		{
 			tl::get_tokens<std::string, std::string>(pairLine.second, " \t", m_vecQuantities);
+			FileInstrBase<t_real>::RenameDuplicateCols();
+
 			//for(const std::string& strCol : m_vecQuantities)
 			//	std::cout << "column: \"" << strCol << "\"" << std::endl;
 			continue;
@@ -1928,6 +1961,7 @@ void FileTrisp<t_real>::ReadData(std::istream& istr)
 			if(begins_with<std::string>(str_to_lower(strLine), "pnt"))
 			{
 				get_tokens<std::string, std::string>(strLine, " \t", m_vecQuantities);
+				FileInstrBase<t_real>::RenameDuplicateCols();
 				//for(const std::string& strCol : m_vecQuantities)
 				//	std::cout << "col: " << strCol << std::endl;
 
