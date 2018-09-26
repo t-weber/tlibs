@@ -325,9 +325,13 @@ const std::vector<std::array<t_real, 6>>& FileInstrBase<t_real>::GetPolStates() 
 template<class t_real>
 void FilePsi<t_real>::ReadData(std::istream& istr)
 {
+	std::size_t iLine = 0;
+
 	// header
 	std::string strHdr;
 	std::getline(istr, strHdr);
+	tl::trim(strHdr);
+	++iLine;
 	get_tokens<std::string, std::string, t_vecColNames>(strHdr, " \t", m_vecColNames);
 	for(std::string& _str : m_vecColNames)
 	{
@@ -344,6 +348,7 @@ void FilePsi<t_real>::ReadData(std::istream& istr)
 	{
 		std::string strLine;
 		std::getline(istr, strLine);
+		++iLine;
 		tl::trim(strLine);
 
 		if(strLine.length() == 0)
@@ -356,7 +361,8 @@ void FilePsi<t_real>::ReadData(std::istream& istr)
 
 		if(vecToks.size() != m_vecColNames.size())
 		{
-			log_warn("Loader: Line size mismatch.");
+			log_warn("Loader: Column size mismatch in data line ", iLine,
+				": Expected ", m_vecColNames.size(), ", got ", vecToks.size(), ".");
 
 			// add zeros
 			while(m_vecColNames.size() > vecToks.size())
