@@ -13,6 +13,8 @@
 
 int main()
 {
+	std::cout.precision(8);
+
 	tl::t_length_si<double> len = 1.*tl::t_meters<double>;
 	std::cout << len << std::endl;
 

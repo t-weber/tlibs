@@ -1,7 +1,7 @@
 /**
  * magnetism
  * @author Tobias Weber <tobias.weber@tum.de>
- * @date 7-jul-15
+ * @date 7-jul-2015 -- 2018
  * @license GPLv2 or GPLv3
  */
 
@@ -154,11 +154,12 @@ t_vec get_S_perp_Q(const t_vec& S, const t_vec& Q)
 	return S - mult<t_vec, t_vec>(Qnorm, S)*Qnorm;
 }
 
+
 /**
  * calculates the magnetic structure factor Fm
  * @param lstAtoms list of atom positions
  * @param lstAtoms list of spins
- * @param vecG lattice vector
+ * @param vecQ scattering vector
  * @param lstf G-dependent magnetic form factor
  * @param lstg g factors, 2 if none given
  * @param pF0 optional total form factor.
@@ -170,7 +171,7 @@ template<typename T = double, typename t_ff = std::complex<T>,
 	template<class...> class t_vec = ublas::vector,
 	template<class ...> class t_cont = std::initializer_list>
 t_vec<std::complex<T>> structfact_mag(const t_cont<t_vec<T>>& lstAtoms,
-	const t_cont<t_vec<T>>& lstS, const t_vec<T>& vecG,
+	const t_cont<t_vec<T>>& lstS, const t_vec<T>& vecQ,
 	const t_cont<t_ff>& lstf = t_cont<t_ff>(),
 	const t_cont<T>& lstg = t_cont<T>(),
 	t_ff *pF0 = nullptr, T dVuc = T(-1))
@@ -210,10 +211,10 @@ t_vec<std::complex<T>> structfact_mag(const t_cont<t_vec<T>>& lstAtoms,
 			g = *iterg;
 
 		const t_vec<T>& vecS = *iterSpin;
-		t_vec<std::complex<T>> vecSperp = get_S_perp_Q<t_vec<T>>(vecS, vecG);
+		t_vec<std::complex<T>> vecSperp = get_S_perp_Q<t_vec<T>>(vecS, vecQ);
 
 		Fm += cFact * g * tFF * vecSperp *
-			std::exp(i * (mult<t_vec<T>, t_vec<T>>(vecG, *iterAtom)));
+			std::exp(i * (mult<t_vec<T>, t_vec<T>>(vecQ, *iterAtom)));
 		if(pF0) *pF0 += tFF;
 
 		// if there is only one form factor in the list, use it for all positions

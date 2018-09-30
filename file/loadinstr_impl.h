@@ -1,7 +1,7 @@
 /**
  * Loads instrument-specific data files
  * @author Tobias Weber <tobias.weber@tum.de>
- * @date feb-2015
+ * @date feb-2015 -- 2018
  * @license GPLv2 or GPLv3
  */
 
@@ -401,6 +401,7 @@ void FilePsi<t_real>::GetInternalParams(const std::string& strAll, FilePsi<t_rea
 template<class t_real>
 void FilePsi<t_real>::ParsePolData()
 {
+	m_vecPolStates.clear();
 	typename t_mapParams::const_iterator iter = m_mapParams.find("POLAN");
 	if(iter == m_mapParams.end())
 		return;
