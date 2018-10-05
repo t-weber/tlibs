@@ -2063,10 +2063,19 @@ T slerp(const T& q1, const T& q2, typename T::value_type t)
 
 // --------------------------------------------------------------------------------
 
-
 }
 
-#include <boost/integer/common_factor_rt.hpp>
+
+#include <boost/version.hpp>
+
+#if BOOST_VERSION >= 106600
+	#include <boost/integer/common_factor_rt.hpp>
+	namespace integer = boost::integer;
+#else
+	#include <boost/math/common_factor_rt.hpp>
+	namespace integer = boost::math;
+#endif
+
 
 namespace tl{
 
@@ -2084,12 +2093,12 @@ t_vec get_gcd_vec(const t_vec& vec)
 		t_int i0 = vec[i];
 		t_int i1 = vec[i+1];
 
-		t_int igcd = boost::integer::gcd<t_int>(i0, i1);
+		t_int igcd = integer::gcd<t_int>(i0, i1);
 
 		if(i==0)
 			igcd_total = igcd;
 		else
-			igcd_total = boost::integer::gcd<t_int>(igcd, igcd_total);
+			igcd_total = integer::gcd<t_int>(igcd, igcd_total);
 	}
 
 	if(igcd_total == 0)
