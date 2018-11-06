@@ -410,7 +410,7 @@ t_angle<Sys,Y> get_angle_ki_Q(const t_wavenumber<Sys,Y>& ki,
 	t_angle<Sys,Y> angle;
 
 	if(Q*get_one_angstrom<Y>() == Y(0.))
-		angle = get_pi<Y>()/Y(2) * units::si::radians;
+		angle = get_pi<Y>()/Y(2) * get_one_radian<Y>();
 	else
 	{
 		auto c = (ki*ki - kf*kf + Q*Q) / (Y(2.)*ki*Q);
@@ -420,7 +420,7 @@ t_angle<Sys,Y> get_angle_ki_Q(const t_wavenumber<Sys,Y>& ki,
 		angle = units::acos(c);
 	}
 
-	if(bAngleOutsideTriag) angle = get_pi<Y>()*units::si::radians - angle;
+	if(bAngleOutsideTriag) angle = get_pi<Y>()*get_one_radian<Y>() - angle;
 	if(!bPosSense) angle = -angle;
 
 	return angle;
@@ -441,7 +441,7 @@ t_angle<Sys,Y> get_angle_kf_Q(const t_wavenumber<Sys,Y>& ki,
 	t_angle<Sys,Y> angle;
 
 	if(Q*get_one_angstrom<Y>() == Y(0.))
-		angle = get_pi<Y>()/Y(2) * units::si::radians;
+		angle = get_pi<Y>()/Y(2) * get_one_radian<Y>();
 	else
 	{
 		auto c = (ki*ki - kf*kf - Q*Q) / (Y(2.)*kf*Q);
@@ -451,7 +451,7 @@ t_angle<Sys,Y> get_angle_kf_Q(const t_wavenumber<Sys,Y>& ki,
 		angle = units::acos(c);
 	}
 
-	if(!bAngleOutsideTriag) angle = get_pi<Y>()*units::si::radians - angle;
+	if(!bAngleOutsideTriag) angle = get_pi<Y>()*get_one_radian<Y>() - angle;
 	if(!bPosSense) angle = -angle;
 
 	return angle;
@@ -517,7 +517,7 @@ get_sample_Q(const t_wavenumber<Sys,Y>& ki,
 {
 	t_dimensionless<Sys,Y> ctt = units::cos(tt);
 	decltype(ki*ki) Qsq = ki*ki + kf*kf - Y(2.)*ki*kf*ctt;
-	if(Y(Qsq*get_one_angstrom()*get_one_angstrom()) < Y(0.))
+	if(Y(Qsq*get_one_angstrom<Y>()*get_one_angstrom<Y>()) < Y(0.))
 	{
 		// TODO
 
@@ -552,7 +552,7 @@ t_wavenumber<Sys,Y> get_other_k(const t_energy<Sys,Y>& E,
 	if(bFixedKi) kE_sq = -kE_sq;
 
 	auto k_sq = kE_sq + kfix*kfix;
-	if(k_sq*get_one_angstrom()*get_one_angstrom() < Y(0.))
+	if(k_sq*get_one_angstrom<Y>()*get_one_angstrom<Y>() < Y(0.))
 		throw Err("Scattering triangle not closed.");
 
 	//return units::sqrt(k_sq);
@@ -572,7 +572,7 @@ template<class Sys, class Y>
 Y ana_effic_factor(const t_wavenumber<Sys, Y>& kf, const t_angle<Sys, Y>& theta)
 {
 	return kf*kf*kf / units::tan(theta) *
-		get_one_angstrom()*get_one_angstrom()*get_one_angstrom();
+		get_one_angstrom<Y>()*get_one_angstrom<Y>()*get_one_angstrom<Y>();
 }
 
 /**
@@ -783,7 +783,7 @@ ElasticSpurion check_elastic_spurion(const ublas::vector<T>& ki,
 template<class t_real=double>
 t_real bose(t_real E, t_real T)
 {
-	const t_real kB = get_kB<t_real>() * units::si::kelvin/get_one_meV<t_real>();
+	const t_real kB = get_kB<t_real>() * get_one_kelvin<t_real>()/get_one_meV<t_real>();
 
 	t_real n = t_real(1)/(std::exp(std::abs(E)/(kB*T)) - t_real(1));
 	if(E >= t_real(0))
@@ -844,7 +844,7 @@ t_real DHO_model(t_real E, t_real T, t_real E0, t_real hwhm, t_real amp, t_real 
 template<class t_real=double>
 t_real fermi(t_real E, t_real mu, t_real T)
 {
-	const t_real kB = get_kB<t_real>() * units::si::kelvin/get_one_meV<t_real>();
+	const t_real kB = get_kB<t_real>() * get_one_kelvin<t_real>()/get_one_meV<t_real>();
 	t_real n = t_real(1)/(std::exp((E-mu)/(kB*T)) + t_real(1));
 	return n;
 }
