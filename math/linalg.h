@@ -1700,7 +1700,23 @@ typename t_mat::value_type determinant(const t_mat& mat)
 	}
 	else if(mat.size1()>3 && mat.size1()<6)		// recursive expansion, complexity: O(n!)
 	{
-		const t_size i = 0;
+		t_size i = 0;
+		t_size iZeros = 0;
+
+		// count zeros
+		for(t_size _i=0; _i<mat.size1(); ++_i)
+		{
+			ublas::vector<T> vecRow = get_row<ublas::vector<T>, t_mat>(mat, _i);
+			t_size iNewZeros = std::count_if(vecRow.begin(), vecRow.end(),
+				[](T d) -> bool { return float_equal<T>(d, 0.); });
+			if(iNewZeros > iZeros)
+			{
+				i = _i;
+				iZeros = iNewZeros;
+			}
+		}
+
+
 		T val = T(0);
 
 		for(t_size j=0; j<mat.size2(); ++j)
