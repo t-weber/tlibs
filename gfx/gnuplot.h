@@ -70,7 +70,7 @@ public:
 	GnuPlot() = default;
 	virtual ~GnuPlot() { DeInit(); }
 
-	void Init();
+	bool Init();
 	void DeInit();
 
 	bool IsReady() const;

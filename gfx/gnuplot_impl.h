@@ -29,14 +29,16 @@ void GnuPlot<t_real>::DeInit()
 	m_pProc.reset(nullptr);
 }
 
+
 template<class t_real>
-void GnuPlot<t_real>::Init()
+bool GnuPlot<t_real>::Init()
 {
-	if(IsReady()) return;
+	if(IsReady()) return true;
 	DeInit();
 
 	m_pProc.reset(new PipeProc<char>("gnuplot -p 2>/dev/null 1>/dev/null", 1));
-	if(!m_pProc || !m_pProc->IsReady()) return;
+	if(!m_pProc || !m_pProc->IsReady())
+		return false;
 
 	m_pProc->GetOstr().precision(m_iPrec);
 	m_pProc->GetOstr() << "set grid\n";
@@ -44,7 +46,10 @@ void GnuPlot<t_real>::Init()
 	//m_pProc->GetOstr() << "set noborder\n";
 	m_pProc->GetOstr() << "set size 1,1\n";
 	m_pProc->GetOstr() << "set palette rgbformulae 33,13,10\n";
+
+	return true;
 }
+
 
 template<class t_real>
 void GnuPlot<t_real>::SetTerminal(int iWnd, const char* pcBackend, t_real dW, t_real dH)
@@ -67,6 +72,7 @@ void GnuPlot<t_real>::SetTerminal(int iWnd, const char* pcBackend, t_real dW, t_
 
 	m_pProc->GetOstr() << "\n";
 }
+
 
 template<class t_real>
 void GnuPlot<t_real>::SetFileTerminal(const char* pcFile, t_real dW, t_real dH)
@@ -104,6 +110,7 @@ void GnuPlot<t_real>::SetFileTerminal(const char* pcFile, t_real dW, t_real dH)
 	m_pProc->GetOstr() << "set output \"" << strFile << "\"\n";
 }
 
+
 template<class t_real>
 void GnuPlot<t_real>::SetPrec(unsigned int iPrec)
 {
@@ -113,6 +120,7 @@ void GnuPlot<t_real>::SetPrec(unsigned int iPrec)
 	if(m_pProc)
 		m_pProc->GetOstr().precision(m_iPrec);
 }
+
 
 template<class t_real>
 void GnuPlot<t_real>::RefreshVars()
@@ -125,6 +133,7 @@ void GnuPlot<t_real>::RefreshVars()
 	else
 		m_pProc->GetOstr() << "set nokey\n";
 }
+
 
 template<class t_real>
 void GnuPlot<t_real>::SimplePlot(const std::vector<t_real>& vecX, const std::vector<t_real>& vecY,
@@ -228,11 +237,13 @@ void GnuPlot<t_real>::SimplePlot2d(const std::vector<std::vector<t_real> >& vec,
 	m_pProc->GetOstr().flush();
 }
 
+
 template<class t_real>
 void GnuPlot<t_real>::AddLine(const PlotObj<t_real>& obj)
 {
 	m_vecObjs.push_back(obj);
 }
+
 
 template<class t_real>
 void GnuPlot<t_real>::StartPlot()
@@ -245,11 +256,13 @@ void GnuPlot<t_real>::StartPlot()
 	++m_iStartCounter;
 }
 
+
 template<class t_real>
 void GnuPlot<t_real>::SetCmdFileOutput(const char* pcFile)
 {
 	m_strCmdFileOutput = pcFile;
 }
+
 
 template<class t_real>
 void GnuPlot<t_real>::FinishPlot()
@@ -282,6 +295,7 @@ void GnuPlot<t_real>::FinishPlot()
 		m_vecObjs.clear();
 	}
 }
+
 
 template<class t_real>
 std::string GnuPlot<t_real>::BuildCmd()
@@ -371,6 +385,7 @@ std::string GnuPlot<t_real>::BuildCmd()
 	return ostr.str();
 }
 
+
 template<class t_real>
 std::string GnuPlot<t_real>::BuildTable(const std::vector<t_real>& vecX, const std::vector<t_real>& vecY,
 	const std::vector<t_real>& vecYErr, const std::vector<t_real>& vecXErr)
@@ -396,6 +411,7 @@ std::string GnuPlot<t_real>::BuildTable(const std::vector<t_real>& vecX, const s
 	return ostr.str();
 }
 
+
 template<class t_real>
 void GnuPlot<t_real>::SetXLabel(const char* pcLab)
 {
@@ -404,6 +420,7 @@ void GnuPlot<t_real>::SetXLabel(const char* pcLab)
 	m_pProc->GetOstr() << "set xlabel \"" << pcLab << "\"\n";
 	//m_pProc->GetOstr().flush();
 }
+
 
 template<class t_real>
 void GnuPlot<t_real>::SetYLabel(const char* pcLab)
@@ -414,6 +431,7 @@ void GnuPlot<t_real>::SetYLabel(const char* pcLab)
 	//m_pProc->GetOstr().flush();
 }
 
+
 template<class t_real>
 void GnuPlot<t_real>::SetTitle(const char* pcTitle)
 {
@@ -422,6 +440,7 @@ void GnuPlot<t_real>::SetTitle(const char* pcTitle)
 	m_pProc->GetOstr() << "set title \"" << pcTitle << "\"\n";
 	//m_pProc->GetOstr().flush();
 }
+
 
 template<class t_real>
 void GnuPlot<t_real>::SetXRange(t_real dMin, t_real dMax)
@@ -433,6 +452,7 @@ void GnuPlot<t_real>::SetXRange(t_real dMin, t_real dMax)
 	m_pProc->GetOstr().flush();
 }
 
+
 template<class t_real>
 void GnuPlot<t_real>::SetYRange(t_real dMin, t_real dMax)
 {
@@ -441,6 +461,7 @@ void GnuPlot<t_real>::SetYRange(t_real dMin, t_real dMax)
 	m_pProc->GetOstr() << "set yrange [" << dMin << ":" << dMax << "]\n";
 	m_pProc->GetOstr().flush();
 }
+
 
 template<class t_real>
 void GnuPlot<t_real>::SetLogX(t_real tBase)
@@ -454,6 +475,7 @@ void GnuPlot<t_real>::SetLogX(t_real tBase)
 	m_pProc->GetOstr().flush();
 }
 
+
 template<class t_real>
 void GnuPlot<t_real>::SetLogY(t_real tBase)
 {
@@ -465,6 +487,7 @@ void GnuPlot<t_real>::SetLogY(t_real tBase)
 		m_pProc->GetOstr() << "unset logscale y\n";
 	m_pProc->GetOstr().flush();
 }
+
 
 template<class t_real>
 void GnuPlot<t_real>::SetGrid(bool bOn)
@@ -479,6 +502,7 @@ void GnuPlot<t_real>::SetGrid(bool bOn)
 	m_pProc->GetOstr().flush();
 }
 
+
 template<class t_real>
 void GnuPlot<t_real>::ClearArrows()
 {
@@ -487,6 +511,7 @@ void GnuPlot<t_real>::ClearArrows()
 	m_pProc->GetOstr() << "unset arrow\n";
 	m_pProc->GetOstr().flush();
 }
+
 
 template<class t_real>
 void GnuPlot<t_real>::AddArrow(t_real dX0, t_real dY0, t_real dX1, t_real dY1, bool bHead)
@@ -502,6 +527,7 @@ void GnuPlot<t_real>::AddArrow(t_real dX0, t_real dY0, t_real dX1, t_real dY1, b
 	m_pProc->GetOstr().flush();
 }
 
+
 template<class t_real>
 void GnuPlot<t_real>::SetColorBarRange(t_real dMin, t_real dMax, bool bCyclic)
 {
@@ -516,6 +542,7 @@ void GnuPlot<t_real>::SetColorBarRange(t_real dMin, t_real dMax, bool bCyclic)
 
 	m_pProc->GetOstr().flush();
 }
+
 
 template<class t_real>
 bool GnuPlot<t_real>::IsReady() const { return m_pProc && m_pProc->IsReady(); }
