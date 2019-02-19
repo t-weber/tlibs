@@ -70,14 +70,16 @@ endfunction
 
 
 
-function [ m, t ] = solve_linear_approx(xs, ys)
-	[Q, R] = qr([ xs.^1; xs.^0 ]');
+function xs_new = solve_linear_approx(xs, ys, order)
+	M = [];
+	for theorder = 0 : order
+		M = [ xs.^theorder; M ];
+	endfor
+
+	[Q, R] = qr(M');
 
 	ys_new = (R' * Q') * ys';
 	xs_new = inv(R'*R) * ys_new;
-
-	m = xs_new(1);
-	t = xs_new(2);
 endfunction
 
 
@@ -111,8 +113,8 @@ print(fig, "estimate.pdf");
 
 # -----------------------------------------------------------------------------
 [ns, sig2] = mean_walk(rand_iters, rand_steps, 0.5, 1., -1.);
-[m, t] = solve_linear_approx(ns, sig2);
-printf("line: m = %g, t = %g\n", m, t);
+xs_new = solve_linear_approx(ns, sig2, 1);
+printf("line: slope = %g, offset = %g\n", xs_new(1), xs_new(2));
 
 clf(fig);
 #fig = figure(2);
@@ -122,6 +124,6 @@ xlim([0., max(ns)]);
 ylim([0., max(sig2)]);
 hold on
 plot(ns, sig2, "o");
-plot(ns, ns.*m .+ t, "-");
+plot(ns, ns.*xs_new(1) .+ xs_new(2), "-");
 print(fig, "walk.pdf");
 # -----------------------------------------------------------------------------
