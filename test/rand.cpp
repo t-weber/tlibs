@@ -101,7 +101,7 @@ rnd3(std::size_t N, t_real inc=1., t_real max=1.)
 			x += tl::rand01<t_real>();
 			k += inc;
 
-			if(x > 1.)
+			if(x > max)
 				break;
 		}
 
