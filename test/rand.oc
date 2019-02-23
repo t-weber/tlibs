@@ -6,10 +6,11 @@
 #
 
 
-function [ Ns, means ] = estimate_number(N, inc, max)
+function [ Ns, means, sigs ] = estimate_number(N, inc, max, nominal_mean)
 	Ns = [];
 	Ks = [];
 	means = [];
+	sigs = [];
 
 	for n = 0 : N-1
 		k = 0.;
@@ -26,7 +27,9 @@ function [ Ns, means ] = estimate_number(N, inc, max)
 
 		Ns = [ Ns, n ];
 		Ks = [ Ks, k ];
-		means = [ means, mean(Ks) ];
+
+		means = [ means, themean = mean(Ks) ];
+		sigs = [ sigs, (themean - nominal_mean)**2. ];
 	endfor
 endfunction
 
@@ -95,7 +98,7 @@ printf("Number of steps: %d.\n", rand_steps);
 
 
 # -----------------------------------------------------------------------------
-[Ns, means] = estimate_number(rand_iters, 1., 1.);
+[ Ns, means, sigs ] = estimate_number(rand_iters, 1., 1., exp(1.));
 printf("e = %g\n", means(length(means)));
 
 fig = figure();
@@ -105,14 +108,23 @@ xlim([0., max(Ns)]);
 ylim([2., 3.]);
 hold on
 plot(Ns, means, "o");
-plot([0, max(Ns)], [exp(1), exp(1)], "-");
+plot([0, max(Ns)], [exp(1.), exp(1.)], "-");
 print(fig, "estimate.pdf");
+
+clf(fig);
+xlabel("Iterations");
+ylabel("sigma");
+xlim([0., max(Ns)]);
+ylim([0., 0.25]);
+hold on
+plot(Ns, sigs, "o");
+print(fig, "estimate_sig.pdf");
 # -----------------------------------------------------------------------------
 
 
 
 # -----------------------------------------------------------------------------
-[ns, sig2] = mean_walk(rand_iters, rand_steps, 0.5, 1., -1.);
+[ ns, sig2 ] = mean_walk(rand_iters, rand_steps, 0.5, 1., -1.);
 xs_new = solve_linear_approx(ns, sig2, 1);
 printf("line: slope = %g, offset = %g\n", xs_new(1), xs_new(2));
 
