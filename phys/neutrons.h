@@ -897,7 +897,6 @@ t_length<Sys, Y> foc_curv(const t_length<Sys, Y>& lenBefore, const t_length<Sys,
 	const Y s = Y(units::abs(units::sin(Y(0.5)*tt)));
 
 	const t_length<Sys, Y> curv = bVert ? Y(2)*f*s : Y(2)*f/s;
-
 	return curv;
 }
 
