@@ -45,6 +45,7 @@ template<class t_real = double>
 class GnuPlot
 {
 protected:
+	std::string m_strVersion;
 	std::unique_ptr<PipeProc<char>> m_pProc;
 
 	std::vector<PlotObj<t_real>> m_vecObjs;

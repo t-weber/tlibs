@@ -35,17 +35,36 @@ bool GnuPlot<t_real>::Init()
 {
 	if(IsReady()) return true;
 	DeInit();
+	const std::string strGplTool = "gnuplot";
 
-	m_pProc.reset(new PipeProc<char>("gnuplot -p 2>/dev/null 1>/dev/null", 1));
-	if(!m_pProc || !m_pProc->IsReady())
-		return false;
 
-	m_pProc->GetOstr().precision(m_iPrec);
-	m_pProc->GetOstr() << "set grid\n";
-	m_pProc->GetOstr() << "set nokey\n";
-	//m_pProc->GetOstr() << "set noborder\n";
-	m_pProc->GetOstr() << "set size 1,1\n";
-	m_pProc->GetOstr() << "set palette rgbformulae 33,13,10\n";
+	// get gnuplot version
+	{
+		PipeProc<char> proc((strGplTool + " 2>/dev/null --version").c_str(), 0);
+		if(!proc.IsReady())
+			return "";
+
+		std::getline(proc.GetIstr(), m_strVersion);
+		trim(m_strVersion);
+	
+		if(m_strVersion == "")
+			return false;
+	}
+
+
+	// open command pipe to gnuplot
+	{
+		m_pProc.reset(new PipeProc<char>((strGplTool + " -p 2>/dev/null 1>/dev/null").c_str(), 1));
+		if(!m_pProc || !m_pProc->IsReady())
+			return false;
+
+		m_pProc->GetOstr().precision(m_iPrec);
+		m_pProc->GetOstr() << "set grid\n";
+		m_pProc->GetOstr() << "set nokey\n";
+		//m_pProc->GetOstr() << "set noborder\n";
+		m_pProc->GetOstr() << "set size 1,1\n";
+		m_pProc->GetOstr() << "set palette rgbformulae 33,13,10\n";
+	}
 
 	return true;
 }
