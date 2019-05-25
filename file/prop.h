@@ -229,7 +229,7 @@ public:
 			return false;
 		std::basic_ostream<t_ch>* pOfstr = ptrOstr.get();
 	#else
-		std::basic_ostream* pOfstr = &ofstr;
+		std::basic_ostream<t_ch>* pOfstr = &ofstr;
 	#endif
 
 		if(!*pOfstr) return false;
