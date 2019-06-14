@@ -42,6 +42,7 @@ template<> inline const std::string& get_dir_seps()
 	static const std::string strSeps("\\/");
 	return strSeps;
 }
+
 template<> inline const std::wstring& get_dir_seps()
 {
 	static const std::wstring strSeps(L"\\/");
@@ -53,6 +54,7 @@ template<> inline const std::string& get_trim_chars()
 	static const std::string strC(" \t\r");
 	return strC;
 }
+
 template<> inline const std::wstring& get_trim_chars()
 {
 	static const std::wstring strC(L" \t\r");
@@ -101,6 +103,7 @@ t_str str_to_upper(const t_str& str)
 	return strOut;
 }
 
+
 template<class t_str=std::string>
 t_str str_to_lower(const t_str& str)
 {
@@ -138,6 +141,7 @@ t_str get_file_noext(const t_str& str, bool bToLower=0)
 	return strRet;
 }
 
+
 template<class t_str=std::string>
 t_str get_fileext(const t_str& str, bool bToLower=0)
 {
@@ -153,6 +157,7 @@ t_str get_fileext(const t_str& str, bool bToLower=0)
 	return strRet;
 }
 
+
 /**
  *  e.g. returns "tof" for "123.tof.bz2"
  */
@@ -166,6 +171,7 @@ t_str get_fileext2(const t_str& str, bool bToLower=0)
 	t_str strFile = str.substr(0, iPos);
 	return get_fileext(strFile, bToLower);
 }
+
 
 /**
  * e.g. returns "tof" for "123.tof.bz2" and for "123.tof"
@@ -182,6 +188,7 @@ t_str get_fileext_nocomp(const t_str& str, bool bToLower=0)
 		return get_fileext2(str, bToLower);
 }
 
+
 template<class t_str=std::string>
 t_str get_dir(const t_str& str, bool bToLower=0)
 {
@@ -196,6 +203,7 @@ t_str get_dir(const t_str& str, bool bToLower=0)
 
 	return strRet;
 }
+
 
 template<class t_str=std::string>
 t_str get_file_nodir(const t_str& str, bool bToLower=0)
@@ -244,6 +252,7 @@ bool str_is_equal(const t_str& str0, const t_str& str1, bool bCase=0)
 
 #endif
 }
+
 
 template<class t_str=std::string>
 bool str_is_equal_to_either(const t_str& str0,
@@ -316,6 +325,7 @@ void trim(t_str& str)
 #endif
 }
 
+
 template<class t_str=std::string>
 t_str trimmed(const t_str& str)
 {
@@ -339,6 +349,7 @@ bool find_and_replace(t_str& str1, const t_str& str_old,
 	str1.replace(pos, str_old.length(), str_new);
 	return true;
 }
+
 
 template<class t_str=std::string>
 void find_all_and_replace(t_str& str1, const t_str& str_old,
@@ -385,6 +396,7 @@ t_str remove_char(const t_str& str, typename t_str::value_type ch)
 
 	return strRet;
 }
+
 
 /**
  * removes all occurrences of specified chars in a string
@@ -545,8 +557,6 @@ split_first(const t_str& str, const t_str& strSep, bool bTrim=0, bool bSeq=0)
 		if(ipos+iLenTok < str.length())
 			str2 = str.substr(ipos+iLenTok, t_str::npos);
 	}
-	//else
-	//	str1 = str;
 
 	if(bTrim)
 	{
@@ -554,7 +564,7 @@ split_first(const t_str& str, const t_str& strSep, bool bTrim=0, bool bSeq=0)
 		trim(str2);
 	}
 
-	return std::pair<t_str, t_str>(str1, str2);
+	return std::make_pair(str1, str2);
 }
 
 
@@ -580,6 +590,7 @@ t_str str_between(const t_str& str, const t_str& strSep1, const t_str& strSep2,
 template<typename T, class t_str=std::string, bool bTIsStr=0>
 struct _str_to_var_impl;
 
+
 template<typename T, class t_str>
 struct _str_to_var_impl<T, t_str, 1>
 {
@@ -588,6 +599,7 @@ struct _str_to_var_impl<T, t_str, 1>
 		return str;
 	}
 };
+
 
 template<typename T, class t_str>
 struct _str_to_var_impl<T, t_str, 0>
@@ -605,6 +617,7 @@ struct _str_to_var_impl<T, t_str, 0>
 		return t;
 	}
 };
+
 
 
 #ifndef NO_BOOST
@@ -630,6 +643,7 @@ void get_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
 			std::is_convertible<T, t_str>::value>()(*iter));
 	}
 }
+
 
 /**
  * Tokenises string on strDelim
@@ -662,6 +676,7 @@ void get_tokens_seq(const t_str& str, const t_str& strDelim, t_cont<T>& vecRet, 
 }
 
 
+
 #if !defined NO_STR_PARSER
 }
 #include "../string/eval.h"
@@ -685,6 +700,7 @@ bool parse_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
 	return bOk;
 }
 
+
 template<typename T, class t_str=std::string>
 T str_to_var_parse(const t_str& str)
 {
@@ -704,6 +720,7 @@ bool parse_tokens(const t_str& str, const t_str& strDelim, t_cont& vecRet)
 	get_tokens<T, t_str, t_cont>(str, strDelim, vecRet);
 	return 1;
 }
+
 
 template<typename T, class t_str=std::string>
 T str_to_var_parse(const t_str& str)
@@ -730,10 +747,12 @@ template<class T, class t_ch,
 	bool is_number_type=std::is_fundamental<T>::value>
 struct _var_to_str_print_impl {};
 
+
 template<class T, class t_ch> struct _var_to_str_print_impl<T, t_ch, false>
 {
 	void operator()(std::basic_ostream<t_ch>& ostr, const T& t) { ostr << t; }
 };
+
 
 template<class T, class t_ch> struct _var_to_str_print_impl<T, t_ch, true>
 {
@@ -746,6 +765,7 @@ template<class T, class t_ch> struct _var_to_str_print_impl<T, t_ch, true>
 		ostr << t0;
 	}
 };
+
 
 template<typename T, class t_str=std::string>
 struct _var_to_str_impl
@@ -794,6 +814,7 @@ struct _var_to_str_impl
 	}
 };
 
+
 template<class t_str>
 struct _var_to_str_impl<t_str, t_str>
 {
@@ -807,6 +828,7 @@ struct _var_to_str_impl<t_str, t_str>
 		return t_str(pc);
 	}
 };
+
 
 template<typename T, class t_str=std::string>
 t_str var_to_str(const T& t,
@@ -866,6 +888,7 @@ bool skip_after_line(std::basic_istream<t_char>& istr,
 	return false;
 }
 
+
 template<typename t_char=char>
 void skip_after_char(std::basic_istream<t_char>& istr, t_char ch, bool bCase=0)
 {
@@ -893,6 +916,7 @@ void skip_after_char(std::basic_istream<t_char>& istr, t_char ch, bool bCase=0)
  */
 template<class t_ch, typename=void> struct char_funcs {};
 
+
 /**
  * specialisation for char
  */
@@ -901,6 +925,7 @@ struct char_funcs<t_ch, typename std::enable_if<std::is_same<t_ch, char>::value>
 {
 	static bool is_digit(t_ch c) { return std::isdigit(c); }
 };
+
 
 /**
  * specialisation for wchar_t

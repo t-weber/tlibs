@@ -16,7 +16,7 @@ namespace tl {
 class FFTw : public Fourier_base<double>
 {
 	protected:
-		unsigned int m_iSize;
+		std::size_t m_iSize;
 
 		void *m_pIn, *m_pOut;
 		void *m_pPlan, *m_pPlan_inv;
