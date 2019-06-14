@@ -17,9 +17,11 @@ namespace tl {
 namespace ublas = boost::numeric::ublas;
 
 
+
 //------------------------------------------------------------------------------
 // MIEZE time (eq. 117 from [Keller, Golub, Gähler, 2000])
 // tau = hbar * omega * Ls / (m*v^3)
+
 template<class Sys, class Y>
 t_time<Sys,Y> mieze_tau(const t_freq<Sys,Y>& fm,
 	const t_length<Sys,Y>& Ls, const t_length<Sys,Y>& lam)
@@ -55,6 +57,7 @@ t_length<Sys,Y> mieze_tau_lam(const t_time<Sys,Y>& tau,
 	return p2lam(p);
 }
 //------------------------------------------------------------------------------
+
 
 
 //------------------------------------------------------------------------------
@@ -95,6 +98,7 @@ t_flux<Sys,Y> larmor_field(const t_length<Sys,Y>& lam,
 
 //------------------------------------------------------------------------------
 // MIEZE contrast reduction due to detector geometry
+
 template<class Sys, class Y>
 Y mieze_reduction_det(const t_length<Sys,Y>& lx, const t_length<Sys,Y>& ly,
 	const t_length<Sys,Y>& xpos, const t_length<Sys,Y>& ypos,
@@ -159,7 +163,10 @@ Y mieze_reduction_det(const t_length<Sys,Y>& lx, const t_length<Sys,Y>& ly,
 	return dreduction;
 }
 
-// reduction factor due to detector thickness
+
+/**
+ * reduction factor due to detector thickness
+ */
 template<class Sys, class Y>
 Y mieze_reduction_det_d(const t_length<Sys,Y>& d,
 	const t_freq<Sys,Y>& fM, const t_length<Sys,Y>& lam)
@@ -256,6 +263,7 @@ Y mieze_reduction_sample_cuboid(const t_length<Sys,Y>& len_x,
 	vol = len_x*len_y*len_z;
 	return integral / vol;
 }
+
 
 // Scattering with extinction
 template<class Sys, class Y>
@@ -433,3 +441,4 @@ t_freq<Sys,Y> mieze_det_misaligned_df2(const t_length<Sys,Y>& L1,
 }
 
 #endif
+
