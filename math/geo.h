@@ -320,29 +320,6 @@ public:
 	}
 
 
-	/**
-	 * distance to line l1
-	 */
-	/*T GetDist(const Line<T>& l1) const
-	{
-		const Line<T>& l0 = *this;
-
-		// vector normal to both directions defining the distance line
-		t_vec vecNorm = cross_3<t_vec>(l0.GetDir(), l1.GetDir());
-		T tlenNorm = veclen(vecNorm);
-
-		t_vec vec01 = l1.GetX0() - l0.GetX0();
-
-		// if the lines are parallel, any point (e.g. the x0s) can be used
-		if(float_equal(tlenNorm, T(0)))
-			return GetDist(l1.GetX0());
-
-		// project x0_1 - x0_0 onto vecNorm
-		T tdot = std::abs(inner(vec01, vecNorm));
-		return tdot / tlenNorm;
-	}*/
-
-
 	bool IsParallel(const Line<T>& line, T eps = tl::get_epsilon<T>()) const
 	{
 		return vec_is_collinear<t_vec>(GetDir(), line.GetDir(), eps);
