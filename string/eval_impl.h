@@ -79,8 +79,8 @@ namespace tl
 		static const std::unordered_map</*t_str*/std::string, t_val> s_consts =
 		{
 			{ "pi", get_pi<t_val>() },
-			{ "hbar",  t_val(hbar/meV/sec) },	// hbar in [meV s]
-			{ "kB",  t_val(kB/meV*kelvin) },	// kB in [meV / K]
+			{ "hbar", t_val(hbar/meV/sec) },	// hbar in [meV s]
+			{ "kB", t_val(kB/meV*kelvin) },		// kB in [meV / K]
 		};
 
 		return s_consts.at(wstr_to_str(strName));
@@ -107,8 +107,8 @@ namespace tl
 	{
 		static const std::unordered_map</*t_str*/std::string, std::function<t_val(t_val, t_val)>> s_funcs =
 		{
-			{ "pow", [t1, t2](t_val t1, t_val t2) -> t_val { return t_val(std::pow(t1, t2)); } },
-			{ "mod", [t1, t2](t_val t1, t_val t2) -> t_val { return t1%t2; } },
+			{ "pow", [](t_val _t1, t_val _t2) -> t_val { return t_val(std::pow(_t1, _t2)); } },
+			{ "mod", [](t_val _t1, t_val _t2) -> t_val { return _t1 % _t2; } },
 		};
 
 		return s_funcs.at(wstr_to_str(strName))(t1, t2);

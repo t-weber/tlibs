@@ -24,6 +24,8 @@ namespace tl {
 
 template<typename T=double> T get_KSQ2E()
 {
+	//T KSQ2E = (co::hbar*co::hbar / (2.*co::m_n)) / one_meV / (angstrom*angstrom);
+
 	const auto _A = get_one_angstrom<T>();
 	const auto _meV = get_one_meV<T>();
 	const auto _mn = get_m_n<T>();
@@ -33,18 +35,18 @@ template<typename T=double> T get_KSQ2E()
 	return T(0.5) * _hbar/_A/_mn * _hbar/_A/_meV;
 }
 
+
 template<typename T=double> T get_E2KSQ()
 {
 	return T(1)/get_KSQ2E<T>();
 }
+
 
 #if __cplusplus >= 201402L
 	template<class T=double> T t_KSQ2E = get_KSQ2E<T>();
 	template<class T=double> T t_E2KSQ = T(1)/t_KSQ2E<T>;
 #endif
 
-//static const double KSQ2E = (co::hbar*co::hbar / (2.*co::m_n)) / one_meV / (angstrom*angstrom);
-//static const double E2KSQ = 1./KSQ2E;
 
 // --------------------------------------------------------------------------------
 
@@ -282,7 +284,7 @@ t_wavenumber<Sys,Y> d2G(const t_length<Sys,Y>& d)
 // --------------------------------------------------------------------------------
 /**
  * differentiated Bragg equation:
- * n lam = 2d sin(th)						| diff
+ * n lam = 2d sin(th)				| diff
  * n dlam = 2dd sin(th) + 2d cos(th) dth	| / Bragg equ
  * dlam/lam = dd/d + cos(th)/sin(th) dth
  *
@@ -303,62 +305,88 @@ Y bragg_diff(Y dDoverD, const t_angle<Sys,Y>& theta, Y dTheta)
 
 
 // --------------------------------------------------------------------------------
-// see e.g. ILL blue book sec. 2.6-2
 
+/**
+ * kinematic plane
+ * see e.g. (ILL Neutron Data Booklet), sec. 2.6-2
+ *
+ * Q_vec = ki_vec - kf_vec
+ * Q^2 = ki^2 + kf^2 - 2ki kf cos 2th	| * hbar^2 / (2 mn)
+ *
+ * using:
+ * Ei = hbar^2 ki^2 / (2 mn)
+ *
+ * Q^2 * hbar^2 / (2 mn) = Ei + Ef - 2 ki kf cos(2th) * hbar^2 / (2 mn)
+ *
+ * using:
+ * ki^2 = 2 mn Ei / hbar^2
+ *
+ * Q^2 = [Ei + Ef - 2 sqrt(Ei) sqrt(Ef) cos 2th] * 2 mn / hbar^2
+ *
+ * using:
+ * dE = Ei - Ef
+ * Ef = Ei - dE
+ *
+ * Q^2 = [2 Ei - dE - 2 sqrt(Ei (Ei - dE)) cos 2th] * 2 mn / hbar^2
+ */
 template<class Sys, class Y>
 t_wavenumber<Sys,Y> kinematic_plane(bool bFixedKi,
 	const t_energy<Sys,Y>& EiEf, const t_energy<Sys,Y>& DeltaE,
 	const t_angle<Sys,Y>& twotheta)
 {
-	const t_energy<Sys,Y> dE = DeltaE;
+	t_energy<Sys,Y> dE = DeltaE;
 	if(bFixedKi)
 		dE = -dE;
 
+	auto c = Y(2.)*get_m_n<Y>() / (get_hbar<Y>()*get_hbar<Y>());
 	t_wavenumber<Sys,Y> Q =
-		units::sqrt(Y(2.)*get_m_n<Y>() / get_hbar<Y>()) *
+		units::sqrt(c *
 		(Y(2.)*EiEf + dE - Y(2.)*units::cos(twotheta) *
-		units::sqrt(EiEf*(EiEf + dE)));
+		units::sqrt(EiEf*(EiEf + dE))));
 
 	return Q;
 }
 
+
+/**
+ * kinematic plane
+ * see e.g. (ILL Neutron Data Booklet), sec. 2.6-2
+ *
+ * solving the above equation for dE using sage:
+ *   Q, Ei, dE, ctt, c = var("Q, Ei, dE, ctt, c")
+ *   equ = (Q^2 -2*Ei*c + dE*c)^2 == 4*Ei*(Ei-dE)*c^2*ctt^2
+ *   equ.solve(dE)
+ */
 template<class Sys, class Y>
 t_energy<Sys,Y> kinematic_plane(bool bFixedKi, bool bBranch,
 	const t_energy<Sys,Y>& EiEf, const t_wavenumber<Sys,Y>& Q,
 	const t_angle<Sys,Y>& twotheta)
 {
 	auto c = Y(2.)*get_m_n<Y>() / (get_hbar<Y>()*get_hbar<Y>());
+	auto c2 = c*c;
+
+	auto EiEf2 = EiEf*EiEf;
+
 	Y ctt = units::cos(twotheta);
-	Y c2tt = units::cos(Y(2.)*twotheta);
+	Y ctt2 = ctt*ctt;
 
-	Y dSign = Y(-1.);
-	if(bBranch)
-		dSign = Y(1.);
+	Y dSign = bBranch ? Y(1.) : Y(-1.);
+	Y dSignFixedKf = bFixedKi ? Y(-1.) : Y(1.);
 
-	Y dSignFixedKf = Y(1.);
-	if(bFixedKi)
-		dSignFixedKf = Y(-1.);
+	t_energy<Sys,Y> dE =
+			dSignFixedKf*Y(2.) * EiEf * ctt2
+			- dSignFixedKf*Y(2.) * EiEf
+			+ dSignFixedKf * Q*Q / c
+			+ dSign*Y(2.) * ctt/c * units::sqrt(c2*ctt2*EiEf2 - c2*EiEf2 + c*EiEf*Q*Q);
 
-	using t_sqrt_rt = decltype(c*c*EiEf*ctt);
-	using t_rt = decltype(t_sqrt_rt()*t_sqrt_rt());
-	t_rt rt = c*c*c*c * (-EiEf*EiEf)*ctt*ctt
-		+ c*c*c*c*EiEf*EiEf*ctt*ctt*c2tt
-		+ Y(2.)*c*c*c*EiEf*Q*Q*ctt*ctt;
-
-	t_energy<Sys,Y> E =
-		Y(1.)/(c*c)*(dSignFixedKf*Y(2.)*c*c*EiEf*ctt*ctt
-		- dSignFixedKf*Y(2.)*c*c*EiEf
-		+ dSign*std::sqrt(Y(2.)) * my_units_sqrt<t_sqrt_rt>(rt)
-		+ dSignFixedKf*c*Q*Q);
-
-	return E;
+	return dE;
 }
 // --------------------------------------------------------------------------------
 
 
 
 // --------------------------------------------------------------------------------
-// Debye-Waller factor
+// Debye-Waller factor, see e.g. (Shirane 2002) p. 24, (Squires 2012) p. 34-35
 
 template<class Sys, class Y>
 Y debye_waller_high_T(const t_temperature<Sys,Y>& T_D,
@@ -485,7 +513,7 @@ t_wavenumber<Sys,Y> get_mono_k(const t_angle<Sys,Y>& _theta,
 /**
  * Q_vec = ki_vec - kf_vec
  * Q^2 = ki^2 + kf^2 - 2ki kf cos 2th
- *cos 2th = (-Q^2 + ki^2 + kf^2) / (2ki kf)
+ * cos 2th = (-Q^2 + ki^2 + kf^2) / (2ki kf)
  */
 template<class Sys, class Y>
 t_angle<Sys,Y> get_sample_twotheta(const t_wavenumber<Sys,Y>& ki,

@@ -57,7 +57,7 @@ T ferromag(const t_cont& lstNeighbours, const ublas::vector<T>& vecq, T tS)
 
 /**
  * Magnetic form factors
- * @desc see: ILL Neutron Data Booklet sec. 2.5-1 (p. 60)
+ * @desc see: (ILL Neutron Data Booklet), sec. 2.5-1 (p. 60)
  * @desc also see: https://www.ill.eu/sites/ccsl/ffacts/
  */
 template<class T=double, template<class...> class t_vec=std::initializer_list>

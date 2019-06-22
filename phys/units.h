@@ -204,9 +204,10 @@ template<class Y=double> t_length<units::si::system, Y> get_r_e()
 	template<class Y=double> const t_length_si<Y> t_meters = get_one_meter<Y>();
 	template<class Y=double> const t_flux_si<Y> t_teslas = Y(1)*units::si::teslas;
 	template<class Y=double> const t_time_si<Y> t_seconds = Y(1)*units::si::seconds;
-	template<class Y=double> const t_angle_si<Y> t_radians = Y(1)*units::si::radians;
 	template<class Y=double> const t_temperature_si<Y> t_kelvins = Y(1)*units::si::kelvins;
 	template<class Y=double> const t_area_si<Y> t_barns = Y(1e-28)*units::si::meters*units::si::meters;
+	template<class Y=double> const t_angle_si<Y> t_radians = Y(1)*units::si::radians;
+	template<class Y=double> const t_angle_si<Y> t_degrees = get_pi<Y>()/Y(180)*units::si::radians;
 
 	template<class Y=double> const t_energy_si<Y> t_meV = get_one_meV<Y>();
 	template<class Y=double> const t_length_si<Y> t_angstrom = get_one_angstrom<Y>();

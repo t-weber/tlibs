@@ -11,24 +11,40 @@
 #include <vector>
 #include <memory>
 #include <functional>
-//#include <iostream>
-//#include "log/debug.h"
 
 #include "../log/log.h"
 #include "../string/string.h"
 #include "../helper/exception.h"
 
+#include <boost/version.hpp>
+
 //#include <png.h>
 #ifndef int_p_NULL
 	#define int_p_NULL reinterpret_cast<int*>(0)
 #endif
-#include <boost/gil/gil_all.hpp>
-#include <boost/gil/extension/io/png_io.hpp>
-#ifndef NO_JPEG
-	#include <boost/gil/extension/io/jpeg_io.hpp>
+
+#if BOOST_VERSION >= 107000
+	#include <boost/gil.hpp>
+	#include <boost/gil/extension/io/png.hpp>
+#else
+	#include <boost/gil/gil_all.hpp>
+	#include <boost/gil/extension/io/png_io.hpp>
 #endif
+
+#ifndef NO_JPEG
+	#if BOOST_VERSION >= 107000
+		#include <boost/gil/extension/io/jpeg.hpp>
+	#else
+		#include <boost/gil/extension/io/jpeg_io.hpp>
+	#endif
+#endif
+
 #ifndef NO_TIFF
-	#include <boost/gil/extension/io/tiff_io.hpp>
+	#if BOOST_VERSION >= 107000
+		#include <boost/gil/extension/io/tiff.hpp>
+	#else
+		#include <boost/gil/extension/io/tiff_io.hpp>
+	#endif
 #endif
 
 
@@ -49,18 +65,33 @@ namespace tl
 		{
 			//if(!file_exists<t_char>(pcFile))
 			//	throw Err(t_str("File \"") + pcFile + t_str("\" does not exist."));
+#if BOOST_VERSION >= 107000
 			if(strExt == "png")
-				gil::png_read_image(pcFile, *pimg);
-#ifndef NO_TIFF
+				gil::read_image(pcFile, *pimg, gil::png_tag{});
+	#ifndef NO_TIFF
 			else if(strExt == "tif" || strExt == "tiff")
-				gil::tiff_read_image(pcFile, *pimg);
-#endif
-#ifndef NO_JPEG
+				gil::read_image(pcFile, *pimg, gil::tiff_tag{});
+	#endif
+	#ifndef NO_JPEG
 			else if(strExt == "jpg" || strExt == "jpeg")
-				gil::jpeg_read_image(pcFile, *pimg);
-#endif
+				gil::read_image(pcFile, *pimg, gil::jpeg_tag{});
+	#endif
 			else
 				throw Err("Unknown file extension in image loading.");
+#else
+			if(strExt == "png")
+				gil::png_read_image(pcFile, *pimg);
+	#ifndef NO_TIFF
+			else if(strExt == "tif" || strExt == "tiff")
+				gil::tiff_read_image(pcFile, *pimg);
+	#endif
+	#ifndef NO_JPEG
+			else if(strExt == "jpg" || strExt == "jpeg")
+				gil::jpeg_read_image(pcFile, *pimg);
+	#endif
+			else
+				throw Err("Unknown file extension in image loading.");
+#endif
 		}
 		catch(const std::exception& ex)
 		{
@@ -79,18 +110,33 @@ namespace tl
 
 		try
 		{
+#if BOOST_VERSION >= 107000
 			if(strExt == "png")
-				gil::png_write_view(pcFile, *pview);
-#ifndef NO_TIFF
+				gil::write_view(pcFile, *pview, gil::png_tag{});
+	#ifndef NO_TIFF
 			else if(strExt == "tif" || strExt == "tiff")
-				gil::tiff_write_view(pcFile, *pview);
-#endif
-#ifndef NO_JPEG
+				gil::write_view(pcFile, *pview, gil::tiff_tag{});
+	#endif
+	#ifndef NO_JPEG
 			else if(strExt == "jpg" || strExt == "jpeg")
-				gil::jpeg_write_view(pcFile, *pview, 90);
-#endif
+				gil::write_view(pcFile, *pview, gil::jpeg_tag{});
+	#endif
 			else
 				throw Err("Unknown file extension in image saving.");
+#else
+			if(strExt == "png")
+				gil::png_write_view(pcFile, *pview);
+	#ifndef NO_TIFF
+			else if(strExt == "tif" || strExt == "tiff")
+				gil::tiff_write_view(pcFile, *pview);
+	#endif
+	#ifndef NO_JPEG
+			else if(strExt == "jpg" || strExt == "jpeg")
+				gil::jpeg_write_view(pcFile, *pview, 90);
+	#endif
+			else
+				throw Err("Unknown file extension in image saving.");
+#endif
 		}
 		catch(const std::exception& ex)
 		{
