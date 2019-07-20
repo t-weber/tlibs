@@ -6,8 +6,8 @@
 
 // clang -o ferro ferro.cpp ../gfx/gnuplot.cpp ../log/log.cpp -lstdc++ -lm -lboost_iostreams -std=c++11
 
-#include "../math/mag.h"
-#include "../math/neutrons.h"
+#include "../phys/mag.h"
+#include "../phys/neutrons.h"
 #include "../gfx/gnuplot.h"
 
 #include <tuple>
@@ -23,9 +23,16 @@ int main()
 	double J1 = 0.5*k;
 	double J2 = 0.5*k;
 	double S = 7./2.;
+	//double J1 = 1.;
+	//double J2 = 1.;
+	//double S = 0.5;
 
 	std::vector<ublas::vector<double>> vecAtomsN0 = get_neighbour_atoms(UCType::FCC, 0, a);
 	std::vector<ublas::vector<double>> vecAtomsN1 = get_neighbour_atoms(UCType::FCC, 1, a);
+	//std::vector<ublas::vector<double>> vecAtomsN0 = get_neighbour_atoms(UCType::BCC, 0, a);
+	//std::vector<ublas::vector<double>> vecAtomsN1 = get_neighbour_atoms(UCType::BCC, 1, a);
+	//std::vector<ublas::vector<double>> vecAtomsN0 = get_neighbour_atoms(UCType::SIMPLE, 0, a);
+	//std::vector<ublas::vector<double>> vecAtomsN1 = get_neighbour_atoms(UCType::SIMPLE, 1, a);
 
 	std::vector<t_magatompos<double>> vecMagAtoms;
 	for(const ublas::vector<double>& vec : vecAtomsN0)
@@ -41,7 +48,7 @@ int main()
 
 
 
-	std::vector<double> vecq = linspace(0., 1.5, 128);
+	std::vector<double> vecq = linspace(0., 1., 128);
 	std::vector<double> vecE1, vecE11, vecE111;
 	vecE1.reserve(vecq.size());
 	vecE11.reserve(vecq.size());

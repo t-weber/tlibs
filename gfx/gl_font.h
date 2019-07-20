@@ -3,6 +3,10 @@
  * @author Tobias Weber <tobias.weber@tum.de>
  * @date 22-dec-2014
  * @license GPLv2 or GPLv3
+
+ * Freetype rendering under OpenGL, inspired by:
+ * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
+ * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_02
  */
 
 #ifndef __GL_FONT_H__
@@ -10,11 +14,6 @@
 
 #include "gl.h"
 
-/**
- * Freetype rendering under OpenGL, inspired by:
- * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
- * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_02
- */
 #define DEF_FONT "/usr/share/fonts/dejavu/DejaVuSansMono.ttf"
 #define DEF_FONT_SIZE 12
 

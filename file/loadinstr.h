@@ -53,8 +53,8 @@ class FileInstrBase
 		virtual t_real GetKFix() const = 0;
 		virtual bool IsKiFixed() const = 0;
 
-		virtual const t_vecVals& GetCol(const std::string& strName, std::size_t *pIdx=0) const = 0;
-		virtual t_vecVals& GetCol(const std::string& strName, std::size_t *pIdx=0) = 0;
+		virtual const t_vecVals& GetCol(const std::string& strName, std::size_t *pColIdx=0) const = 0;
+		virtual t_vecVals& GetCol(const std::string& strName, std::size_t *pColIdx=0) = 0;
 
 		virtual std::size_t GetScanCount() const = 0;
 		virtual std::array<t_real, 5> GetScanHKLKiKf(std::size_t i) const = 0;

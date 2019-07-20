@@ -3,6 +3,10 @@
  * @author Tobias Weber <tobias.weber@tum.de>
  * @date 22-dec-2014
  * @license GPLv2 or GPLv3
+
+ * Freetype rendering under OpenGL, inspired by:
+ * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
+ * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_02
  */
 
 #ifndef __GL_FONT_HELPER_IMPL_H__
@@ -21,11 +25,6 @@
 
 namespace tl {
 
-/**
- * Freetype rendering under OpenGL, inspired by:
- * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_01
- * https://en.wikibooks.org/wiki/OpenGL_Programming/Modern_OpenGL_Tutorial_Text_Rendering_02
- */
 void FontMap::draw_tile(unsigned char* pcBuf,
 	unsigned int iW, unsigned int iH,
 	unsigned int iTileW, unsigned int iTileH,
