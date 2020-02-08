@@ -127,7 +127,13 @@ void cvec_to_arrs(const std::vector<std::complex<T>>& vec, T* pReal, T* pImag)
 
 /**
  * tShift=1: shift 1 sample to the right
- * tShift=-11: shift 1 sample to the left
+ * tShift=-1: shift 1 sample to the left
+ *
+ * dft: x_k = x_j e^(-2pi i j k / N)
+ * dataset shifted by l: x_k = x_(j+l) e^(-2pi i j k / N)
+ * redefine vars m = j+l : x_k = x_m e^(-2pi i (m-l) k / N)
+ * x_k = x_m e^(-2pi i m k / N) * e^(2pi i (-l) k / N)
+ *   -> shift(x_k, l) = x_k * e^(2pi i l k / N) = x_k * (cos(2pi l k / N) + i * sin(pi l k / N))
  */
 template<typename T=double>
 std::vector<std::complex<T>> dft_shift(const std::vector<std::complex<T>>& vecIn, T tShift=1.)
@@ -147,6 +153,7 @@ std::vector<std::complex<T>> dft_shift(const std::vector<std::complex<T>>& vecIn
 
 	return vecOut;
 }
+
 
 template<typename T=double>
 std::vector<std::complex<T>> dft_double(const std::vector<std::complex<T>>& vecIn)
