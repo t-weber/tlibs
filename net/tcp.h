@@ -46,8 +46,8 @@ protected:
 	t_str m_strCmdDelim = "\n";
 	lf::queue<const t_str*, lf::fixed_sized<false>> m_listWriteBuffer;
 
-    static constexpr const std::size_t m_iReadBufLen = 512;
-    t_ch m_pcReadBuffer[m_iReadBufLen];
+	static constexpr const std::size_t m_iReadBufLen = 512;
+	t_ch m_pcReadBuffer[m_iReadBufLen];
 	t_str m_strReadBuffer;
 
 	using t_sigRecv = sig::signal<void(const t_str&)>;
