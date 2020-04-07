@@ -3,6 +3,7 @@
  * @author Tobias Weber <tobias.weber@tum.de>
  * @date aug-2015
  * @license GPLv2 or GPLv3
+ * @desc see, e.g, (Williams 2012), pp. 273-299
  */
 
 #ifndef __TLIBS_THREAD_H__
@@ -17,24 +18,66 @@
 #include <type_traits>
 #include <memory>
 
+#ifdef USE_BOOST_THREADPOOL
+	#include <boost/asio.hpp>
+#endif
+
 
 namespace tl {
 
 
 /**
- * minimalistic thread pool
+	* thread pool interface
+	*/
+template<class t_func>
+class IThreadPool
+{
+public:
+	using t_ret = typename std::result_of<t_func&()>::type;
+	using t_fut = std::list<std::future<t_ret>>;
+	using t_task = std::list<std::packaged_task<t_ret()>>;
+
+public:
+	virtual ~IThreadPool() {}
+
+	/**
+	 * add a function to be executed, giving a packaged task and a future.
+	 */
+	virtual void AddTask(const std::function<t_ret()>& fkt) = 0;
+
+	/**
+	 * issue start signal
+	 */
+	virtual void StartTasks() = 0;
+
+	/**
+	 * get (remaining) tasks and their results
+	 */
+	virtual t_task& GetTasks() = 0;
+	virtual t_fut& GetFutures() = 0;
+
+	/**
+	 * wait for all tasks to be finished
+	 */
+	virtual void JoinAll() = 0;
+};
+
+
+
+/**
+ * minimalistic direct thread pool implementation
  */
-template<class t_func> class ThreadPool
+template<class t_func> class ThreadPool1
 {
 	public:
-		using t_ret = typename std::result_of<t_func&()>::type;
-		using t_fut = std::list<std::future<t_ret>>;
-		using t_task = std::list<std::packaged_task<t_ret()>>;
+		using t_ret = typename IThreadPool<t_func>::t_ret;
+		using t_fut = typename IThreadPool<t_func>::t_fut;
+		using t_task = typename IThreadPool<t_func>::t_task;
 
 
 	protected:
 		std::list<std::unique_ptr<std::thread>> m_lstThreads;
-		mutable std::mutex m_mtx;
+		std::mutex m_mtx;
 
 
 		// list of wrapped function to be executed
@@ -49,7 +92,7 @@ template<class t_func> class ThreadPool
 
 
 	public:
-		ThreadPool(unsigned int iNumThreads = std::thread::hardware_concurrency(),
+		ThreadPool1(unsigned int iNumThreads = std::thread::hardware_concurrency(),
 			void (*pThStartFunc)() = nullptr)
 		{
 			// start 'iNumThreads' threads
@@ -88,7 +131,7 @@ template<class t_func> class ThreadPool
 		}
 
 
-		virtual ~ThreadPool()
+		virtual ~ThreadPool1()
 		{
 			JoinAll();
 			m_lstThreads.clear();
@@ -135,6 +178,103 @@ template<class t_func> class ThreadPool
 				});
 		}
 };
+
+
+
+
+#ifdef USE_BOOST_THREADPOOL
+/**
+ * wrapper for boost thread pool
+ */
+template<class t_func>
+class ThreadPool2 : public IThreadPool<t_func>
+{
+public:
+	using t_ret = typename IThreadPool<t_func>::t_ret;
+	using t_fut = typename IThreadPool<t_func>::t_fut;
+	using t_task = typename IThreadPool<t_func>::t_task;
+
+protected:
+	std::shared_ptr<boost::asio::thread_pool> m_tp;
+	std::mutex m_mtx;
+
+	// list of wrapped function to be executed
+	t_task m_lstTasks;
+	// futures with function return values
+	t_fut m_lstFutures;
+
+	void (*m_pThStartFunc)() = nullptr;
+
+
+public:
+	ThreadPool2(unsigned int iNumThreads = std::thread::hardware_concurrency(),
+		void (*pThStartFunc)() = nullptr)
+		: m_tp{std::make_shared<boost::asio::thread_pool>(iNumThreads)},
+			m_pThStartFunc{pThStartFunc}
+	{}
+
+
+	virtual ~ThreadPool2()
+	{
+		JoinAll();
+	}
+
+
+	/**
+	 * add a function to be executed, giving a packaged task and a future.
+	 */
+	void AddTask(const std::function<t_ret()>& fkt)
+	{
+		std::packaged_task<t_ret()> task(fkt);
+		std::future<t_ret> fut = task.get_future();
+
+		std::lock_guard<std::mutex> lock(m_mtx);
+		m_lstTasks.emplace_back(std::move(task));
+		m_lstFutures.emplace_back(std::move(fut));
+
+		std::packaged_task<t_ret()>* thetask = &m_lstTasks.back();;
+
+		boost::asio::post(*m_tp, [this, thetask]() -> void
+		{
+			if(m_pThStartFunc)
+				(*m_pThStartFunc)();
+			(*thetask)();
+		});
+	}
+
+
+	/**
+	 * issue start signal
+	 */
+	void StartTasks()
+	{
+		// not supported, starts immediately
+	}
+
+
+	t_fut& GetFutures() { return m_lstFutures; }
+	t_task& GetTasks() { return m_lstTasks; }
+
+
+	/**
+	 * wait for all tasks to be finished
+	 */
+	void JoinAll()
+	{
+		if(!m_tp) return;
+		m_tp->join();
+	}
+};
+#endif
+
+
+
+#ifdef USE_BOOST_THREADPOOL
+	template<class t_func> using ThreadPool = ThreadPool2<t_func>;
+#else
+	template<class t_func> using ThreadPool = ThreadPool1<t_func>;
+#endif
+
 
 }
 #endif
