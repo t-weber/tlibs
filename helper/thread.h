@@ -67,7 +67,7 @@ public:
 /**
  * minimalistic direct thread pool implementation
  */
-template<class t_func> class ThreadPool1
+template<class t_func> class ThreadPool1 : public IThreadPool<t_func>
 {
 	public:
 		using t_ret = typename IThreadPool<t_func>::t_ret;
@@ -141,7 +141,7 @@ template<class t_func> class ThreadPool1
 		/**
 		 * add a function to be executed, giving a packaged task and a future.
 		 */
-		void AddTask(const std::function<t_ret()>& fkt)
+		virtual void AddTask(const std::function<t_ret()>& fkt) override
 		{
 			std::packaged_task<t_ret()> task(fkt);
 			std::future<t_ret> fut = task.get_future();
@@ -155,20 +155,20 @@ template<class t_func> class ThreadPool1
 		/**
 		 * issue start signal
 		 */
-		void StartTasks()
+		virtual void StartTasks() override
 		{
 			m_signalStartIn.set_value();
 		}
 
 
-		t_fut& GetFutures() { return m_lstFutures; }
-		t_task& GetTasks() { return m_lstTasks; }
+		virtual t_fut& GetFutures() override { return m_lstFutures; }
+		virtual t_task& GetTasks() override { return m_lstTasks; }
 
 
 		/**
 		 * wait for all tasks to be finished
 		 */
-		void JoinAll()
+		virtual void JoinAll() override
 		{
 			std::for_each(m_lstThreads.begin(), m_lstThreads.end(),
 				[](std::unique_ptr<std::thread>& pThread)
@@ -196,13 +196,14 @@ public:
 
 protected:
 	std::shared_ptr<boost::asio::thread_pool> m_tp;
-	std::mutex m_mtx;
+	std::mutex m_mtx, m_mtxStart;
 
 	// list of wrapped function to be executed
 	t_task m_lstTasks;
 	// futures with function return values
 	t_fut m_lstFutures;
 
+	// function to run before each thread (not task)
 	void (*m_pThStartFunc)() = nullptr;
 
 
@@ -223,7 +224,7 @@ public:
 	/**
 	 * add a function to be executed, giving a packaged task and a future.
 	 */
-	void AddTask(const std::function<t_ret()>& fkt)
+	virtual void AddTask(const std::function<t_ret()>& fkt) override
 	{
 		std::packaged_task<t_ret()> task(fkt);
 		std::future<t_ret> fut = task.get_future();
@@ -236,8 +237,19 @@ public:
 
 		boost::asio::post(*m_tp, [this, thetask]() -> void
 		{
-			if(m_pThStartFunc)
-				(*m_pThStartFunc)();
+			{
+				// ensure that this is only called per-thread, not per-task
+				std::lock_guard<std::mutex> lockStart(m_mtxStart);
+
+				thread_local bool bThreadAlreadySeen{0};
+				if(m_pThStartFunc && !bThreadAlreadySeen)
+				{
+					bThreadAlreadySeen = 1;
+					(*m_pThStartFunc)();
+				}
+			}
+
+			// run task
 			(*thetask)();
 		});
 	}
@@ -246,20 +258,20 @@ public:
 	/**
 	 * issue start signal
 	 */
-	void StartTasks()
+	virtual void StartTasks() override
 	{
 		// not supported, starts immediately
 	}
 
 
-	t_fut& GetFutures() { return m_lstFutures; }
-	t_task& GetTasks() { return m_lstTasks; }
+	virtual t_fut& GetFutures() override { return m_lstFutures; }
+	virtual t_task& GetTasks() override { return m_lstTasks; }
 
 
 	/**
 	 * wait for all tasks to be finished
 	 */
-	void JoinAll()
+	virtual void JoinAll() override
 	{
 		if(!m_tp) return;
 		m_tp->join();
