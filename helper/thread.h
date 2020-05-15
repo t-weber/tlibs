@@ -27,8 +27,8 @@ namespace tl {
 
 
 /**
-	* thread pool interface
-	*/
+ * thread pool interface
+ */
 template<class t_func>
 class IThreadPool
 {
