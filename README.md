@@ -1,2 +1,2 @@
 # tlibs
-A mathematical-physical C++ template library.
+A physical-mathematical C++ template library.
