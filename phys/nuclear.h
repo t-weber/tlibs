@@ -17,7 +17,9 @@
 
 namespace tl {
 
-// see: https://de.wikipedia.org/wiki/Mittleres_logarithmisches_Energiedekrement
+/**
+ * see: https://de.wikipedia.org/wiki/Mittleres_logarithmisches_Energiedekrement
+ */
 template<class Y=double>
 Y mean_log_E_loss(Y A)
 {
@@ -25,6 +27,10 @@ Y mean_log_E_loss(Y A)
 	return Y(1) + a/(Y(1)-a) * std::log(a);
 }
 
+
+/**
+ * see: https://de.wikipedia.org/wiki/Mittleres_logarithmisches_Energiedekrement
+ */
 template<class Sys, class Y=double>
 Y mean_collisions(Y A, const t_energy<Sys,Y>& E_from, const t_energy<Sys,Y>& E_to)
 {

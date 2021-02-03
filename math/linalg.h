@@ -966,6 +966,7 @@ matrix_type rotation_matrix_3d_z(typename matrix_type::value_type angle)
 
 /**
  * cross-product in matrix form
+ * @see https://en.wikipedia.org/wiki/Skew-symmetric_matrix
  */
 template<class matrix_type = ublas::matrix<double>,
 	class vector_type = ublas::vector<typename matrix_type::value_type>>
@@ -1180,7 +1181,8 @@ bool is_centering_matrix(const t_mat& mat)
 
 /**
  * Euler-Rodrigues formula
- * see e.g.: https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
+ * @see https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
+ * @see (Arens 2015), p. 718 and p. 816
  */
 template<class mat_type = ublas::matrix<double>,
 	class vec_type = ublas::vector<typename mat_type::value_type>,
@@ -1224,8 +1226,8 @@ typename matrix_type::value_type trace(const matrix_type& mat)
 
 /**
  * parallel or perspectivic projection matrix
- * see: https://www.opengl.org/sdk/docs/man2/xhtml/glOrtho.xml
- * see: https://www.opengl.org/sdk/docs/man2/xhtml/gluPerspective.xml
+ * @see https://www.opengl.org/sdk/docs/man2/xhtml/glOrtho.xml
+ * @see https://www.opengl.org/sdk/docs/man2/xhtml/gluPerspective.xml
  */
 template<class t_mat = ublas::matrix<double, ublas::row_major, ublas::bounded_array<double,4*4>>,
 	class T = typename t_mat::value_type>
@@ -1258,7 +1260,7 @@ t_mat proj_matrix(T l, T r, T b, T t, T n, T f, bool bParallel)
 
 /**
  * parallel projection matrix
- * see: https://www.opengl.org/sdk/docs/man2/xhtml/glOrtho.xml
+ * @see https://www.opengl.org/sdk/docs/man2/xhtml/glOrtho.xml
  */
 template<class t_mat = ublas::matrix<double, ublas::row_major, ublas::bounded_array<double,4*4>>,
 	class T = typename t_mat::value_type>
@@ -1269,7 +1271,7 @@ t_mat ortho_matrix(T l, T r, T b, T t, T n, T f)
 
 /**
  * perspectivic projection matrix
- * see: https://www.opengl.org/sdk/docs/man2/xhtml/gluPerspective.xml
+ * @see https://www.opengl.org/sdk/docs/man2/xhtml/gluPerspective.xml
  * also see: similar gnomonic projection of spherical coordinates onto a plane
  */
 template<class t_mat = ublas::matrix<double, ublas::row_major, ublas::bounded_array<double,4*4>>,
@@ -1364,7 +1366,7 @@ bool is_nan_or_inf(const T& mat)
 /**
  * calculates the matrix inverse
  *
- * @desc code for inverse based on boost/libs/numeric/ublas/test/test_lu.cpp
+ * @desc code for inverse based on https://github.com/boostorg/ublas/blob/develop/test/test_lu.cpp
  * @desc Boost's test_lu.cpp is (c) 2008 by G. Winkler
  */
 template<class mat_type = ublas::matrix<double>>
@@ -1567,8 +1569,10 @@ bool solve_linear(const ublas::matrix<T>& M,
 	return true;
 }
 
+
 /**
  * solve M^T M x = M^T v for x
+ * @see e.g. (Arens 2015), p. 793
  */
 template<typename T = double>
 bool solve_linear_approx(const ublas::matrix<T>& M,
@@ -1648,6 +1652,7 @@ inline matrix_type row_col_matrix(const container_type& vecs)
 	return mat;
 }
 
+
 /**
  * vectors form rows of matrix
  */
@@ -1658,6 +1663,7 @@ matrix_type row_matrix(const container_type& vecs)
 {
 	return row_col_matrix<matrix_type, vec_type, container_type, true>(vecs);
 }
+
 
 /**
  * vectors form columns of matrix
@@ -1674,6 +1680,10 @@ matrix_type column_matrix(const container_type& vecs)
 // ----------------------------------------------------------------------------
 
 
+/**
+ * determinant
+ * @see e.g.: https://en.wikipedia.org/wiki/Determinant
+ */
 template<class t_mat/*=ublas::matrix<double>*/>
 typename t_mat::value_type determinant(const t_mat& mat)
 {
@@ -1767,7 +1777,7 @@ typename t_mat::value_type determinant(const t_mat& mat)
 
 /**
  * minor determinant
- * see e.g.: https://en.wikipedia.org/wiki/Minor_(linear_algebra)
+ * @see e.g.: https://en.wikipedia.org/wiki/Minor_(linear_algebra)
  */
 template<class t_mat = ublas::matrix<double>>
 typename t_mat::value_type minor_det(const t_mat& mat, std::size_t iRow, std::size_t iCol)
@@ -1789,9 +1799,10 @@ typename t_mat::value_type cofactor(const t_mat& mat, std::size_t iRow, std::siz
 	return m*s;
 }
 
+
 /**
  * adjugate matrix
- * see e.g.: https://en.wikipedia.org/wiki/Adjugate_matrix
+ * @see e.g.: https://en.wikipedia.org/wiki/Adjugate_matrix
  */
 template<class t_mat = ublas::matrix<double>>
 t_mat adjugate(const t_mat& mat, bool bTranspose=1)
@@ -1835,8 +1846,8 @@ typename matrix_type::value_type get_ellipsoid_volume(const matrix_type& mat)
 
 /**
  * calculate fractional coordinate basis vectors from angles
- * see: http://www.bmsc.washington.edu/CrystaLinks/man/pdb/part_75.html
- * or: https://en.wikipedia.org/wiki/Fractional_coordinates
+ * @see http://www.bmsc.washington.edu/CrystaLinks/man/pdb/part_75.html
+ * @see https://en.wikipedia.org/wiki/Fractional_coordinates
  * for the reciprocal lattice this is equal to the B matrix from Acta Cryst. (1967), 22, 457
  */
 template<class t_vec>
@@ -1901,6 +1912,7 @@ typename vec_type::value_type vec_angle(const vec_type& vec)
 template<typename T> void set_eps_0(T& d, underlying_value_type_t<T> eps=-1.);
 template<typename T, LinalgType ty=get_linalg_type<T>::value> struct set_eps_0_impl {};
 
+
 /**
  * set values lower than epsilon to zero
  * scalar version
@@ -1916,6 +1928,7 @@ struct set_eps_0_impl<real_type, LinalgType::REAL>
 			d = real_type(0);
 	}
 };
+
 
 /**
  * set values lower than epsilon to zero
@@ -1934,6 +1947,7 @@ struct set_eps_0_impl<vec_type, LinalgType::VECTOR>
 	}
 };
 
+
 /**
  * set values lower than epsilon to zero
  * matrix version
@@ -1951,6 +1965,7 @@ struct set_eps_0_impl<mat_type, LinalgType::MATRIX>
 				set_eps_0<real_type>(mat(i,j), eps);
 	}
 };
+
 
 template<typename T>
 void set_eps_0(T& d, underlying_value_type_t<T> eps)
@@ -1972,6 +1987,7 @@ bool vec_is_collinear(const t_vec& _vec1, const t_vec& _vec2, T eps = get_epsilo
 	T tdot = std::abs(inner(vec1, vec2));
 	return float_equal<T>(tdot, 1, eps);
 }
+
 
 /**
  * signed angle between two vectors
@@ -2014,6 +2030,7 @@ typename vec_type::value_type vec_angle(const vec_type& vec0,
 template<class T, LinalgType ty=get_linalg_type<T>::value>
 struct vec_angle_unsigned_impl {};
 
+
 /**
  * unsigned angle between two vectors
  */
@@ -2048,6 +2065,7 @@ struct vec_angle_unsigned_impl<T, LinalgType::VECTOR>
 	}
 };
 
+
 template<class T>
 typename T::value_type vec_angle_unsigned(const T& q1, const T& q2)
 {
@@ -2058,9 +2076,8 @@ typename T::value_type vec_angle_unsigned(const T& q1, const T& q2)
 
 
 /**
- * - see: K. Shoemake, "Animating rotation with quaternion curves":
- *        http://dx.doi.org/10.1145/325334.325242
- * - see: (Bronstein 2008), formula 4.207
+ * @see K. Shoemake, "Animating rotation with quaternion curves", http://dx.doi.org/10.1145/325334.325242
+ * @see (Bronstein 2008), formula 4.207
  */
 template<class T>
 T slerp(const T& q1, const T& q2, typename T::value_type t)
@@ -2126,9 +2143,10 @@ t_vec get_gcd_vec(const t_vec& vec)
 
 // --------------------------------------------------------------------------------
 
+
 /**
  * Householder reflection matrix
- * @desc for the algo, see (Scarpino 2011), p. 268
+ * @see (Scarpino 2011), p. 268
  */
 template<class t_mat = ublas::matrix<double>,
 	class t_vec = ublas::vector<typename t_mat::value_type>,
@@ -2190,7 +2208,7 @@ template<class t_mat = ublas::matrix<double>,
 
 /**
  * QR decomposition via householder reflections
- * @desc for the algo, see (Scarpino 2011), pp. 269--272
+ * @see (Scarpino 2011), pp. 269--272
  */
 template<class t_mat = ublas::matrix<double>,
 	class t_vec = ublas::vector<typename t_mat::value_type>,
@@ -2257,6 +2275,7 @@ template<typename t_vec = ublas::vector<double>,
 	typename T = typename t_vec::value_type>
 std::vector<t_vec> gram_schmidt(const std::vector<t_vec>& vecs, bool bNorm=true);
 
+
 /**
  * QR decomposition via gram-schmidt orthogonalisation
  */
@@ -2309,6 +2328,7 @@ bool is_symmetric(const t_mat& mat, t_real eps = get_epsilon<t_real>())
 // -----------------------------------------------------------------------------
 template<class T, LinalgType ty=get_linalg_type<T>::value> struct apply_fkt_impl {};
 
+
 template<class T>
 struct apply_fkt_impl<T, LinalgType::REAL>
 {
@@ -2317,6 +2337,7 @@ struct apply_fkt_impl<T, LinalgType::REAL>
 		return fkt(t);
 	}
 };
+
 
 template<class t_vec>
 struct apply_fkt_impl<t_vec, LinalgType::VECTOR>
@@ -2334,6 +2355,7 @@ struct apply_fkt_impl<t_vec, LinalgType::VECTOR>
 		return v;
 	}
 };
+
 
 template<class t_mat>
 struct apply_fkt_impl<t_mat, LinalgType::MATRIX>
@@ -2353,12 +2375,14 @@ struct apply_fkt_impl<t_mat, LinalgType::MATRIX>
 	}
 };
 
+
 template<class T, class t_val=underlying_value_type_t<T>>
 T apply_fkt(const T& t, const std::function<t_val(t_val)>& fkt)
 {
 	apply_fkt_impl<T> impl;
 	return impl(t, fkt);
 }
+
 
 template<class T, class t_val=underlying_value_type_t<T>>
 inline T apply_fkt(const T& t, t_val(*pfkt)(t_val))
@@ -2372,6 +2396,7 @@ inline T apply_fkt(const T& t, t_val(*pfkt)(t_val))
 template<class T, LinalgType ty=get_linalg_type<T>::value>
 struct get_minmax_impl {};
 
+
 template<class T>
 struct get_minmax_impl<T, LinalgType::REAL>
 {
@@ -2381,6 +2406,7 @@ struct get_minmax_impl<T, LinalgType::REAL>
 		return std::pair<T,T>(t,t);
 	}
 };
+
 
 template<class t_vec>
 struct get_minmax_impl<t_vec, LinalgType::VECTOR>
@@ -2402,6 +2428,7 @@ struct get_minmax_impl<t_vec, LinalgType::VECTOR>
 		return std::pair<t_val, t_val>(tmin, tmax);
 	}
 };
+
 
 template<class t_mat>
 struct get_minmax_impl<t_mat, LinalgType::MATRIX>
@@ -2425,6 +2452,7 @@ struct get_minmax_impl<t_mat, LinalgType::MATRIX>
 	}
 };
 
+
 template<class T>
 std::pair<underlying_value_type_t<T>, underlying_value_type_t<T>>
 get_minmax(const T& t)
@@ -2438,7 +2466,7 @@ get_minmax(const T& t)
 
 /**
  * Calculates the dominant eigenvector/eigenvalue for symmetric matrices
- * see: (Bronstein 2008), equs. (4.148)-(4.151)
+ * @see (Bronstein 2008), equs. (4.148)-(4.151)
  */
 template<class t_mat = ublas::matrix<double>,
 	class t_vec = ublas::vector<typename t_mat::value_type>,
@@ -2478,7 +2506,7 @@ bool eigenvec_dominant_sym(const t_mat& mat, t_vec& evec, T& eval,
 
 /**
  * Calculates the least dominant eigenvector/eigenvalue for symmetric matrices
- * see: (Bronstein 2008), equs. (4.148)-(4.151)
+ * @see (Bronstein 2008), equs. (4.148)-(4.151)
  */
 template<class t_mat = ublas::matrix<double>,
 	class t_vec = ublas::vector<typename t_mat::value_type>,
@@ -2664,7 +2692,8 @@ t_vec proj_vec(t_vec vec1, t_vec vec2)
 
 /**
  * Gram-Schmidt orthogonalisation of basis vectors
- * see e.g.: https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
+ * @see e.g. https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
+ * @see e.g. (Arens 2015), p. 744
  */
 template<typename t_vec /*= ublas::vector<double>*/,
 	typename T /*= typename t_vec::value_type*/ >

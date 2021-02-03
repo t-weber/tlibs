@@ -40,7 +40,7 @@ int main()
 	std::cout << "det(g_contra) = " << tl::determinant(matGContra) << std::endl;
 	std::cout << std::endl;
 
-	
+
 	{
 		t_mat matBaseCov = tl::column_matrix(vecsBaseCov);
 		//t_mat matBaseContra = tl::column_matrix(vecsBaseContra);

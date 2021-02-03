@@ -30,6 +30,11 @@ namespace math = boost::math;
 
 template<typename T> class Line;
 
+
+/**
+ * analytical geometry of a plane
+ * @see (Stoecker 1999), chapter "Analytische Geometrie".
+ */
 template<typename T> class Plane
 {
 public:
@@ -157,6 +162,7 @@ public:
 
 	/**
 	 * "Lotfußpunkt"
+	 * @see e.g. https://de.wikipedia.org/wiki/Lot_(Mathematik)
 	 */
 	t_vec GetDroppedPerp(const t_vec& vecP, T *pdDist=0) const
 	{
@@ -202,7 +208,7 @@ public:
 
 	/**
 	 * plane-plane intersection
-	 * http://mathworld.wolfram.com/Plane-PlaneIntersection.html
+	 * @see http://mathworld.wolfram.com/Plane-PlaneIntersection.html
 	 */
 	bool intersect(const Plane<T>& plane2, Line<T>& lineRet,
 		T eps = tl::get_epsilon<T>()) const
@@ -233,7 +239,7 @@ public:
 
 	/**
 	 * intersection point of three planes
-	 * http://mathworld.wolfram.com/Plane-PlaneIntersection.html
+	 * @see http://mathworld.wolfram.com/Plane-PlaneIntersection.html
 	 */
 	bool intersect(const Plane<T>& plane2, const Plane<T>& plane3, t_vec& ptRet,
 		T eps = tl::get_epsilon<T>()) const
@@ -266,7 +272,10 @@ public:
 //------------------------------------------------------------------------------
 
 
-
+/**
+ * analytical geometry of a line
+ * @see (Stoecker 1999), chapter "Analytische Geometrie".
+ */
 template<typename T> class Line
 {
 public:
@@ -341,6 +350,7 @@ public:
 
 	/**
 	 * "Lotfußpunkt"
+	 * @see e.g. https://de.wikipedia.org/wiki/Lot_(Mathematik)
 	 */
 	t_vec GetDroppedPerp(const t_vec& vecP, T *pdDist=0) const
 	{
@@ -387,7 +397,7 @@ public:
 
 	/**
 	 * line-plane intersection
-	 * http://mathworld.wolfram.com/Line-PlaneIntersection.html
+	 * @see http://mathworld.wolfram.com/Line-PlaneIntersection.html
 	 */
 	bool intersect(const Plane<T>& plane, T& t, T eps = tl::get_epsilon<T>()) const
 	{
@@ -430,7 +440,7 @@ public:
 
 	/**
 	 * line-line intersection
-	 * see e.g.: https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
+	 * @see e.g.: https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
 	 *
 	 * pos0 + t0*dir0 = pos1 + t1*dir1
 	 * pos0 - pos1 = t1*dir1 - t0*dir0
@@ -439,7 +449,7 @@ public:
 	 *
 	 * generally:
 	 * exact: b = M t  ->  M^(-1)*b = t
-	 * approx: M^t b = M^t M t  ->  (M^t M)^(-1) * M^t b = t
+	 * approx.: M^t b = M^t M t  ->  (M^t M)^(-1) * M^t b = t
 	 */
 	bool intersect(const Line<T>& line1, T& t0, T eps = tl::get_epsilon<T>(), T *pt1=nullptr, T *pDist=nullptr) const
 	{
@@ -558,7 +568,7 @@ std::ostream& operator<<(std::ostream& ostr, const Line<T>& line)
 
 
 /**
- * intersection of "plane" and polygon (defined by "planePoly" and vertPoly")
+ * intersection of "plane" and polygon (defined by "planePoly" and "vertPoly")
  */
 template<class t_vec = ublas::vector<double>,
 	template<class...> class t_cont = std::vector,
@@ -877,6 +887,10 @@ t_cont<t_cont<t_vec>> verts_to_polyhedron(
 //------------------------------------------------------------------------------
 
 
+/**
+ * quadric
+ * see e.g.: (Arens 2015), ch. 21
+ */
 template<class T = double>
 class Quadric
 {

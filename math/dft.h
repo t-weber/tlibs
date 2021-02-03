@@ -3,7 +3,7 @@
  * @author Tobias Weber <tobias.weber@tum.de>
  * @date 2012, jan-2015
  * @license GPLv2 or GPLv3
- * @desc see (Scarpino 2011), ch. 14, for an explanation of the fft algorithms employed here.
+ * @see (Scarpino 2011), ch. 14, for an explanation of the fft algorithms employed here.
  */
 
 #ifndef __TLIBS_DFT_H__
@@ -23,7 +23,7 @@ namespace tl
 /**
  * standard dft
  * dft formulas from here:
- * http://www.fftw.org/fftw3_doc/The-1d-Discrete-Fourier-Transform-_0028DFT_0029.html#The-1d-Discrete-Fourier-Transform-_0028DFT_0029
+ * @see http://www.fftw.org/fftw3_doc/The-1d-Discrete-Fourier-Transform-_0028DFT_0029.html#The-1d-Discrete-Fourier-Transform-_0028DFT_0029
  */
 template<typename T=double>
 std::complex<T> dft_coeff(int k,
@@ -385,6 +385,7 @@ class DFT : public Fourier_base<T>
 
 /**
  * fft with pre-calculated coefficients
+ * @see (Scarpino 2011), ch. 14, for an explanation of the fft algorithms employed here.
  */
 template<class T=double>
 class FFT : public Fourier_base<T>

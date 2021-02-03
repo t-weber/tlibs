@@ -20,7 +20,7 @@ namespace tl {
 
 /**
  * reciprocal matrix to A: B = 2*pi * A^(-T)
- * see e.g.: https://en.wikipedia.org/wiki/Reciprocal_lattice
+ * @see e.g.: https://en.wikipedia.org/wiki/Reciprocal_lattice
  */
 template<typename T=double>
 bool reciprocal(const ublas::matrix<T>& matReal, ublas::matrix<T>& matRecip)
@@ -98,6 +98,7 @@ class Lattice
 		bool IsCubic() const;
 };
 
+
 template<typename T>
 Lattice<T>::Lattice(T a, T b, T c, T alpha, T beta, T gamma)
 {
@@ -108,6 +109,7 @@ Lattice<T>::Lattice(T a, T b, T c, T alpha, T beta, T gamma)
 	fractional_basis_from_angles(a,b,c, alpha,beta,gamma, m_vecs[0],m_vecs[1],m_vecs[2]);
 }
 
+
 template<typename T>
 Lattice<T>::Lattice(const t_vec& vec0, const t_vec& vec1, const t_vec& vec2)
 {
@@ -116,6 +118,7 @@ Lattice<T>::Lattice(const t_vec& vec0, const t_vec& vec1, const t_vec& vec2)
 	this->m_vecs[2] = vec2;
 }
 
+
 template<typename T>
 Lattice<T>::Lattice(const Lattice<T>& lattice)
 {
@@ -123,6 +126,7 @@ Lattice<T>::Lattice(const Lattice<T>& lattice)
 	this->m_vecs[1] = lattice.m_vecs[1];
 	this->m_vecs[2] = lattice.m_vecs[2];
 }
+
 
 template<typename T>
 void Lattice<T>::RotateEuler(T dPhi, T dTheta, T dPsi)
@@ -137,6 +141,7 @@ void Lattice<T>::RotateEuler(T dPhi, T dTheta, T dPsi)
 	for(std::size_t i=0; i<3; ++i)
 		m_vecs[i] = prod_mv(mat, m_vecs[i]);
 }
+
 
 template<typename T>
 void Lattice<T>::RotateEulerRecip(const t_vec& vecRecipX,
@@ -201,6 +206,7 @@ T Lattice<T>::GetVol() const
 	return get_volume(column_matrix({m_vecs[0], m_vecs[1], m_vecs[2]}));
 }
 
+
 /**
  (x)   (v0_x v1_x v2_x) (h)
  (y) = (v0_y v1_y v2_y) (k)
@@ -211,6 +217,7 @@ typename Lattice<T>::t_vec Lattice<T>::GetPos(T h, T k, T l) const
 {
 	return h*m_vecs[0] + k*m_vecs[1] + l*m_vecs[2];
 }
+
 
 /**
  (h)   (v0_x v1_x v2_x)^(-1) (x)
@@ -228,6 +235,7 @@ typename Lattice<T>::t_vec Lattice<T>::GetHKL(const t_vec& vec) const
 
 	return prod_mv(matInv, vec);
 }
+
 
 template<typename T>
 Lattice<T> Lattice<T>::GetRecip() const
@@ -247,6 +255,7 @@ Lattice<T> Lattice<T>::GetRecip() const
 		get_column(matRecip,2));
 }
 
+
 template<typename T>
 Lattice<T> Lattice<T>::GetAligned() const
 {
@@ -263,6 +272,7 @@ typename Lattice<T>::t_mat Lattice<T>::GetBaseMatrixCov() const
 	set_eps_0(matBase);
 	return matBase;
 }
+
 
 template<typename T>
 typename Lattice<T>::t_mat Lattice<T>::GetBaseMatrixCont() const
@@ -285,6 +295,7 @@ typename Lattice<T>::t_mat Lattice<T>::GetMetricCov() const
 	set_eps_0(matG);
 	return matG;
 }
+
 
 template<typename T>
 typename Lattice<T>::t_mat Lattice<T>::GetMetricCont() const
@@ -321,6 +332,7 @@ bool Lattice<T>::IsCubic() const
 
 /**
  * B matrix converts rlu to 1/A
+ * @see e.g.: https://doi.org/10.1107/S0021889805004875
  */
 template<typename T = double>
 ublas::matrix<T> get_B(const Lattice<T>& lattice, bool bIsRealLattice=1)
@@ -339,6 +351,7 @@ ublas::matrix<T> get_B(const Lattice<T>& lattice, bool bIsRealLattice=1)
 
 /**
  * U matrix expresses the coordinates in the basis of the scattering plane
+ * @see e.g.: https://doi.org/10.1107/S0021889805004875
  */
 template<typename T = double>
 ublas::matrix<T> get_U(const ublas::vector<T>& _vec1, const ublas::vector<T>& _vec2,
@@ -371,7 +384,7 @@ ublas::matrix<T> get_U(const ublas::vector<T>& _vec1, const ublas::vector<T>& _v
 /**
  * UB matrix converts rlu to 1/A and expresses it in the scattering plane coords:
  * Q = U*B*hkl
- * see e.g.: https://doi.org/10.1107/S0021889805004875
+ * @see e.g.: https://doi.org/10.1107/S0021889805004875
  */
 template<typename T = double>
 ublas::matrix<T> get_UB(const Lattice<T>& lattice_real,
@@ -392,6 +405,7 @@ ublas::matrix<T> get_UB(const Lattice<T>& lattice_real,
 
 /**
  * hklE -> TAS angles
+ * @see e.g.: https://doi.org/10.1107/S0021889805004875
  */
 template<typename T = double>
 void get_tas_angles(const Lattice<T>& lattice_real,
@@ -438,6 +452,7 @@ void get_tas_angles(const Lattice<T>& lattice_real,
 
 /**
  * TAS angles -> hklE
+ * @see e.g.: https://doi.org/10.1107/S0021889805004875
  */
 template<typename T = double>
 void get_hkl_from_tas_angles(const Lattice<T>& lattice_real,

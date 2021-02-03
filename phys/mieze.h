@@ -19,9 +19,12 @@ namespace ublas = boost::numeric::ublas;
 
 
 //------------------------------------------------------------------------------
-// MIEZE time (eq. 117 from [Keller, Golub, Gähler, 2000])
-// tau = hbar * omega * Ls / (m*v^3)
-
+/**
+ * MIEZE time
+ * tau = hbar * omega * Ls / (m*v^3)
+ * @see e.q. 117 from [Keller, Golub, Gähler, 2000]
+ * @see e.g.: https://doi.org/10.1016/j.nima.2011.07.003
+ */
 template<class Sys, class Y>
 t_time<Sys,Y> mieze_tau(const t_freq<Sys,Y>& fm,
 	const t_length<Sys,Y>& Ls, const t_length<Sys,Y>& lam)
@@ -29,6 +32,7 @@ t_time<Sys,Y> mieze_tau(const t_freq<Sys,Y>& fm,
 	t_velocity<Sys,Y> v = lam2p(lam) / co::m_n;
 	return 2.*get_pi<Y>() * fm * Ls * co::hbar / (co::m_n * v*v*v);
 }
+
 
 template<class Sys, class Y>
 t_freq<Sys,Y> mieze_tau_fm(const t_time<Sys,Y>& tau,
@@ -38,6 +42,7 @@ t_freq<Sys,Y> mieze_tau_fm(const t_time<Sys,Y>& tau,
 	return tau / (2.*get_pi<Y>() * Ls * co::hbar) * (co::m_n * v*v*v);
 }
 
+
 template<class Sys, class Y>
 t_length<Sys,Y> mieze_tau_Ls(const t_time<Sys,Y>& tau,
 	const t_freq<Sys,Y>& fm, const t_length<Sys,Y>& lam)
@@ -45,6 +50,7 @@ t_length<Sys,Y> mieze_tau_Ls(const t_time<Sys,Y>& tau,
 	t_velocity<Sys,Y> v = lam2p(lam) / co::m_n;
 	return tau / (2.*get_pi<Y>() * fm * co::hbar) * (co::m_n * v*v*v);
 }
+
 
 template<class Sys, class Y>
 t_length<Sys,Y> mieze_tau_lam(const t_time<Sys,Y>& tau,
@@ -61,14 +67,16 @@ t_length<Sys,Y> mieze_tau_lam(const t_time<Sys,Y>& tau,
 
 
 //------------------------------------------------------------------------------
-// Larmor precession
-
-// gamma*B = omega
+/**
+ * gamma*B = omega
+ * @see https://en.wikipedia.org/wiki/Larmor_precession
+ */
 template<class Sys, class Y=double>
 t_freq<Sys,Y> larmor_om(const t_flux<Sys,Y>& B)
 {
 	return co::gamma_n * B;
 }
+
 
 template<class Sys, class Y=double>
 t_flux<Sys,Y> larmor_B(const t_freq<Sys,Y>& om)
@@ -76,7 +84,9 @@ t_flux<Sys,Y> larmor_B(const t_freq<Sys,Y>& om)
 	return om/co::gamma_n;
 }
 
-/* omega = -gamma*B
+
+/**
+ * omega = -gamma*B
  * omega*t = -gamma*B*t
  * phi = - gamma * B * l/v
  * B = -phi*v / (gamma*l)
@@ -97,8 +107,10 @@ t_flux<Sys,Y> larmor_field(const t_length<Sys,Y>& lam,
 
 
 //------------------------------------------------------------------------------
-// MIEZE contrast reduction due to detector geometry
-
+/**
+ * MIEZE contrast reduction due to detector geometry
+ * @see e.g.: https://doi.org/10.1016/j.nima.2011.07.003
+ */
 template<class Sys, class Y>
 Y mieze_reduction_det(const t_length<Sys,Y>& lx, const t_length<Sys,Y>& ly,
 	const t_length<Sys,Y>& xpos, const t_length<Sys,Y>& ypos,
@@ -166,6 +178,7 @@ Y mieze_reduction_det(const t_length<Sys,Y>& lx, const t_length<Sys,Y>& ly,
 
 /**
  * reduction factor due to detector thickness
+ * @see e.g.: https://doi.org/10.1016/j.nima.2011.07.003
  */
 template<class Sys, class Y>
 Y mieze_reduction_det_d(const t_length<Sys,Y>& d,
@@ -192,13 +205,12 @@ Y mieze_reduction_det_d(const t_length<Sys,Y>& d,
 
 
 
-
 //------------------------------------------------------------------------------
 // MIEZE contrast reduction due to sample geometry
 
 /**
  * numerical approximation to the R_sample integral of
- * formula (9) in Brandl et. al., NIMA 654(1), pp. 394-398 (2011)
+ * @see formula (9) in Brandl et. al., NIMA 654(1), pp. 394-398 (2011), doi: https://doi.org/10.1016/j.nima.2011.07.003
  */
 template<class Sys, class Y>
 Y mieze_reduction_sample_cuboid(const t_length<Sys,Y>& len_x,
@@ -265,7 +277,9 @@ Y mieze_reduction_sample_cuboid(const t_length<Sys,Y>& len_x,
 }
 
 
-// Scattering with extinction
+/**
+ * Scattering with extinction
+ */
 template<class Sys, class Y>
 Y mieze_reduction_sample_cuboid_extinction(const t_length<Sys,Y>& len_x,
 	const t_length<Sys,Y>& len_y, const t_length<Sys,Y>& len_z,
@@ -348,7 +362,9 @@ Y mieze_reduction_sample_cuboid_extinction(const t_length<Sys,Y>& len_x,
 }
 
 
-// Bragg scattering with extinction
+/**
+ * Bragg scattering with extinction
+ */
 template<class Sys, class Y>
 Y mieze_reduction_sample_cuboid_bragg(const t_length<Sys,Y>& len_x,
 	const t_length<Sys,Y>& len_y,
@@ -380,6 +396,7 @@ t_length<Sys,Y> mieze_condition_L2(const t_freq<Sys,Y>& f1,
         return L1 / (f2/f1 - 1.);
 }
 
+
 template<class Sys, class Y>
 t_length<Sys,Y> mieze_condition_L1(const t_freq<Sys,Y>& f1,
 	const t_freq<Sys,Y>& f2, const t_length<Sys,Y>& L2)
@@ -387,12 +404,14 @@ t_length<Sys,Y> mieze_condition_L1(const t_freq<Sys,Y>& f1,
         return L2 * (f2/f1 - 1.);
 }
 
+
 template<class Sys, class Y>
 t_freq<Sys,Y> mieze_condition_f2(const t_freq<Sys,Y>& f1,
 	const t_length<Sys,Y>& L1, const t_length<Sys,Y>& L2)
 {
         return (L1/L2 + 1.)*f1;
 }
+
 
 template<class Sys, class Y>
 t_freq<Sys,Y> mieze_condition_f1(const t_freq<Sys,Y>& f2,
@@ -426,6 +445,7 @@ t_freq<Sys,Y> mieze_det_misaligned_df1(const t_length<Sys,Y>& L1,
 	df = (f2-f1) - (L1*f2)/(L1+L2+dL);
 	return df;
 }
+
 
 template<class Sys, class Y>
 t_freq<Sys,Y> mieze_det_misaligned_df2(const t_length<Sys,Y>& L1,

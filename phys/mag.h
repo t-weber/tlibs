@@ -25,11 +25,12 @@ namespace tl {
 // ----------------------------------------------------------------------------
 
 /**
- * Simple ferromagnetic dispersion (see e.g. (Squires 2012) p. 161)
+ * Simple ferromagnetic dispersion
  * @param lstNeighbours list of distances to neighbour atoms and their coupling constants
  * @param vecq q position
  * @param tS spin
  * @return E(q)
+ * @see e.g. (Squires 2012) p. 161
  */
 template<class t_vec = ublas::vector<double>,
 	typename T = typename t_vec::value_type,
@@ -42,6 +43,7 @@ T ferromag(const t_cont<t_vec>& vecNeighbours, const t_cont<std::complex<T>>& ve
 		(vecNeighbours, vecq, vecJ, &J0).real();
 	return T(2)*tS*(J0 - J).real();
 }
+
 
 template<class t_vec = ublas::vector<double>,
 	typename T = typename t_vec::value_type,
@@ -57,8 +59,8 @@ T ferromag(const t_cont& lstNeighbours, const ublas::vector<T>& vecq, T tS)
 
 /**
  * Magnetic form factors
- * @desc see: (ILL Neutron Data Booklet), sec. 2.5-1 (p. 60)
- * @desc also see: https://www.ill.eu/sites/ccsl/ffacts/
+ * @see (ILL Neutron Data Booklet), sec. 2.5-1 (p. 60)
+ * @see https://www.ill.eu/sites/ccsl/ffacts/
  */
 template<class T=double, template<class...> class t_vec=std::initializer_list>
 T j0_avg(T Q, const t_vec<T>& A, const t_vec<T>& a)
@@ -73,12 +75,14 @@ T j0_avg(T Q, const t_vec<T>& A, const t_vec<T>& a)
 	return tl::formfact<T, std::vector>(Q, vecA, vecB, c);
 }
 
+
 template<class T=double, template<class...> class t_vec=std::initializer_list>
 T j2_avg(T Q, const t_vec<T>& A, const t_vec<T>& a)
 {
 	T s = Q/(T(4)*get_pi<T>());
 	return j0_avg<T, t_vec>(Q, A, a) * s * s;
 }
+
 
 template<class T=double, template<class...> class t_vec=std::initializer_list>
 T mag_formfact(T Q, T L, T S,
@@ -88,10 +92,11 @@ T mag_formfact(T Q, T L, T S,
 	return (L+T(2)*S) * j0_avg<T, t_vec>(Q, A0, a0) * L * j2_avg<T, t_vec>(Q, A2, a2);
 }
 
+
 /**
  * form factor for transition metals (d orbitals, weak LS, spin-only)
- * @desc see: (Squires 2012), p. 138
- * @desc also see: http://www.neutron.ethz.ch/research/resources/magnetic-form-factors.html
+ * @see (Squires 2012), p. 138
+ * @see http://www.neutron.ethz.ch/research/resources/magnetic-form-factors.html
  */
 template<class T=double, template<class...> class t_vec=std::initializer_list>
 std::tuple<T,T,T> mag_formfact_d(T Q, T g,
@@ -104,10 +109,11 @@ std::tuple<T,T,T> mag_formfact_d(T Q, T g,
 	return std::tuple<T,T,T>(j0, j2, j0 + (T(1)-T(2)/g)*j2);
 }
 
+
 /**
  * form factor for rare earths (f orbitals, strong LS, jj)
- * @desc see: (Squires 2012), p. 139
- * @desc also see: http://www.neutron.ethz.ch/research/resources/magnetic-form-factors.html
+ * @see (Squires 2012), p. 139
+ * @see http://www.neutron.ethz.ch/research/resources/magnetic-form-factors.html
  */
 template<class T=double, template<class...> class t_vec=std::initializer_list>
 std::tuple<T,T,T> mag_formfact_f(T Q, T L, T S, T J,
@@ -128,7 +134,7 @@ std::tuple<T,T,T> mag_formfact_f(T Q, T L, T S, T J,
 /**
  * effective magnetic scattering length p in fm
  * @param tM: magnetic moment (in units of muB)
- * @desc see e.g.: (Shirane 2002), p. 4
+ * @see e.g.: (Shirane 2002), p. 4
  */
 template<typename T = double>
 T mag_scatlen_eff(T tM)
@@ -144,7 +150,7 @@ T mag_scatlen_eff(T tM)
 
 /**
  * spin S perpendicular to scattering vector Q
- * @desc see: (Shirane 2002), p. 37, equ. 2.63
+ * @see (Shirane 2002), p. 37, equ. 2.63
  */
 template<class t_vec = ublas::vector<double>>
 t_vec get_S_perp_Q(const t_vec& S, const t_vec& Q)
@@ -165,7 +171,7 @@ t_vec get_S_perp_Q(const t_vec& S, const t_vec& Q)
  * @param pF0 optional total form factor.
  * @param dVuc optionally normalise by the unit cell volume
  * @return structure factor
- * @desc see: (Shirane 2002), p. 40, equ. 2.81
+ * @see (Shirane 2002), p. 40, equ. 2.81
  */
 template<typename T = double, typename t_ff = std::complex<T>,
 	template<class...> class t_vec = ublas::vector,
@@ -239,7 +245,8 @@ t_vec<std::complex<T>> structfact_mag(const t_cont<t_vec<T>>& lstAtoms,
 // ----------------------------------------------------------------------------
 /**
  * metropolis algorithm
- * @desc see e.g. (Scherer 2010), p. 104 or (Schroeder 2000), p. 346
+ * @see (Scherer 2010), p. 104
+ * @see (Schroeder 2000), p. 346 ff
  */
 template<class t_real, std::size_t DIM,
 	template<class, std::size_t, class...> class t_arr_1d = boost::array,
@@ -386,6 +393,7 @@ void metrop(
 
 /**
  * Langevin function for mean cosine
+ * @see https://en.wikipedia.org/wiki/Brillouin_and_Langevin_functions
  */
 template<class T=double>
 T langevin(T x)
@@ -397,6 +405,7 @@ T langevin(T x)
 /**
  * Brillouin function ~ magnetisation
  * @param x = g muB J B / (kB T)
+ * @see https://en.wikipedia.org/wiki/Brillouin_and_Langevin_functions
  */
 template<class T=double>
 T brillouin(T J, T x)
