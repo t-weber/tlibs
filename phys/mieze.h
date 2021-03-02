@@ -3,6 +3,8 @@
  * @author Tobias Weber <tobias.weber@tum.de>
  * @date May 2012, 29-may-2013
  * @license GPLv2 or GPLv3
+ *
+ * @see https://doi.org/10.1016/B978-012613760-6/50068-1 for a good explanation of all things spin-echo.
  */
 
 #ifndef __MIEZE_FORMULAS__
@@ -22,7 +24,7 @@ namespace ublas = boost::numeric::ublas;
 /**
  * MIEZE time
  * tau = hbar * omega * Ls / (m*v^3)
- * @see e.q. 117 from [Keller, Golub, Gähler, 2000]
+ * @see equ. 122 from https://doi.org/10.1016/B978-012613760-6/50068-1
  * @see e.g.: https://doi.org/10.1016/j.nima.2011.07.003
  */
 template<class Sys, class Y>
